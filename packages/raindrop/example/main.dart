@@ -134,6 +134,13 @@ class FakeTransactionDelegate extends TransactionDelegate {
   }
 
   @override
+  Future<T> transaction<T>(
+    Future<T> Function(TransactionDelegate delegate) transaction,
+  ) {
+    return transaction(FakeTransactionDelegate(dialect));
+  }
+
+  @override
   Future<void> rollback() {
     throw UnimplementedError();
   }

@@ -1,22 +1,56 @@
-import 'package:raindrop/raindrop.dart';
-// import 'package:raindrop/src/queries/select.dart' as x;
+part of 'raindrop.dart';
 
 /// {@template raindrop_executor}
 ///
 /// {@endtemplate}
 class RaindropExecutor<D extends Delegate> {
   /// {@macro raindrop_executor}
-  const RaindropExecutor(this.delegate);
+  RaindropExecutor(this.delegate) : _lock = Lock();
 
   /// The delegate of the current database.
   final D delegate;
+
+  final Lock _lock;
 
   /// Execute a raw [query].
   Future<List<Map<String, dynamic>>> execute(
     String query, [
     List<Object?> values = const [],
-  ]) async {
-    return delegate.execute(query, values);
+  ]) {
+    if (Zone.current[#delegate] case final Delegate d when d != delegate) {
+      final error = StringBuffer();
+      if (delegate is RaindropDelegate) {
+        error.write('''
+You can not use the main database executor inside a transaction.''');
+      }
+      if (delegate is TransactionDelegate) {
+        error.write('''
+You can not use a parent transaction executor inside a nested transaction.''');
+      }
+      error.write('''
+
+This bypasses the current transaction context and could lead to inconsistent behavior.
+
+💡 To fix this, use the transaction executor instead.''');
+
+      throw StateError('$error');
+    }
+
+    return _lock.run(() => delegate.execute(query, values));
+  }
+
+  /// Perform a transaction on the database.
+  Future<T> transaction<T>(
+    Future<T> Function(RaindropExecutor<TransactionDelegate> tx) transaction,
+  ) {
+    return _lock.run(
+      () => delegate.transaction(
+        (tx) => runZoned(
+          () => transaction(RaindropExecutor(tx)),
+          zoneValues: {#delegate: tx},
+        ),
+      ),
+    );
   }
 
   /// Create an insert builder for inserting entities [into] the database.

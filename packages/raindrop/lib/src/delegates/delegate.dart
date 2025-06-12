@@ -1,4 +1,4 @@
-import 'package:raindrop/raindrop.dart';
+part of 'delegates.dart';
 
 /// {@template delegate}
 /// Abstract delegate class that provides all the necessary components to talk
@@ -16,6 +16,11 @@ abstract class Delegate {
   Future<List<Map<String, dynamic>>> execute(
     String query,
     List<Object?> values,
+  );
+
+  /// Perform a transaction on the database.
+  Future<T> transaction<T>(
+    Future<T> Function(TransactionDelegate delegate) transaction,
   );
 
   /// Create an insert builder for an entity.
@@ -56,6 +61,9 @@ abstract class Delegate {
     RaindropExecutor executor,
     Table<S> from,
   ) {
-    return DeleteAllBuilder(executor, config: QueryConfig.from({#from: from}));
+    return DeleteAllBuilder(
+      executor,
+      config: QueryConfig.from({#from: from}),
+    );
   }
 }

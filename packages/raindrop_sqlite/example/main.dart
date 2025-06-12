@@ -67,5 +67,24 @@ CREATE TABLE IF NOT EXISTS items (
 
   print('Deleted the following users: $deletedUsers');
 
+  await Future.wait([
+    (() {
+      return db.transaction((tx) async {
+        await tx.execute('SELECT 1');
+        await tx.transaction((tx2) async {
+          await tx2.execute('SELECT 2');
+        });
+      });
+    })(),
+    (() {
+      return db.transaction((tx) {
+        return tx.transaction((tx2) {
+          return tx2.execute('SELECT 3');
+        });
+      });
+    })(),
+    db.execute('SELECT 4'),
+  ]);
+
   await db.close();
 }
