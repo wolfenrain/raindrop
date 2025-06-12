@@ -5,10 +5,16 @@ part of 'raindrop.dart';
 /// {@endtemplate}
 class RaindropExecutor<D extends Delegate> {
   /// {@macro raindrop_executor}
-  RaindropExecutor(this.delegate) : _lock = Lock();
+  RaindropExecutor(
+    this.delegate, {
+    required Logger logger,
+  })  : _log = logger,
+        _lock = Lock();
 
   /// The delegate of the current database.
   final D delegate;
+
+  final Logger _log;
 
   final Lock _lock;
 
@@ -36,7 +42,10 @@ This bypasses the current transaction context and could lead to inconsistent beh
       throw StateError('$error');
     }
 
-    return _lock.run(() => delegate.execute(query, values));
+    return _lock.run(() {
+      _log.query(query, values);
+      return delegate.execute(query, values);
+    });
   }
 
   /// Perform a transaction on the database.
@@ -46,7 +55,7 @@ This bypasses the current transaction context and could lead to inconsistent beh
     return _lock.run(
       () => delegate.transaction(
         (tx) => runZoned(
-          () => transaction(RaindropExecutor(tx)),
+          () => transaction(RaindropExecutor(tx, logger: _log)),
           zoneValues: {#delegate: tx},
         ),
       ),

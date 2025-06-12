@@ -13,7 +13,7 @@ part 'raindrop_executor.dart';
 /// {@endtemplate}
 class Raindrop extends RaindropExecutor<RaindropDelegate> {
   /// {@macro raindrop}
-  Raindrop(super.delegate);
+  Raindrop(super.delegate, {super.logger = const NoopLogger()});
 
   /// Ensure the database is open.
   Future<void> ensureOpen() {

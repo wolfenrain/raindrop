@@ -1,13 +1,23 @@
+import 'dart:io';
+
 import 'package:raindrop/raindrop.dart';
 import 'package:raindrop_sqlite/raindrop_sqlite.dart';
 
 import 'schemas/items.dart';
 import 'schemas/users.dart';
 
-import 'utils.dart';
+class ExampleLogger implements Logger {
+  @override
+  void query(String query, List<Object?> values) {
+    stdout.writeln('\x1B[90m$query => $values\x1B[0m');
+  }
+}
 
 void main() async {
-  final db = Raindrop(SQLiteDelegate.open('example.db'));
+  final db = Raindrop(
+    SQLiteDelegate.open('example.db'),
+    logger: ExampleLogger(),
+  );
 
   await db.execute('''
 CREATE TABLE IF NOT EXISTS users (

@@ -104,13 +104,9 @@ mixin _DatabaseDelegate on Delegate {
     List<Object?> values,
   ) {
     try {
-      print(query);
-      print(values);
       final result = _database.select(query, values);
       return Future.value(result.map((e) => {...e}).toList());
-    } on SqliteException catch (err) {
-      print(err);
-      print(err.runtimeType);
+    } on SqliteException {
       rethrow;
     }
   }
