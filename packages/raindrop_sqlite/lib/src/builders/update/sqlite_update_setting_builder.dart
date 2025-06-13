@@ -30,7 +30,7 @@ class SQLiteUpdateWhereBuilder<S extends Schema<S>, V, R>
 }
 
 // TODO(wolfen): better return type
-extension PostgresUpdateReturningExtension<S extends Schema<S>, V>
+extension SQLiteUpdateReturningExtension<S extends Schema<S>, V>
     on UpdateWhereBuilder<S, V, void> {
   SQLiteUpdateReturningBuilder<S, V> returning() {
     return SQLiteUpdateReturningBuilder<S, V>(

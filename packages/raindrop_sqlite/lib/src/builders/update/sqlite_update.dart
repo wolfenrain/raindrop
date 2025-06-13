@@ -7,7 +7,7 @@ export 'sqlite_update_setting_builder.dart';
 /// SQL update statement tailored for SQLite.
 /// {@endtemplate}
 class SQLiteUpdate<S extends Schema<S>, V> extends Update<S, V> {
-  /// {@macro postgres_update}
+  /// {@macro sqlite_update}
   SQLiteUpdate({
     required super.set,
     required super.table,
