@@ -166,6 +166,7 @@ class SQLiteDialect extends SqlDialect {
     if (update is SQLiteUpdate<S, V>) {
       if (update.withReturning) {
         buffer.write(' RETURNING ');
+
         for (final set in setting) {
           if (set is UpdateableColumn) {
             buffer
@@ -174,8 +175,12 @@ class SQLiteDialect extends SqlDialect {
               buffer.write(', ');
             }
           } else if (set is UpdateableTable) {
-            // TODO(wolfen): not yet implemented
-            throw UnimplementedError('${set.runtimeType}');
+            for (final column in set.table.columns) {
+              buffer.write('${column.name} as "${registry.name(column)}"');
+              if (column != set.table.columns.last) {
+                buffer.write(', ');
+              }
+            }
           } else {
             throw UnimplementedError('${set.runtimeType}');
           }
