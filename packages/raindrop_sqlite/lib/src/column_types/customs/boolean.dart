@@ -7,7 +7,7 @@ extension BooleanColumnDefinition<S extends Schema<S>> on SchemaBuilder<S> {
     // ignore: avoid_positional_boolean_parameters
     bool? value,
   ) {
-    return transform<bool, int>(
+    return custom<bool, int>(
       BooleanColumn.new,
       name,
       field,

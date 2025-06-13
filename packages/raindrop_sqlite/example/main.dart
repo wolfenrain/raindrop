@@ -4,6 +4,7 @@ import 'package:raindrop/raindrop.dart';
 import 'package:raindrop_sqlite/raindrop_sqlite.dart';
 
 // import 'schemas/items.dart';
+import 'schemas/pets.dart';
 import 'schemas/users.dart';
 
 class ExampleLogger implements Logger {
@@ -27,10 +28,10 @@ CREATE TABLE IF NOT EXISTS users (
 );''');
 
   await db.execute('''
-CREATE TABLE IF NOT EXISTS items (
+CREATE TABLE IF NOT EXISTS pets (
   id INTEGER NOT NULL PRIMARY KEY,
-  label TEXT NOT NULL,
-  user_id INTEGER NULL
+  name TEXT NOT NULL,
+  owner_id INTEGER NULL
 );''');
 
   await db.ensureOpen();
@@ -62,6 +63,15 @@ CREATE TABLE IF NOT EXISTS items (
       .returning();
 
   print('Updated to the following names: $updatedNames');
+
+  // final x = await db
+  //     .select()
+  //     .from(users)
+  //     .join(posts, on: users.id.equals(posts.ownerId))
+  //     .join(posts, on: users.id.equals(posts.ownerId));
+
+  // print(x);
+  // return;
 
   // final publicUser = (users.name, users.id).$;
   // final publicItem = (items.id, items.label).$;

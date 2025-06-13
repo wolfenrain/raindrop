@@ -8,7 +8,7 @@ extension BigIntColumnDefinition<S extends Schema<S>> on SchemaBuilder<S> {
     Field<S, BigInt> field,
     BigInt? value,
   ) {
-    return transform<BigInt, Uint8List>(
+    return custom<BigInt, Uint8List>(
       BigIntColumn.new,
       name,
       field,

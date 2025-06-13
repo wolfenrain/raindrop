@@ -6,7 +6,7 @@ extension DateTimeColumnDefinition<S extends Schema<S>> on SchemaBuilder<S> {
     Field<S, DateTime> field,
     DateTime? value,
   ) {
-    return transform<DateTime, int>(
+    return custom<DateTime, int>(
       DateTimeColumn.new,
       name,
       field,
