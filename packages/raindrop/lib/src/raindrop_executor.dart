@@ -70,7 +70,9 @@ This bypasses the current transaction context and could lead to inconsistent beh
   }
 
   /// Create a select builder that can filter down on [selectable] if needed.
-  SelectBuilder<V> select<V extends Object?>([Selectable<V>? selectable]) {
+  SelectBuilder<V> select<V extends Object?>([
+    Selectable<V>? selectable,
+  ]) {
     return delegate.select(this, selectable);
   }
 
@@ -89,9 +91,7 @@ This bypasses the current transaction context and could lead to inconsistent beh
   }
 
   /// Execute the [query] on the database and return the mapped entities.
-  Future<List<V>> query<S extends Schema<S>, V>(
-    Query<S, V> queryOrBuilder,
-  ) async {
+  Future<List<V>> query<S extends Schema<S>, V>(Query<S, V> queryOrBuilder) {
     var query = queryOrBuilder;
     if (query case final ToQuery<S, V> builder) {
       query = builder.toQuery();

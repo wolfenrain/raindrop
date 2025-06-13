@@ -1,21 +1,22 @@
 import 'package:raindrop/raindrop.dart';
+import 'package:raindrop_sqlite/raindrop_sqlite.dart';
 
 class Item extends Schema<Item> {
   Item({
     required String label,
     int? userId,
     int? id,
-  })  : id = _builder.primaryKey('id', (s) => s.id, value: id),
-        userId = _builder.integer('user_id', (s) => s.userId, value: userId),
-        label = _builder.text('label', (s) => s.label, value: label);
+  })  : id = $.integer('id', (s) => s.id, id).primaryKey(autoIncrement: true),
+        userId = $.integer('user_id', (s) => s.userId, userId),
+        label = $.text('label', (s) => s.label, label);
 
-  final PrimaryKey id;
+  final IntColumn? id;
 
   final IntColumn userId;
 
   final TextColumn label;
 
-  static const _builder = SchemaBuilder<Item>();
+  static const $ = SchemaBuilder<Item>();
 }
 
 final items = table(

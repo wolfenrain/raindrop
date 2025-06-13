@@ -43,7 +43,7 @@ class AliasRegistry<S extends Schema<S>, V> {
         for (final item in set.items) {
           if (item is UpdateableColumn) {
             add(item.column);
-          } else if (item is UpdatableTable) {
+          } else if (item is UpdateableTable) {
             add(item.table);
           } else {
             throw UnimplementedError('${item.runtimeType}');

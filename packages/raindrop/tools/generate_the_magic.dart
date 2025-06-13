@@ -31,7 +31,7 @@ import 'package:raindrop/raindrop.dart';
   for (var i = 2; i < amount; i++) {
     vs.add(i);
     buffer.writeln('''
-extension SelectableColumns$i<V${vs.join(', V')}> on (${vs.map((v) => 'ColumnType<V$v>').join(', ')}) {
+extension SelectableColumns$i<V${vs.join(', V')}> on (${vs.map((v) => 'ColumnOf<V$v>').join(', ')}) {
   SelectableResult<(V${vs.join(', V')})> get \$ {
     return SelectableResult([${vs.map((i) => 'this.\$$i.\$').join(', ')}]);
   }

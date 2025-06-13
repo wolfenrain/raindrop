@@ -3,16 +3,20 @@ import 'dart:async';
 import 'package:raindrop/raindrop.dart';
 
 class SchemaFake {
-  const SchemaFake();
+  SchemaFake();
 
-  int primaryKey() => -1;
+  int _counter = 0;
 
-  String text() => '-1';
+  int primaryKey() => _counter++ * -1;
 
-  int integer() => -1;
+  String text() => '${_counter++ * -1}';
+
+  int integer() => _counter++ * -1;
+
+  DateTime dateTime() => DateTime.fromMicrosecondsSinceEpoch(_counter++);
 }
 
-const fakes = SchemaFake();
+final fakes = SchemaFake();
 
 class SchemaBuilder<S extends Schema<S>> {
   const SchemaBuilder();
@@ -42,21 +46,23 @@ class Table<S extends Schema<S>> implements Selectable<S> {
     if (instance is! S) {
       throw StateError('Only $S types can be converted to values');
     }
-    return [...columns.map((c) => c.valueOf!(instance))];
+    return [
+      ...columns.map((c) => c.encode(c.valueOf!(instance))),
+    ];
   }
 
-  Column<S, T> addColumn<T extends Object?>(
+  Column<S, V> addColumn<V extends Object>(
     String name,
-    T Function(S) valueOf, {
+    Field<S, V> field, {
     bool isNullable = false,
-    bool isPrimaryKey = false,
+    ColumnTransformer<V, Object?>? transformer,
   }) {
-    final column = Column<S, T>(
+    final column = Column<S, V>(
       this,
       name,
-      valueOf: valueOf,
+      valueOf: field,
       isNullable: isNullable,
-      isPrimaryKey: isPrimaryKey,
+      transformer: transformer,
     );
     columns.add(column);
     return column;

@@ -3,7 +3,7 @@ import 'dart:io';
 import 'package:raindrop/raindrop.dart';
 import 'package:raindrop_sqlite/raindrop_sqlite.dart';
 
-import 'schemas/items.dart';
+// import 'schemas/items.dart';
 import 'schemas/users.dart';
 
 class ExampleLogger implements Logger {
@@ -15,14 +15,15 @@ class ExampleLogger implements Logger {
 
 void main() async {
   final db = Raindrop(
-    SQLiteDelegate.open('example.db'),
+    SQLiteDelegate.memory(),
     logger: ExampleLogger(),
   );
 
   await db.execute('''
 CREATE TABLE IF NOT EXISTS users (
   id INTEGER NOT NULL PRIMARY KEY,
-  name TEXT NOT NULL
+  name TEXT NOT NULL,
+  deleted_at INTEGER
 );''');
 
   await db.execute('''
@@ -69,6 +70,14 @@ CREATE TABLE IF NOT EXISTS items (
   //     .from(users)
   //     .join(items, on: items.userId.equals(users.id));
   // print(userName);
+
+  final softDeleted = await db
+      .update(users)
+      .set(users.deletedAt.set(DateTime.now()))
+      .where(users.id.equals(1))
+      .returning();
+
+  print('Soft deleted the following users: $softDeleted');
 
   final deletedUsers = await db
       .delete(from: users)

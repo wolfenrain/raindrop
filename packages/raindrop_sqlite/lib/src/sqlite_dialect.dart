@@ -107,8 +107,9 @@ class SQLiteDialect extends SqlDialect {
             '${registry.name(column.table)}."${column.name}"',
         ].join(' ');
       });
-      buffer.write(columns.join(', '));
-      buffer.write(')');
+      buffer
+        ..write(columns.join(', '))
+        ..write(')');
     }
 
     if (select.limit != null) {
@@ -131,38 +132,30 @@ class SQLiteDialect extends SqlDialect {
     final setting = switch (update.set) {
       final UpdateableResult<S, V> result => result.items,
       final UpdateableColumn<S, V> column => [column],
-      final UpdatableTable<S> table => [table],
+      final UpdateableTable<S> table => [table],
       _ => throw UnsupportedError('${update.set.runtimeType}'),
     };
 
     for (final set in setting) {
       if (set is UpdateableColumn) {
         buffer.write(' ${set.column.name} = \$${values.length + 1}');
-        values.add(set.value);
+
+        values.add(set.column.encode(set.value));
         if (set != setting.last) {
           buffer.write(', ');
         }
-      } else if (set is UpdatableTable) {
-        // TODO(wolfen): not yet implemented
-        throw UnimplementedError('${set.runtimeType}');
+      } else if (set is UpdateableTable) {
+        for (final column in set.table.columns) {
+          buffer.write(' ${column.name} = \$${values.length + 1}');
+          values.add(column.encode(column.valueOf!(set.value)));
+          if (column != set.table.columns.last) {
+            buffer.write(', ');
+          }
+        }
       } else {
         throw UnimplementedError('${set.runtimeType}');
       }
     }
-
-    // // If the set value is a reference we only check the modified values but if
-    // // the set value is an entity instance we copy it and get all (original)
-    // // values.
-    // final data = switch (update.set) {
-    //   Reference<E>() => (update.set as Reference<E>).modified,
-    //   E() => (update.set.copyWith() as Reference<E>).original,
-    // };
-
-    // // Write all the data entries as SQL columns with value references.
-    // for (final entry in data.entries) {
-    //   buffer.write(' ${entry.key} = \$${values.length + 1}');
-    //   values.add(entry.value);
-    // }
 
     if (update.where != null) {
       buffer.write(
@@ -180,7 +173,7 @@ class SQLiteDialect extends SqlDialect {
             if (set != setting.last) {
               buffer.write(', ');
             }
-          } else if (set is UpdatableTable) {
+          } else if (set is UpdateableTable) {
             // TODO(wolfen): not yet implemented
             throw UnimplementedError('${set.runtimeType}');
           } else {
@@ -253,16 +246,16 @@ class SQLiteDialect extends SqlDialect {
     return buffer.toString();
   }
 
-  String translateSQL(SQL sql, List<Object?> values, AliasRegistry registry) {
+  String translateSQL(SQL s, List<Object?> values, AliasRegistry registry) {
     final buffer = StringBuffer();
-    for (final chunk in sql.chunks) {
-      if (chunk is RawSQL) {
+    for (final chunk in s.chunks) {
+      if (chunk case final RawSQL chunk) {
         buffer.write(chunk.sql);
-      } else if (chunk is Column) {
-        buffer.write('${registry.name(chunk.table)}."${chunk.name}"');
-      } else if (chunk is List) {
+      } else if (chunk case final Column column) {
+        buffer.write('${registry.name(column.table)}."${column.name}"');
+      } else if (chunk case final List<dynamic> values) {
         buffer.write('(');
-        for (final value in chunk) {
+        for (final value in values) {
           final i = values.length + 1;
           buffer.write('\$$i,');
           values.add(value);
@@ -272,6 +265,10 @@ class SQLiteDialect extends SqlDialect {
         final i = values.length + 1;
         buffer.write('\$$i');
         values.add(chunk);
+      }
+
+      if (chunk != s.chunks.last) {
+        buffer.write(' ');
       }
     }
     return buffer.toString();

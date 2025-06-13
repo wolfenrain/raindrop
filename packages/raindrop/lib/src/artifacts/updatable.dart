@@ -12,10 +12,10 @@ abstract interface class Updateable<S extends Schema<S>, V> {
     Map<String, dynamic> data,
     AliasRegistry registry,
   ) {
-    if (item is UpdatableTable<S>) {
-      // item.table;
+    if (item case final UpdateableTable<S> update) {
+      return update.table.create(data) as V;
     } else if (item is UpdateableColumn<S, V>) {
-      return data[registry.name(item.column)] as V;
+      return item.column.decode(data[registry.name(item.column)]) as V;
     }
 
     throw UnsupportedError('$item');
@@ -39,9 +39,9 @@ class UpdateableColumn<S extends Schema<S>, V> implements Updateable<S, V> {
 /// {@template updateable_table}
 /// A table that can be updated.
 /// {@endtemplate}
-class UpdatableTable<S extends Schema<S>> implements Updateable<S, S> {
+class UpdateableTable<S extends Schema<S>> implements Updateable<S, S> {
   /// {@macro updateable_table}
-  const UpdatableTable(this.table, this.value);
+  const UpdateableTable(this.table, this.value);
 
   /// The table in question.
   final Table<S> table;
@@ -51,17 +51,16 @@ class UpdatableTable<S extends Schema<S>> implements Updateable<S, S> {
 }
 
 /// Provide a set method to a column to update a column.
-extension UpdateColumn<V> on Column<Schema, V> {
+extension UpdateColumn<V> on ColumnOf<V> {
   /// Make the column updateable by [value].
-  UpdateableColumn<S, V> set<S extends Schema<S>>(V value) {
-    return UpdateableColumn(this as Column<S, V>, value);
-  }
+  UpdateableColumn<S, V> set<S extends Schema<S>>(V value) =>
+      UpdateableColumn($ as Column<S, V>, value);
 }
 
 /// Provide a set method to a table to update a record.
-extension UpdateRecord<S extends Schema<S>> on Table<S> {
+extension UpdateRecord<S extends Schema<S>> on S {
   /// Make the table updateable by [value].
-  UpdatableTable<S> set(S value) => UpdatableTable(this, value);
+  UpdateableTable<S> set(S value) => UpdateableTable($, value);
 }
 
 /// {@template updatable_result}
@@ -82,7 +81,7 @@ class UpdateableResult<S extends Schema<S>, V> implements Updateable<S, V> {
         yield* update.items;
       } else if (update is UpdateableColumn) {
         yield update;
-      } else if (update is UpdatableTable) {
+      } else if (update is UpdateableTable) {
         yield update;
       } else {
         yield update;

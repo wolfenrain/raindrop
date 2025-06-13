@@ -1,17 +1,27 @@
 import 'package:raindrop/raindrop.dart';
+import 'package:raindrop_sqlite/raindrop_sqlite.dart';
 
 class User extends Schema<User> {
   User({
     required String name,
+    DateTime? deletedAt,
     int? id,
-  })  : id = _builder.primaryKey('id', (s) => s.id, value: id),
-        name = _builder.text('name', (s) => s.name, value: name);
+  })  : id = $.integer('id', (s) => s.id, id).primaryKey(autoIncrement: true),
+        name = $.text('name', (s) => s.name, name),
+        deletedAt = $.dateTime(
+          'deleted_at',
+          (s) => s.deletedAt,
+          deletedAt,
+        );
 
-  final PrimaryKey id;
+  final IntColumn? id;
 
   final TextColumn name;
 
-  static const _builder = SchemaBuilder<User>();
+  // TODO: if this is not nullable it should be an error on it's definition.
+  final DateTimeColumn? deletedAt;
+
+  static const $ = SchemaBuilder<User>();
 }
 
 final users = table(
@@ -19,5 +29,6 @@ final users = table(
   () => User(
     id: fakes.primaryKey(),
     name: fakes.text(),
+    deletedAt: fakes.dateTime(),
   ),
 );
