@@ -8,14 +8,14 @@ import 'package:raindrop/raindrop.dart';
 abstract interface class Updateable<S extends Schema<S>, V> {
   /// Read the given updatable into proper data of the type [V].
   static V read<S extends Schema<S>, V>(
-    Updateable<S, V> item,
+    Updateable<S, Object> item,
     Map<String, dynamic> data,
     AliasRegistry registry,
   ) {
     if (item case final UpdateableTable<S> update) {
       return update.table.create(data) as V;
-    } else if (item is UpdateableColumn<S, V>) {
-      return item.column.decode(data[registry.name(item.column)]) as V;
+    } else if (item case final UpdateableColumn<S, V> update) {
+      return update.column.decode(data[registry.name(update.column)]) as V;
     }
 
     throw UnsupportedError('$item');

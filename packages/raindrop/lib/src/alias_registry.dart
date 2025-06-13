@@ -39,8 +39,8 @@ class AliasRegistry<S extends Schema<S>, V> {
       result.items.forEach(add);
     } else if (query case final Update<S, V> update) {
       final set = update.set;
-      if (set is UpdateableResult<S, V>) {
-        for (final item in set.items) {
+      if (set case final UpdateableResult<S, V> update) {
+        for (final item in update.items) {
           if (item is UpdateableColumn) {
             add(item.column);
           } else if (item is UpdateableTable) {
@@ -49,8 +49,8 @@ class AliasRegistry<S extends Schema<S>, V> {
             throw UnimplementedError('${item.runtimeType}');
           }
         }
-      } else if (set is UpdateableColumn<S, V>) {
-        add(set.column);
+      } else if (set case final UpdateableColumn<S, V> update) {
+        add(update.column);
       }
     } else if (query case final Delete<S, V> delete) {
       add(delete.from);
