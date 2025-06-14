@@ -8,17 +8,14 @@ abstract class SqlDialect {
   const SqlDialect();
 
   /// Translate [query] into a query statement with values.
-  (String, List<Object?>) translate<S extends Schema<S>, V>(
-    Query<S, V> query,
-    AliasRegistry<S, V> registry,
-  ) {
+  (String, List<Object?>) translate<S extends Schema<S>, V>(Query<S, V> query) {
     return Raindrop.tracer.trace('$runtimeType.translate', (span) {
       final values = <Object?>[];
       final sql = switch (query) {
-        Insert<S, V>() => translateInsert(query, values, registry),
-        Select<S, V>() => translateSelect(query, values, registry),
-        Update<S, V>() => translateUpdate(query, values, registry),
-        Delete<S, V>() => translateDelete(query, values, registry),
+        Insert<S, V>() => translateInsert(query, values),
+        Select<S, V>() => translateSelect(query, values),
+        Update<S, V>() => translateUpdate(query, values),
+        Delete<S, V>() => translateDelete(query, values),
         _ => throw UnsupportedError('${query.runtimeType}'),
       };
 
@@ -28,39 +25,41 @@ abstract class SqlDialect {
     });
   }
 
+  /// Escape the [name] for SQL consumption.
+  String escapeName(String name);
+
+  /// Escape the [number] for SQL consumption.
+  String escapeParam(int number);
+
   /// Translate an [insert].
   String translateInsert<S extends Schema<S>, V>(
     Insert<S, V> insert,
     List<Object?> values,
-    AliasRegistry<S, V> registry,
   );
 
   /// Translate a [select].
   String translateSelect<S extends Schema<S>, V>(
     Select<S, V> select,
     List<Object?> values,
-    AliasRegistry<S, V> registry,
   );
 
   /// Translate an [update].
   String translateUpdate<S extends Schema<S>, V>(
     Update<S, V> update,
     List<Object?> values,
-    AliasRegistry<S, V> registry,
   );
 
   /// Translate a [delete].
   String translateDelete<S extends Schema<S>, V>(
     Delete<S, V> delete,
     List<Object?> values,
-    AliasRegistry<S, V> registry,
   );
 
   /// Translate a [filter].
   String translateFilter(
     Filter filter,
-    List<Object?> values,
-    AliasRegistry registry, [
+    List<Object?> values, {
+    bool singleTable = false,
     int level = 0,
-  ]);
+  });
 }

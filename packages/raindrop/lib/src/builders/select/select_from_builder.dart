@@ -40,54 +40,6 @@ class SelectFromBuilder<S extends Schema<S>, V> extends QueryBuilder<S, V>
     );
   }
 
-  /// Set a join clause of the builder.
-  SelectFromBuilder<S, V> join<O extends Schema<O>>(
-    O table, {
-    required Filter on,
-  }) {
-    return SelectFromBuilder(
-      executor,
-      config: config.copyWith({
-        #joins: <Join>[
-          ...(config.get(#joins) ?? []),
-          InnerJoin<O>(Table.getForSchema<O>()!, on: on),
-        ],
-      }),
-    );
-  }
-
-  /// Set a left join clause of the builder.
-  SelectFromBuilder<S, V> leftJoin<O extends Schema<O>>(
-    O table, {
-    required Filter on,
-  }) {
-    return SelectFromBuilder(
-      executor,
-      config: config.copyWith({
-        #joins: <Join>[
-          ...config.get(#joins) ?? [],
-          LeftJoin<O>(Table.getForSchema<O>()!, on: on),
-        ],
-      }),
-    );
-  }
-
-  /// Set a right join clause of the builder.
-  SelectFromBuilder<S, V> rightJoin<O extends Schema<O>>(
-    O table, {
-    required Filter on,
-  }) {
-    return SelectFromBuilder(
-      executor,
-      config: config.copyWith({
-        #joins: <Join>[
-          ...config.get(#joins) ?? [],
-          RightJoin<O>(Table.getForSchema<O>()!, on: on),
-        ],
-      }),
-    );
-  }
-
   @override
   Select<S, V> toQuery() {
     return Select(
@@ -101,3 +53,98 @@ class SelectFromBuilder<S extends Schema<S>, V> extends QueryBuilder<S, V>
     );
   }
 }
+
+// TODO: come up with a way for select from with join with a custom select.
+// extension SelectWithInnerJoin1<S extends Schema<S>> on SelectFromBuilder<S, S> {
+//   /// Set a join clause of the builder.
+//   SelectFromBuilder<S, (S, O)> join<O extends Schema<O>>(
+//     O table, {
+//     required Filter on,
+//   }) {
+//     final (s) = config.get(#selecting) as Table<S>;
+//     final o = Table.get(table)! as Table<O>;
+
+//     return SelectFromBuilder(
+//       executor,
+//       config: config.copyWith({
+//         #selecting: SelectableResult<(S, O)>([s, o]),
+//         #joins: <Join>[
+//           ...(config.get(#joins) ?? []),
+//           InnerJoin<O>(o, on: on),
+//         ],
+//       }),
+//     );
+//   }
+// }
+
+// extension SelectWithInnerJoin2<
+//     S extends Schema<S>,
+//     S1 extends Schema<S1>? //
+//     > on SelectFromBuilder<S, (S, S1)> {
+//   /// Set a join clause of the builder.
+//   SelectFromBuilder<S, (S, S1, O)> join<O extends Schema<O>>(
+//     O table, {
+//     required Filter on,
+//   }) {
+//     final result = config.get(#selecting) as SelectableResult;
+//     final o = Table.get(table)! as Table<O>;
+
+//     return SelectFromBuilder(
+//       executor,
+//       config: config.copyWith({
+//         #selecting: SelectableResult<(S, S1, O)>([...result.selected, o]),
+//         #joins: <Join>[
+//           ...(config.get(#joins) ?? []),
+//           InnerJoin<O>(o, on: on),
+//         ],
+//       }),
+//     );
+//   }
+// }
+
+// extension SelectWithLeftJoin1<S extends Schema<S>> on SelectFromBuilder<S, S> {
+//   /// Set a left join clause of the builder.
+//   SelectFromBuilder<S, (S, O?)> leftJoin<O extends Schema<O>>(
+//     O table, {
+//     required Filter on,
+//   }) {
+//     final (s) = config.get(#selecting) as Table<S>;
+//     final o = Table.get(table)! as Table<O>;
+
+//     return SelectFromBuilder(
+//       executor,
+//       config: config.copyWith({
+//         #selecting: SelectableResult<(S, O)>([s, o]),
+//         #joins: <Join>[
+//           ...config.get(#joins) ?? [],
+//           LeftJoin<O>(Table.get(table)! as Table<O>, on: on),
+//         ],
+//       }),
+//     );
+//   }
+// }
+
+// extension SelectWithLeftJoin2<
+//     S extends Schema<S>,
+//     S1 extends Schema<S1>? //
+//     > on SelectFromBuilder<S, (S, S1)> {
+//   /// Set a left join clause of the builder.
+//   SelectFromBuilder<S, (S, S1, O?)> leftJoin<O extends Schema<O>>(
+//     O table, {
+//     required Filter on,
+//   }) {
+//     final result = config.get(#selecting) as SelectableResult;
+//     final o = Table.get(table)! as Table<O>;
+
+//     return SelectFromBuilder(
+//       executor,
+//       config: config.copyWith({
+//         #selecting: SelectableResult<(S, S1, O)>([...result.selected, o]),
+//         #joins: <Join>[
+//           ...config.get(#joins) ?? [],
+//           LeftJoin<O>(Table.get(table)! as Table<O>, on: on),
+//         ],
+//       }),
+//     );
+//   }
+// }

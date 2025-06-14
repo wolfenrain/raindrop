@@ -13,10 +13,7 @@ abstract class Delegate {
 
   /// Execute a [query] with it's [values] inside the database to which this
   /// [Delegate] is connected.
-  Future<List<Map<String, dynamic>>> execute(
-    String query,
-    List<Object?> values,
-  );
+  Future<DatabaseResult> execute(String query, List<Object?> values);
 
   /// Perform a transaction on the database.
   Future<T> transaction<T>(

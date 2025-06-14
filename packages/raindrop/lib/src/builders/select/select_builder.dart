@@ -17,7 +17,7 @@ class SelectBuilder<V extends Object?> extends QueryBuilder<NoSchema, V> {
 extension NothingSelected on SelectBuilder<Object?> {
   /// Create a from builder where the whole table gets selected.
   SelectFromBuilder<S, S> from<S extends Schema<S>>(S from) {
-    final table = Table.getForSchema<S>();
+    final table = Table.get(from);
     return SelectFromBuilder(
       executor,
       config: config.copyWith({#selecting: table, #from: table}),
@@ -29,10 +29,9 @@ extension NothingSelected on SelectBuilder<Object?> {
 extension SomethingSelected<V extends Object> on SelectBuilder<V> {
   /// Create a from builder.
   SelectFromBuilder<S, V> from<S extends Schema<S>>(S from) {
-    final table = Table.getForSchema<S>();
     return SelectFromBuilder(
       executor,
-      config: config.copyWith({#from: table}),
+      config: config.copyWith({#from: Table.get(from)}),
     );
   }
 }

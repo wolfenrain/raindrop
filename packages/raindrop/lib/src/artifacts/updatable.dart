@@ -5,22 +5,7 @@ import 'package:raindrop/raindrop.dart';
 /// Interface for making a class updateable.
 ///
 /// Used internally.
-abstract interface class Updateable<S extends Schema<S>, V> {
-  /// Read the given updatable into proper data of the type [V].
-  static V read<S extends Schema<S>, V>(
-    Updateable<S, Object> item,
-    Map<String, dynamic> data,
-    AliasRegistry registry,
-  ) {
-    if (item case final UpdateableTable<S> update) {
-      return update.table.create(data) as V;
-    } else if (item case final UpdateableColumn<S, V> update) {
-      return update.column.decode(data[registry.name(update.column)]) as V;
-    }
-
-    throw UnsupportedError('$item');
-  }
-}
+abstract interface class Updateable<S extends Schema<S>, V> {}
 
 /// {@template updateable_column}
 /// A column that can be updated.
@@ -57,8 +42,8 @@ extension UpdateColumn<V> on ColumnOf<V> {
       UpdateableColumn($ as Column<S, V>, value);
 }
 
-/// Provide a set method to a table to update a record.
-extension UpdateRecord<S extends Schema<S>> on S {
+/// Provide a set method to a table to update an instance.
+extension UpdateTable<S extends Schema<S>> on S {
   /// Make the table updateable by [value].
   UpdateableTable<S> set(S value) => UpdateableTable($, value);
 }
@@ -70,22 +55,8 @@ extension UpdateRecord<S extends Schema<S>> on S {
 /// {@endtemplate}
 class UpdateableResult<S extends Schema<S>, V> implements Updateable<S, V> {
   /// {@macro updatable_result}
-  const UpdateableResult(this._updating);
+  const UpdateableResult(this.updating);
 
-  final List<Updateable> _updating;
-
-  /// The updateable items.
-  Iterable<Updateable> get items sync* {
-    for (final update in _updating) {
-      if (update is UpdateableResult) {
-        yield* update.items;
-      } else if (update is UpdateableColumn) {
-        yield update;
-      } else if (update is UpdateableTable) {
-        yield update;
-      } else {
-        yield update;
-      }
-    }
-  }
+  /// The updated items.
+  final List<Updateable> updating;
 }

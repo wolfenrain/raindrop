@@ -33,8 +33,7 @@ abstract class QueryBuilder<S extends Schema<S>, V> implements Query<S, V> {
   String toString() {
     if (this is ToQuery<S, V>) {
       final query = (this as ToQuery<S, V>).toQuery();
-      final registry = AliasRegistry(query);
-      return executor.delegate.dialect.translate(query, registry).$1;
+      return executor.delegate.dialect.translate(query).$1;
     }
     return super.toString();
   }

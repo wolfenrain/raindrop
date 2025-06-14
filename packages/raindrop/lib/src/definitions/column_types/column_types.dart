@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:convert';
 
 import 'package:raindrop/raindrop.dart';
 
@@ -34,7 +33,7 @@ extension ColumnField<S extends Schema<S>> on SchemaBuilder<S> {
     return value;
   }
 
-  I? transform<I extends Object, O extends Object>(
+  I? custom<I extends Object, O extends Object>(
     ColumnType<I?> Function(I) typeBuilder,
     String name,
     Field<S, I> field,
@@ -60,6 +59,10 @@ extension type ColumnType<V extends Object?>._(V _) {
 }
 
 extension ColumnTypeX<T extends ColumnType<V>, V extends Object?> on T? {
+  // TODO: validate if this works
+  /// Returns the nullable version of this column.
+  ColumnType<V>? get nullable => this;
+
   T? primaryKey({required bool autoIncrement}) {
     if (Zone.current[#table] case final Table table) {
       table.columns.last.isPrimaryKey = true;
@@ -71,14 +74,14 @@ extension ColumnTypeX<T extends ColumnType<V>, V extends Object?> on T? {
 
 extension ColumnOperators<V extends Object?> on ColumnOf<V> {
   /// The column of this specific type.
-  Column<Schema, V> get $ =>
-      ColumnType._typeToColumn[this]! as Column<Schema, V>;
+  Column<Schema<Object?>, V> get $ =>
+      ColumnType._typeToColumn[this]! as Column<Schema<Object?>, V>;
 
   /// Row value for column is in the list of [values].
   SQL inList(List<V> values) => SQL([$, 'IN', values]);
 
   /// Returns the count of what is being selected.
-  ColumnTransform<Schema, int> count() => $.transform(
+  ColumnTransform<Schema<Object?>, int> count() => $.transform(
         SQL.function('COUNT', [$]),
       );
 

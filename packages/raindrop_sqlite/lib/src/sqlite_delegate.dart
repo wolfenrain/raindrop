@@ -99,15 +99,16 @@ mixin _DatabaseDelegate on Delegate {
   Database get _database;
 
   @override
-  Future<List<Map<String, dynamic>>> execute(
-    String query,
-    List<Object?> values,
-  ) {
-    try {
-      final result = _database.select(query, values);
-      return Future.value(result.map((e) => {...e}).toList());
-    } on SqliteException {
-      rethrow;
-    }
+  Future<DatabaseResult> execute(String query, List<Object?> values) {
+    final resultSet = _database.select(query, values);
+
+    return Future.value(
+      DatabaseResult(
+        columns: resultSet.columnNames,
+        rows: [...resultSet.map((row) => row.values)],
+        rowsAffected: 0, // TODO: implement
+        lastInsertedRowId: null,
+      ),
+    );
   }
 }

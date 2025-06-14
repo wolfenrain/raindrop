@@ -8,7 +8,6 @@ class _TestDialect extends SqlDialect {
   String translateInsert<S extends Schema<S>, V>(
     Insert<S, V> insert,
     List<Object?> values,
-    AliasRegistry<S, V> registry,
   ) {
     return 'INSERT';
   }
@@ -17,7 +16,6 @@ class _TestDialect extends SqlDialect {
   String translateSelect<S extends Schema<S>, V>(
     Select<S, V> select,
     List<Object?> values,
-    AliasRegistry<S, V> registry,
   ) {
     return 'SELECT';
   }
@@ -26,7 +24,6 @@ class _TestDialect extends SqlDialect {
   String translateUpdate<S extends Schema<S>, V>(
     Update<S, V> update,
     List<Object?> values,
-    AliasRegistry<S, V> registry,
   ) {
     return 'UPDATE';
   }
@@ -35,7 +32,6 @@ class _TestDialect extends SqlDialect {
   String translateDelete<S extends Schema<S>, V>(
     Delete<S, V> delete,
     List<Object?> values,
-    AliasRegistry<S, V> registry,
   ) {
     return 'DELETE';
   }
@@ -43,10 +39,10 @@ class _TestDialect extends SqlDialect {
   @override
   String translateFilter(
     Filter filter,
-    List<Object?> values,
-    AliasRegistry registry, [
+    List<Object?> values, {
     int level = 0,
-  ]) {
+    bool singleTable = false,
+  }) {
     return 'FILTER';
   }
 }
@@ -54,11 +50,11 @@ class _TestDialect extends SqlDialect {
 class Test extends Schema<Test> {
   Test({
     required String field,
-  }) : field = _builder.text('field', (s) => s.field, value: field);
+  }) : field = $.text('field', (s) => s.field, value: field);
 
   final TextColumn field;
 
-  static const _builder = SchemaBuilder<Test>();
+  static const $ = SchemaBuilder<Test>();
 }
 
 final tests = table('tests', () => Test(field: 'field'));
@@ -78,8 +74,7 @@ void main() {
 
     setUp(() {
       dialect = _TestDialect();
-
-      table = Table.getForSchema<Test>()!;
+      table = Table.get(tests)! as Table<Test>;
     });
 
     group('can translate', () {
@@ -89,19 +84,13 @@ void main() {
           values: [Test(field: 'field')],
         );
 
-        expect(
-          dialect.translate(insert, AliasRegistry(insert)).$1,
-          equals('INSERT'),
-        );
+        expect(dialect.translate(insert).$1, equals('INSERT'));
       });
 
       test('select query', () {
         final select = Select(selecting: table, from: table);
 
-        expect(
-          dialect.translate(select, AliasRegistry(select)).$1,
-          equals('SELECT'),
-        );
+        expect(dialect.translate(select).$1, equals('SELECT'));
       });
 
       test('update query', () {
@@ -110,20 +99,14 @@ void main() {
           table: table,
         );
 
-        expect(
-          dialect.translate(update, AliasRegistry(update)).$1,
-          equals('UPDATE'),
-        );
+        expect(dialect.translate(update).$1, equals('UPDATE'));
       });
     });
 
     test('can not translate unknown query', () {
       final unknown = _UnknownQuery(table);
 
-      expect(
-        () => dialect.translate(unknown, AliasRegistry(unknown)),
-        throwsUnsupportedError,
-      );
+      expect(() => dialect.translate(unknown), throwsUnsupportedError);
     });
   });
 }

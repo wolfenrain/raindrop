@@ -1,8 +1,8 @@
 import 'package:raindrop/raindrop.dart';
 
-typedef Field<S extends Schema<S>, V extends Object> = V? Function(S);
+typedef Field<S extends Schema<S>?, V extends Object> = V? Function(S);
 
-class Column<S extends Schema<S>, V extends Object?> implements Selectable<V> {
+class Column<S extends Schema<S>?, V extends Object?> implements Selectable<V> {
   Column(
     this.table,
     this.name, {
@@ -46,6 +46,7 @@ class Column<S extends Schema<S>, V extends Object?> implements Selectable<V> {
   /// If the column is nullable;
   final bool isNullable;
 
+  // TODO: should be on ColumnType
   /// Returns the nullable version of this column.
   Column<S, V?> get nullable =>
       Column(table, name, isNullable: true, isPrimaryKey: isPrimaryKey);
@@ -72,7 +73,8 @@ class Column<S extends Schema<S>, V extends Object?> implements Selectable<V> {
 }
 
 /// Provides alias information of a column.
-class ColumnAlias<S extends Schema<S>, V extends Object?> extends Column<S, V> {
+class ColumnAlias<S extends Schema<S>?, V extends Object?>
+    extends Column<S, V> {
   ColumnAlias._(
     super.table,
     super.name, {
@@ -88,7 +90,7 @@ class ColumnAlias<S extends Schema<S>, V extends Object?> extends Column<S, V> {
 /// {@template column_transform}
 /// Provides transform information of a column.
 /// {@endtemplate}
-class ColumnTransform<S extends Schema<S>, V extends Object?>
+class ColumnTransform<S extends Schema<S>?, V extends Object?>
     extends Column<S, V> {
   /// {@macro column_transform}
   ColumnTransform(super.table, super.name, this.sql);

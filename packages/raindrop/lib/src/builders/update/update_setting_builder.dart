@@ -23,8 +23,12 @@ class UpdateWhereBuilder<S extends Schema<S>, V, R> extends UpdateBuilder<S, R>
   UpdateWhereBuilder(super.executor, {required super.config});
 
   /// Filter the update query.
-  UpdateWhereBuilder<S, V, R> where(Filter where) =>
-      UpdateWhereBuilder(executor, config: config.copyWith({#where: where}));
+  UpdateWhereBuilder<S, V, R> where(Filter where) {
+    return UpdateWhereBuilder(
+      executor,
+      config: config.copyWith({#where: where}),
+    );
+  }
 
   @override
   Update<S, R> toQuery() {

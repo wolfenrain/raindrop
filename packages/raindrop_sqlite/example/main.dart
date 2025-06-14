@@ -35,7 +35,6 @@ CREATE TABLE IF NOT EXISTS pets (
 );''');
 
   await db.ensureOpen();
-
   final testUser = User(name: 'testing');
 
   final emptyResult = await db.insert(into: users).values([testUser]);
@@ -44,12 +43,12 @@ CREATE TABLE IF NOT EXISTS pets (
   final [user] = await db.insert(into: users).values([testUser]).returning();
   print('Inserted one user: $user');
 
-  final result = await db
+  final namesAndTheirOccurrences = await db
       .select((users.name.$, users.name.count()).$)
       .from(users)
-      .where(not(users.name.isNull()))
+      .where(users.deletedAt.isNull())
       .groupBy(users.name.$);
-  print('Found the following names: $result');
+  print('Found the following names: $namesAndTheirOccurrences');
 
   final usersFound = await db.select().from(users).where(
         not(users.id.equals(1)) & users.name.like('%est%'),
@@ -64,14 +63,17 @@ CREATE TABLE IF NOT EXISTS pets (
 
   print('Updated to the following names: $updatedNames');
 
-  // final x = await db
-  //     .select()
-  //     .from(users)
-  //     .join(posts, on: users.id.equals(posts.ownerId))
-  //     .join(posts, on: users.id.equals(posts.ownerId));
+  final a = posts.as('a');
+  final b = posts.as('b');
+  final c = posts.as('c');
+  final result = await db
+      .select()
+      .from(users)
+      .join(a, on: users.id.equals(a.ownerId))
+      .leftJoin(b, on: users.id.equals(b.ownerId))
+      .rightJoin(c, on: c.id.equals(1));
 
-  // print(x);
-  // return;
+  print(result);
 
   // final publicUser = (users.name, users.id).$;
   // final publicItem = (items.id, items.label).$;

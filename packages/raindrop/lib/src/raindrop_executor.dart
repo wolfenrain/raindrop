@@ -19,7 +19,7 @@ class RaindropExecutor<D extends Delegate> {
   final Lock _lock;
 
   /// Execute a raw [query].
-  Future<List<Map<String, dynamic>>> execute(
+  Future<DatabaseResult> execute(
     String query, [
     List<Object?> values = const [],
   ]) {
@@ -66,7 +66,7 @@ This bypasses the current transaction context and could lead to inconsistent beh
   InsertValuesBuilder<S, void> insert<S extends Schema<S>>({
     required S into,
   }) {
-    return delegate.insert(this, Table.getForSchema<S>()!);
+    return delegate.insert(this, Table.get(into)! as Table<S>);
   }
 
   /// Create a select builder that can filter down on [selectable] if needed.
@@ -80,45 +80,38 @@ This bypasses the current transaction context and could lead to inconsistent beh
   UpdateSettingBuilder<S, void> update<S extends Schema<S>>(
     S table,
   ) {
-    return delegate.update(this, Table.getForSchema<S>()!);
+    return delegate.update(this, Table.get(table)! as Table<S>);
   }
 
   /// Create a delete builder that can delete data [from] the database.
   DeleteAllBuilder<S, void> delete<S extends Schema<S>>({
     required S from,
   }) {
-    return delegate.delete(this, Table.getForSchema<S>()!);
+    return delegate.delete(this, Table.get(from)! as Table<S>);
   }
 
-  /// Execute the [query] on the database and return the mapped entities.
+  /// Execute the [queryOrBuilder] on the database and return the mapped
+  /// entities.
   Future<List<V>> query<S extends Schema<S>, V>(Query<S, V> queryOrBuilder) {
-    var query = queryOrBuilder;
-    if (query case final ToQuery<S, V> builder) {
-      query = builder.toQuery();
-    }
+    final query = switch (queryOrBuilder) {
+      ToQuery() => queryOrBuilder.toQuery(),
+      _ => queryOrBuilder,
+    };
 
     return Raindrop.tracer.trace('RaindropExecutor.query', (span) async {
       span?.attributes.addAll({'query': '${query.runtimeType}'});
-      final registry = AliasRegistry(query);
-      final (sql, values) = delegate.dialect.translate(query, registry);
-      final data = await execute(sql, values);
+      final (sql, values) = delegate.dialect.translate(query);
+      final result = await execute(sql, values);
 
-      return data
-          .map((value) {
-            if (query case final Select<S, V> select) {
-              return Selectable.read(select.selecting, value, registry);
-            } else if (query case final Insert<S, V> insert) {
-              return insert.into.create(value);
-            } else if (query case final Update<S, V> update) {
-              return Updateable.read<S, V>(update.set, value, registry);
-            } else if (query case final Delete<S, V> delete) {
-              return delete.from.create(value);
-            }
+      final records = switch (query) {
+        Insert() => result.rows.map((e) => _read(query.into, [...e])),
+        Select() => result.rows.map((e) => _read(query.selecting, [...e])),
+        Update() => result.rows.map((e) => _read(query.table, [...e])),
+        Delete() => result.rows.map((e) => _read(query.from, [...e])),
+        _ => throw UnimplementedError('${query.runtimeType}'),
+      };
 
-            return null;
-          })
-          .cast<V>()
-          .toList();
+      return records.cast<V>().toList();
     });
   }
 
@@ -128,5 +121,53 @@ This bypasses the current transaction context and could lead to inconsistent beh
   /// discarded, keep that in mind when writing your query.
   Future<V?> queryOne<S extends Schema<S>, V>(Query<S, V> query) async {
     return (await this.query(query)).firstOrNull;
+  }
+}
+
+R _read<R>(Selectable<R> selectable, List<Object?> rows) {
+  if (selectable case final Schema schema) {
+    return _read(Table.get(schema)!, rows) as R;
+  }
+
+  if (selectable case final Table table) {
+    final data = <String, dynamic>{
+      for (final column in table.columns) column.name: _read(column, rows),
+    };
+
+    return switch (data.values.whereType<Object>().isEmpty) {
+      // TODO: this could fail if a schema is fully nullable?
+      true => null,
+      _ => table.create(data)
+    } as R;
+  } else if (selectable case final Column column) {
+    final value = rows.removeAt(0);
+    if (column is ColumnTransform) {
+      return value as R;
+    }
+    return column.decode(value) as R;
+  } else if (selectable case final SelectableResult result) {
+    return result.readRecord(rows) as R;
+  } else {
+    throw UnimplementedError('${selectable.runtimeType}');
+  }
+}
+
+extension<R> on SelectableResult<R> {
+  R readRecord(List<Object?> rows) {
+    switch (selected.length) {
+      case 2:
+        return (
+          _read(selected[0], rows),
+          _read(selected[1], rows),
+        ) as R;
+      case 3:
+        return (
+          _read(selected[0], rows),
+          _read(selected[1], rows),
+          _read(selected[2], rows),
+        ) as R;
+      default:
+        throw UnsupportedError('${selected.length}');
+    }
   }
 }

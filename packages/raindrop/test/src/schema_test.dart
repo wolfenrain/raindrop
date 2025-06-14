@@ -6,11 +6,11 @@ import 'package:test/test.dart';
 class TestSchema extends Schema<TestSchema> {
   TestSchema({
     required String key,
-  }) : key = _builder.text('key', (s) => s.key, value: key);
+  }) : key = $.text('key', (s) => s.key, value: key);
 
   final TextColumn key;
 
-  static const _builder = SchemaBuilder<TestSchema>();
+  static const $ = SchemaBuilder<TestSchema>();
 }
 
 void main() {

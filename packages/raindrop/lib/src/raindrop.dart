@@ -24,7 +24,7 @@ class Raindrop extends RaindropExecutor<RaindropDelegate> {
   }
 
   @override
-  Future<List<Map<String, dynamic>>> execute(
+  Future<DatabaseResult> execute(
     String query, [
     List<Object?> values = const [],
   ]) async {
