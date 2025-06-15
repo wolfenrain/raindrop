@@ -42,6 +42,42 @@ abstract class QueryBuilder<S extends Schema<S>, V> implements Query<S, V> {
 /// Provide the [toQuery] method to a query builder.
 mixin ToQuery<S extends Schema<S>, V> on QueryBuilder<S, V>
     implements Future<List<V>> {
+  /// The first element.
+  ///
+  /// Throws a [StateError] if `this` is empty.
+  /// Otherwise returns the first element in the iteration order,
+  /// equivalent to `this.elementAt(0)`.
+  Future<V> get first async => (await this).first;
+
+  /// The first element of this iterator, or `null` if the iterable is empty.
+  Future<V?> get firstOrNull async => (await this).firstOrNull;
+
+  /// The last element.
+  ///
+  /// Throws a [StateError] if `this` is empty.
+  /// Otherwise may iterate through the elements and returns the last one
+  /// seen.
+  /// Some iterables may have more efficient ways to find the last element
+  /// (for example a list can directly access the last element,
+  /// without iterating through the previous ones).
+  Future<V> get last async => (await this).last;
+
+  /// The last element of this iterable, or `null` if the iterable is empty.
+  Future<V?> get lastOrNull async => (await this).lastOrNull;
+
+  /// Checks that this iterable has only one element, and returns that element.
+  ///
+  /// Throws a [StateError] if `this` is empty or has more than one element.
+  /// This operation will not iterate past the second element.
+  Future<V> get single async => (await this).single;
+
+  /// The single element of this iterator, or `null`.
+  ///
+  /// If the iterator has precisely one element, this is that element.
+  /// Otherwise, if the iterator has zero elements, or it has two or more,
+  /// the value is `null`.
+  Future<V?> get singleOrNull async => (await this).singleOrNull;
+
   /// Turn the builder into a [Query] instance.
   Query<S, V> toQuery();
 
