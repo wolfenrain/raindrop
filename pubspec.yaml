@@ -1,0 +1,10 @@
+name: raindrop_workspace
+publush_to: none
+
+environment:
+  sdk: ">3.5.0<=4.0.0"
+
+workspace:
+  - packages/raindrop
+  - packages/raindrop_postgres
+  - packages/raindrop_sqlite
