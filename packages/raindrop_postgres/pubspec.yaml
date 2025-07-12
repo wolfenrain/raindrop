@@ -1,0 +1,17 @@
+name: raindrop_postgres
+description: A Very Good Project created by Very Good CLI.
+version: 0.1.0+1
+publish_to: none
+resolution: workspace
+
+environment:
+  sdk: ">3.5.0-0<=4.0.0"
+
+dependencies:
+  postgres: ^3.2.0
+  raindrop: ^0.1.0
+
+dev_dependencies:
+  mocktail: ^1.0.3
+  test: ^1.25.2
+  very_good_analysis: ^5.1.0
