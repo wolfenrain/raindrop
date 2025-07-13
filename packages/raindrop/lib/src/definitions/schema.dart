@@ -24,3 +24,7 @@ extension SchemaX<S extends Schema<S>> on S {
     return table.aliased(alias).schema;
   }
 }
+
+class SchemaBuilder<S extends Schema<S>> {
+  const SchemaBuilder();
+}

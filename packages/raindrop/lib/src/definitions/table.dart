@@ -15,11 +15,9 @@ class SchemaFake {
 
   int integer() => _counter++ * -1;
 
-  DateTime dateTime() => DateTime.fromMicrosecondsSinceEpoch(_counter++);
-}
+  List<T> list<T>(T value) => List.filled(_counter++, value);
 
-class SchemaBuilder<S extends Schema<S>> {
-  const SchemaBuilder();
+  DateTime dateTime() => DateTime.fromMicrosecondsSinceEpoch(_counter++);
 }
 
 /// {@macro table}

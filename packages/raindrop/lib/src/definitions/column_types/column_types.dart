@@ -6,31 +6,18 @@ export 'double.dart';
 export 'integer.dart';
 export 'text.dart';
 
-extension ColumnField<S extends Schema<S>> on SchemaBuilder<S> {
+typedef ColumnBuilder<S extends Schema<S>, C extends ColumnType<V>,
+        V extends Object>
+    = T Function<T extends C?>(V, Field<S, V>, V?);
+
+extension ColumnBuilderProvider<S extends Schema<S>> on SchemaBuilder<S> {
   V? column<T extends ColumnType<V?>, V extends Object>(
     T Function(V) typeBuilder,
     String name,
     Field<S, V> field,
-    V? value, {
-    ColumnTransformer<V, Object?>? transformer,
-  }) {
-    if (Zone.current[#table] case final Table<S> table) {
-      ColumnType._typeToColumn[typeBuilder(value!)] = table.addColumn<V>(
-        name,
-        field,
-        isNullable: null is V,
-        transformer: transformer,
-      );
-    }
-
-    if (Zone.current[#read] case final Map<String, dynamic> read) {
-      final value = read[name];
-      if (value == null) return null;
-      if (transformer != null) return transformer.decode(value);
-      return value as V;
-    }
-
-    return value;
+    V? value,
+  ) {
+    return _column<S, T, V>(typeBuilder, name, field, value);
   }
 
   I? custom<I extends Object, O extends Object>(
@@ -40,8 +27,46 @@ extension ColumnField<S extends Schema<S>> on SchemaBuilder<S> {
     I? value, {
     required ColumnTransformer<I, O> transformer,
   }) {
-    return column(typeBuilder, name, field, value, transformer: transformer);
+    return _column(typeBuilder, name, field, value, transformer: transformer);
   }
+}
+
+extension NestedColumnBuilderProvider<S extends Schema<S>,
+    C extends ColumnType<V>, V extends Object> on ColumnBuilder<S, C, V> {
+  R? column<T extends ColumnType<R?>, R extends Object>(
+    T Function(R) typeBuilder,
+    String name,
+    Field<S, R> field,
+    R? value,
+  ) {
+    return _column<S, T, R>(typeBuilder, name, field, value);
+  }
+}
+
+V? _column<S extends Schema<S>, T extends ColumnType<V?>, V extends Object>(
+  T Function(V) typeBuilder,
+  String name,
+  Field<S, V> field,
+  V? value, {
+  ColumnTransformer<V, Object?>? transformer,
+}) {
+  if (Zone.current[#table] case final Table<S> table) {
+    ColumnType._typeToColumn[typeBuilder(value!)] = table.addColumn<V>(
+      name,
+      field,
+      isNullable: null is V,
+      transformer: transformer,
+    );
+  }
+
+  if (Zone.current[#read] case final Map<String, dynamic> read) {
+    final value = read[name];
+    if (value == null) return null;
+    if (transformer != null) return transformer.decode(value);
+    return value as V;
+  }
+
+  return value;
 }
 
 abstract class ColumnTransformer<I, O> {
