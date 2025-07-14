@@ -32,8 +32,8 @@ class SQLiteUpdateWhereBuilder<S extends Schema<S>, V, R>
 // TODO(wolfen): better return type
 extension SQLiteUpdateReturningExtension<S extends Schema<S>, V>
     on UpdateWhereBuilder<S, V, void> {
-  SQLiteUpdateReturningBuilder<S, V, S> returning() {
-    return SQLiteUpdateReturningBuilder<S, V, S>(
+  SQLiteUpdateReturningBuilder<S, V, V> returning() {
+    return SQLiteUpdateReturningBuilder<S, V, V>(
       executor,
       config: config.copyWith({#withReturning: true}),
     );

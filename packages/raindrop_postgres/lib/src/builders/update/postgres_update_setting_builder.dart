@@ -32,8 +32,8 @@ class PostgresUpdateWhereBuilder<S extends Schema<S>, V, R>
 // TODO(wolfen): better return type
 extension PostgresUpdateReturningExtension<S extends Schema<S>, V>
     on UpdateWhereBuilder<S, V, void> {
-  PostgresUpdateReturningBuilder<S, V, S> returning() {
-    return PostgresUpdateReturningBuilder<S, V, S>(
+  PostgresUpdateReturningBuilder<S, V, V> returning() {
+    return PostgresUpdateReturningBuilder<S, V, V>(
       executor,
       config: config.copyWith({#withReturning: true}),
     );

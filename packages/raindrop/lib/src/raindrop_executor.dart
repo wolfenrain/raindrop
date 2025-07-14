@@ -106,7 +106,7 @@ This bypasses the current transaction context and could lead to inconsistent beh
       final records = switch (query) {
         Insert() => result.rows.map((e) => _read(query.into, [...e])),
         Select() => result.rows.map((e) => _read(query.selecting, [...e])),
-        Update() => result.rows.map((e) => _read(query.table, [...e])),
+        Update() => result.rows.map((e) => _read(query.set.toReadable, [...e])),
         Delete() => result.rows.map((e) => _read(query.from, [...e])),
         _ => throw UnimplementedError('${query.runtimeType}'),
       };
@@ -169,5 +169,21 @@ extension<R> on SelectableResult<R> {
       default:
         throw UnsupportedError('${selected.length}');
     }
+  }
+}
+
+extension<R> on Updateable<R> {
+  Selectable<R> get toReadable {
+    if (this case final UpdateableTable update) {
+      return update.table as Selectable<R>;
+    } else if (this case final UpdateableColumn update) {
+      return update.column as Selectable<R>;
+    } else if (this case final UpdateableResult<dynamic> result) {
+      return SelectableResult(
+        result.updating.map((u) => u.toReadable).toList(),
+      );
+    }
+
+    throw 'Unsupported $this';
   }
 }

@@ -20,6 +20,11 @@ class Column<S extends Schema<S>?, V extends Object?> implements Selectable<V> {
 
   final V? Function(S)? valueOf;
 
+  /// Same as [valueOf] but without any of it's type data.s
+  ///
+  /// This is useful for internal use mostly.
+  dynamic readValueOf(Schema<Object?> s) => valueOf!(s as S) as dynamic;
+
   Object? encode(V? input) {
     if (input == null) return null;
 

@@ -119,12 +119,13 @@ class PostgresDialect extends SqlDialect {
     final tableSQL = translateTable(update.table);
     final setSQL = translateUpdateSet(update.set, values);
     final whereSQL = switch (update.where) {
-      final Filter filter => 'WHERE ${translateFilter(filter, values)}',
+      final Filter filter =>
+        'WHERE ${translateFilter(filter, values, singleTable: true)}',
       _ => '',
     };
     final returningSQL = switch (update) {
       final PostgresUpdate<S, V> query when query.withReturning =>
-        'RETURNING ${translateSelection(query.table, values)}',
+        'RETURNING ${translateUpdateable(query.set, values)}',
       _ => '',
     };
 
@@ -254,6 +255,50 @@ class PostgresDialect extends SqlDialect {
     return chunks.join();
   }
 
+  // TODO: better name? updateToReturning
+  String translateUpdateable(
+    Updateable<dynamic> update,
+    List<Object?> values, {
+    bool singleTable = true,
+  }) {
+    final chunks = <String>[];
+
+    if (update case final UpdateableTable update) {
+      final table = update.table;
+      for (final column in table.columns) {
+        chunks.add(
+          translateSelection(column, values, singleTable: singleTable),
+        );
+        if (column != table.columns.last) {
+          chunks.add(', ');
+        }
+      }
+    } else if (update case final UpdateableColumn update) {
+      final column = update.column;
+      if (column case final ColumnTransform column) {
+        chunks.add(translateSQL(column.sql, values, singleTable: singleTable));
+      } else {
+        if (column.table.alias case final String alias) {
+          chunks.add('${escapeName(alias)}.');
+        } else if (!singleTable) {
+          chunks.add('${escapeName(column.table.name)}.');
+        }
+        chunks.add(escapeName(column.name));
+      }
+    } else if (update case final UpdateableResult<dynamic> result) {
+      for (final update in result.updating) {
+        chunks.add(
+          translateUpdateable(update, values, singleTable: singleTable),
+        );
+        if (update != result.updating.last) {
+          chunks.add(', ');
+        }
+      }
+    }
+
+    return chunks.join();
+  }
+
   String translateTable(Table table) {
     return [
       escapeName(table.name),
@@ -287,16 +332,21 @@ class PostgresDialect extends SqlDialect {
   String translateUpdateSet(Updateable updateSet, List<Object?> values) {
     final chunks = <String>[];
     if (updateSet case UpdateableColumn(:final column, :final value)) {
-      chunks.add('${column.name} = ${escapeParam(values.length)}');
+      chunks.add('"${column.name}" = ${escapeParam(values.length)}');
       values.add(column.encode(value));
     } else if (updateSet case UpdateableTable(:final table, :final value)) {
+      final buffer = StringBuffer();
       for (final column in table.columns) {
-        chunks.add(' ${column.name} = ${escapeParam(values.length)}');
-        values.add(column.encode(column.valueOf!(value)));
+        final columnValue = column.readValueOf(value);
+        if (column.isPrimaryKey && columnValue == null) continue;
+
+        buffer.write('"${column.name}" = ${escapeParam(values.length)}');
+        values.add(column.encode(columnValue));
         if (column != table.columns.last) {
-          chunks.add(', ');
+          buffer.write(', ');
         }
       }
+      chunks.add(buffer.toString());
     } else if (updateSet case UpdateableResult(:final updating)) {
       for (final update in updating) {
         chunks.add(translateUpdateSet(update, values));

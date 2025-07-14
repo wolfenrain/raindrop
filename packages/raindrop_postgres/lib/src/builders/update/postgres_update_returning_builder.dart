@@ -11,7 +11,7 @@ class PostgresUpdateReturningBuilder<S extends Schema<S>, V, R>
       table: config.get(#table)!,
       set: config.get(#set)!,
       where: config.get(#where),
-      withReturning: true,
+      withReturning: config.get(#withReturning) ?? false,
     );
   }
 }
