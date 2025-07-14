@@ -9,7 +9,7 @@ class UpdateSettingBuilder<S extends Schema<S>, R> extends UpdateBuilder<S, R> {
   UpdateSettingBuilder(super.executor, {required super.config});
 
   /// Set the rows to update.
-  UpdateWhereBuilder<S, V, R> set<V>(Updateable<S, V> set) {
+  UpdateWhereBuilder<S, V, R> set<V>(Updateable<V> set) {
     return UpdateWhereBuilder(executor, config: config.copyWith({#set: set}));
   }
 }

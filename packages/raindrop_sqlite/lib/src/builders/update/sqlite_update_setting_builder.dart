@@ -6,7 +6,7 @@ class SQLiteUpdateSettingBuilder<S extends Schema<S>, R>
   SQLiteUpdateSettingBuilder(super.executor, {required super.config});
 
   @override
-  UpdateWhereBuilder<S, V, R> set<V>(Updateable<S, V> set) {
+  UpdateWhereBuilder<S, V, R> set<V>(Updateable<V> set) {
     return SQLiteUpdateWhereBuilder(
       executor,
       config: config.copyWith({#set: set}),

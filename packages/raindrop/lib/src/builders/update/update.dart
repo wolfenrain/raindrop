@@ -15,7 +15,7 @@ class Update<S extends Schema<S>, V> extends Query<S, V> {
   });
 
   /// The rows/entities to set.
-  final Updateable<S, Object> set;
+  final Updateable<Object> set;
 
   /// The table to update.
   final Table<S> table;

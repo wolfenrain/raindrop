@@ -6,7 +6,7 @@ class PostgresUpdateSettingBuilder<S extends Schema<S>, R>
   PostgresUpdateSettingBuilder(super.executor, {required super.config});
 
   @override
-  UpdateWhereBuilder<S, V, R> set<V>(Updateable<S, V> set) {
+  UpdateWhereBuilder<S, V, R> set<V>(Updateable<V> set) {
     return PostgresUpdateWhereBuilder(
       executor,
       config: config.copyWith({#set: set}),
