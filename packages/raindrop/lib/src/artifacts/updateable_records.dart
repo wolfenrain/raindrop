@@ -3,21 +3,18 @@
 import 'package:raindrop/raindrop.dart';
 
 // ERROR
-extension UpdateableX3<S extends Schema<S>, V1, V2> on (
-  Updateable<S, V1>,
-  Updateable<S, V2>
-) {
-  UpdateableResult<S, (V1, V2)> get $ {
+extension UpdateableX3<V1, V2> on (Updateable<V1>, Updateable<V2>) {
+  UpdateableResult<(V1, V2)> get $ {
     return UpdateableResult([this.$1, this.$2]);
   }
 }
 
-extension UpdateableX4<S extends Schema<S>, V1, V2, V3> on (
-  Updateable<S, V1>,
-  Updateable<S, V2>,
-  Updateable<S, V3>
+extension UpdateableX4<V1, V2, V3> on (
+  Updateable<V1>,
+  Updateable<V2>,
+  Updateable<V3>
 ) {
-  UpdateableResult<S, (V1, V2, V3)> get $ {
+  UpdateableResult<(V1, V2, V3)> get $ {
     return UpdateableResult([this.$1, this.$2, this.$3]);
   }
 }

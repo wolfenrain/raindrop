@@ -5,17 +5,17 @@ import 'package:raindrop/raindrop.dart';
 /// Interface for making a class updateable.
 ///
 /// Used internally.
-abstract interface class Updateable<S extends Schema<S>, V> {}
+abstract interface class Updateable<V> {}
 
 /// {@template updateable_column}
 /// A column that can be updated.
 /// {@endtemplate}
-class UpdateableColumn<S extends Schema<S>, V> implements Updateable<S, V> {
+class UpdateableColumn<V> implements Updateable<V> {
   /// {@macro updateable_column}
   const UpdateableColumn(this.column, this.value);
 
   /// The column in question.
-  final Column<S, V> column;
+  final Column<Schema<Object?>, V> column;
 
   /// The value to update it too.
   final V value;
@@ -24,7 +24,7 @@ class UpdateableColumn<S extends Schema<S>, V> implements Updateable<S, V> {
 /// {@template updateable_table}
 /// A table that can be updated.
 /// {@endtemplate}
-class UpdateableTable<S extends Schema<S>> implements Updateable<S, S> {
+class UpdateableTable<S extends Schema<S>> implements Updateable<S> {
   /// {@macro updateable_table}
   const UpdateableTable(this.table, this.value);
 
@@ -38,8 +38,7 @@ class UpdateableTable<S extends Schema<S>> implements Updateable<S, S> {
 /// Provide a set method to a column to update a column.
 extension UpdateColumn<V> on ColumnOf<V> {
   /// Make the column updateable by [value].
-  UpdateableColumn<S, V> set<S extends Schema<S>>(V value) =>
-      UpdateableColumn($ as Column<S, V>, value);
+  UpdateableColumn<V> set(V value) => UpdateableColumn($, value);
 }
 
 /// Provide a set method to a table to update an instance.
@@ -53,7 +52,7 @@ extension UpdateTable<S extends Schema<S>> on S {
 ///
 /// Used internally.
 /// {@endtemplate}
-class UpdateableResult<S extends Schema<S>, V> implements Updateable<S, V> {
+class UpdateableResult<V> implements Updateable<V> {
   /// {@macro updatable_result}
   const UpdateableResult(this.updating);
 
