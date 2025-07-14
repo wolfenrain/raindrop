@@ -85,13 +85,31 @@ void generateJoin(String path, String type, int amount) {
 
 import 'package:raindrop/raindrop.dart';
 
+extension SelectWith${type}Join<V extends Object?, S extends Schema<S>> on SelectFromBuilder<S, V> {
+  /// Add a ${type.toLowerCase()} join clause of the builder.
+  SelectFromBuilder<S, V> $methodName<O extends Schema<O>>(
+    O table, {
+    required Filter on,
+  }) {
+    return SelectFromBuilder(
+      executor,
+      config: config.copyWith({
+        #joins: <Join>[
+          ...config.get(#joins) ?? [],
+          ${type}Join<O>(Table.get(table)! as Table<O>, on: on),
+        ],
+      }),
+    );
+  }
+}
+
 extension SelectWith${type}Join0<S extends Schema<S>> on SelectFromBuilder<S, S> {
-  /// Set a ${type.toLowerCase()} join clause of the builder.
+  /// Add a ${type.toLowerCase()} join clause of the builder.
   SelectFromBuilder<S, (S${type == 'Right' ? '?' : ''}, O${type == 'Left' ? '?' : ''})> $methodName<O extends Schema<O>>(
     O table, {
     required Filter on,
   }) {
-    final (s) = config.get(#selecting) as Table<S>;
+    final s = config.get(#selecting) as Table<S>;
     final o = Table.get(table)! as Table<O>;
 
     return SelectFromBuilder(
@@ -100,7 +118,7 @@ extension SelectWith${type}Join0<S extends Schema<S>> on SelectFromBuilder<S, S>
         #selecting: SelectableResult<(S, O)>([s, o]),
         #joins: <Join>[
           ...config.get(#joins) ?? [],
-          ${type}Join<O>(Table.get(table)! as Table<O>, on: on),
+          ${type}Join<O>(o, on: on),
         ],
       }),
     );
@@ -108,13 +126,14 @@ extension SelectWith${type}Join0<S extends Schema<S>> on SelectFromBuilder<S, S>
 }''');
 
   for (var i = 1; i < amount; i++) {
-    final types = List.generate(i, (s) => 'S$s${type == 'Right' ? '?' : ''}');
+    final types =
+        List.generate(i + 1, (j) => 'S$j${type == 'Right' ? '?' : ''}');
 
     buffer.write('''
 
-extension SelectWith${type}Join$i<S extends Schema<S>, ${List.generate(i, (s) => 'S$s extends Schema<S$s>?').join(', ')}> on SelectFromBuilder<S, (S, ${types.join(', ')})> {
-  /// Set a ${type.toLowerCase()} join clause of the builder.
-  SelectFromBuilder<S, (S${type == 'Right' ? '?' : ''}, ${types.join(', ')}, O${type == 'Left' ? '?' : ''})> $methodName<O extends Schema<O>>(
+extension SelectWith${type}Join$i<S extends Schema<S>, ${List.generate(i + 1, (s) => 'S$s extends Schema<S$s>?').join(', ')}> on SelectFromBuilder<S, (${types.join(', ').replaceAll('?', '')})> {
+  /// Add a ${type.toLowerCase()} join clause of the builder.
+  SelectFromBuilder<S, (${types.join(', ')}, O${type == 'Left' ? '?' : ''})> $methodName<O extends Schema<O>>(
     O table, {
     required Filter on,
   }) {
@@ -127,7 +146,7 @@ extension SelectWith${type}Join$i<S extends Schema<S>, ${List.generate(i, (s) =>
         #selecting: SelectableResult<(S, ${types.join(', ')}, O)>([...result.selected, o]),
         #joins: <Join>[
           ...config.get(#joins) ?? [],
-          ${type}Join<O>(Table.get(table)! as Table<O>, on: on),
+          ${type}Join<O>(o, on: on),
         ],
       }),
     );

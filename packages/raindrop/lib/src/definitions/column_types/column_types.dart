@@ -83,11 +83,13 @@ extension type ColumnType<V extends Object?>._(V _) {
   static final Map<ColumnType, Column> _typeToColumn = {};
 }
 
-extension ColumnTypeX<T extends ColumnType<V>, V extends Object?> on T? {
+extension ColumnTypeX<V extends Object?> on ColumnType<V>? {
   // TODO: validate if this works
   /// Returns the nullable version of this column.
-  ColumnType<V>? get nullable => this;
+  ColumnType<V?> get nullable => this as ColumnType<V>;
+}
 
+extension PrimaryColumn<T extends ColumnType<V>, V extends Object?> on T? {
   T? primaryKey({required bool autoIncrement}) {
     if (Zone.current[#table] case final Table table) {
       table.columns.last.isPrimaryKey = true;
@@ -98,6 +100,9 @@ extension ColumnTypeX<T extends ColumnType<V>, V extends Object?> on T? {
 }
 
 extension ColumnOperators<V extends Object?> on ColumnOf<V> {
+  /// Make an alias of the column.
+  ColumnAlias<Schema<Object?>, V> as(String alias) => $.as(alias);
+
   /// The column of this specific type.
   Column<Schema<Object?>, V> get $ =>
       ColumnType._typeToColumn[this]! as Column<Schema<Object?>, V>;
