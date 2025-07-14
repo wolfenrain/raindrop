@@ -143,7 +143,7 @@ extension SelectWith${type}Join$i<S extends Schema<S>, ${List.generate(i + 1, (s
     return SelectFromBuilder(
       executor,
       config: config.copyWith({
-        #selecting: SelectableResult<(S, ${types.join(', ')}, O)>([...result.selected, o]),
+        #selecting: SelectableResult<(${types.join(', ')}, O)>([...result.selected, o]),
         #joins: <Join>[
           ...config.get(#joins) ?? [],
           ${type}Join<O>(o, on: on),

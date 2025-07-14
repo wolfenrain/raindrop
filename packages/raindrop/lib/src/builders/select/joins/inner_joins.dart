@@ -54,7 +54,7 @@ extension SelectWithInnerJoin1<S extends Schema<S>, S0 extends Schema<S0>?, S1 e
     return SelectFromBuilder(
       executor,
       config: config.copyWith({
-        #selecting: SelectableResult<(S, S0, S1, O)>([...result.selected, o]),
+        #selecting: SelectableResult<(S0, S1, O)>([...result.selected, o]),
         #joins: <Join>[
           ...config.get(#joins) ?? [],
           InnerJoin<O>(o, on: on),
@@ -76,7 +76,7 @@ extension SelectWithInnerJoin2<S extends Schema<S>, S0 extends Schema<S0>?, S1 e
     return SelectFromBuilder(
       executor,
       config: config.copyWith({
-        #selecting: SelectableResult<(S, S0, S1, S2, O)>([...result.selected, o]),
+        #selecting: SelectableResult<(S0, S1, S2, O)>([...result.selected, o]),
         #joins: <Join>[
           ...config.get(#joins) ?? [],
           InnerJoin<O>(o, on: on),
@@ -98,7 +98,7 @@ extension SelectWithInnerJoin3<S extends Schema<S>, S0 extends Schema<S0>?, S1 e
     return SelectFromBuilder(
       executor,
       config: config.copyWith({
-        #selecting: SelectableResult<(S, S0, S1, S2, S3, O)>([...result.selected, o]),
+        #selecting: SelectableResult<(S0, S1, S2, S3, O)>([...result.selected, o]),
         #joins: <Join>[
           ...config.get(#joins) ?? [],
           InnerJoin<O>(o, on: on),
@@ -120,7 +120,7 @@ extension SelectWithInnerJoin4<S extends Schema<S>, S0 extends Schema<S0>?, S1 e
     return SelectFromBuilder(
       executor,
       config: config.copyWith({
-        #selecting: SelectableResult<(S, S0, S1, S2, S3, S4, O)>([...result.selected, o]),
+        #selecting: SelectableResult<(S0, S1, S2, S3, S4, O)>([...result.selected, o]),
         #joins: <Join>[
           ...config.get(#joins) ?? [],
           InnerJoin<O>(o, on: on),
@@ -142,7 +142,7 @@ extension SelectWithInnerJoin5<S extends Schema<S>, S0 extends Schema<S0>?, S1 e
     return SelectFromBuilder(
       executor,
       config: config.copyWith({
-        #selecting: SelectableResult<(S, S0, S1, S2, S3, S4, S5, O)>([...result.selected, o]),
+        #selecting: SelectableResult<(S0, S1, S2, S3, S4, S5, O)>([...result.selected, o]),
         #joins: <Join>[
           ...config.get(#joins) ?? [],
           InnerJoin<O>(o, on: on),
@@ -164,7 +164,7 @@ extension SelectWithInnerJoin6<S extends Schema<S>, S0 extends Schema<S0>?, S1 e
     return SelectFromBuilder(
       executor,
       config: config.copyWith({
-        #selecting: SelectableResult<(S, S0, S1, S2, S3, S4, S5, S6, O)>([...result.selected, o]),
+        #selecting: SelectableResult<(S0, S1, S2, S3, S4, S5, S6, O)>([...result.selected, o]),
         #joins: <Join>[
           ...config.get(#joins) ?? [],
           InnerJoin<O>(o, on: on),
@@ -186,7 +186,7 @@ extension SelectWithInnerJoin7<S extends Schema<S>, S0 extends Schema<S0>?, S1 e
     return SelectFromBuilder(
       executor,
       config: config.copyWith({
-        #selecting: SelectableResult<(S, S0, S1, S2, S3, S4, S5, S6, S7, O)>([...result.selected, o]),
+        #selecting: SelectableResult<(S0, S1, S2, S3, S4, S5, S6, S7, O)>([...result.selected, o]),
         #joins: <Join>[
           ...config.get(#joins) ?? [],
           InnerJoin<O>(o, on: on),
@@ -208,7 +208,7 @@ extension SelectWithInnerJoin8<S extends Schema<S>, S0 extends Schema<S0>?, S1 e
     return SelectFromBuilder(
       executor,
       config: config.copyWith({
-        #selecting: SelectableResult<(S, S0, S1, S2, S3, S4, S5, S6, S7, S8, O)>([...result.selected, o]),
+        #selecting: SelectableResult<(S0, S1, S2, S3, S4, S5, S6, S7, S8, O)>([...result.selected, o]),
         #joins: <Join>[
           ...config.get(#joins) ?? [],
           InnerJoin<O>(o, on: on),
@@ -230,7 +230,7 @@ extension SelectWithInnerJoin9<S extends Schema<S>, S0 extends Schema<S0>?, S1 e
     return SelectFromBuilder(
       executor,
       config: config.copyWith({
-        #selecting: SelectableResult<(S, S0, S1, S2, S3, S4, S5, S6, S7, S8, S9, O)>([...result.selected, o]),
+        #selecting: SelectableResult<(S0, S1, S2, S3, S4, S5, S6, S7, S8, S9, O)>([...result.selected, o]),
         #joins: <Join>[
           ...config.get(#joins) ?? [],
           InnerJoin<O>(o, on: on),
@@ -252,7 +252,7 @@ extension SelectWithInnerJoin10<S extends Schema<S>, S0 extends Schema<S0>?, S1 
     return SelectFromBuilder(
       executor,
       config: config.copyWith({
-        #selecting: SelectableResult<(S, S0, S1, S2, S3, S4, S5, S6, S7, S8, S9, S10, O)>([...result.selected, o]),
+        #selecting: SelectableResult<(S0, S1, S2, S3, S4, S5, S6, S7, S8, S9, S10, O)>([...result.selected, o]),
         #joins: <Join>[
           ...config.get(#joins) ?? [],
           InnerJoin<O>(o, on: on),
@@ -274,7 +274,7 @@ extension SelectWithInnerJoin11<S extends Schema<S>, S0 extends Schema<S0>?, S1 
     return SelectFromBuilder(
       executor,
       config: config.copyWith({
-        #selecting: SelectableResult<(S, S0, S1, S2, S3, S4, S5, S6, S7, S8, S9, S10, S11, O)>([...result.selected, o]),
+        #selecting: SelectableResult<(S0, S1, S2, S3, S4, S5, S6, S7, S8, S9, S10, S11, O)>([...result.selected, o]),
         #joins: <Join>[
           ...config.get(#joins) ?? [],
           InnerJoin<O>(o, on: on),
@@ -296,7 +296,7 @@ extension SelectWithInnerJoin12<S extends Schema<S>, S0 extends Schema<S0>?, S1 
     return SelectFromBuilder(
       executor,
       config: config.copyWith({
-        #selecting: SelectableResult<(S, S0, S1, S2, S3, S4, S5, S6, S7, S8, S9, S10, S11, S12, O)>([...result.selected, o]),
+        #selecting: SelectableResult<(S0, S1, S2, S3, S4, S5, S6, S7, S8, S9, S10, S11, S12, O)>([...result.selected, o]),
         #joins: <Join>[
           ...config.get(#joins) ?? [],
           InnerJoin<O>(o, on: on),
@@ -318,7 +318,7 @@ extension SelectWithInnerJoin13<S extends Schema<S>, S0 extends Schema<S0>?, S1 
     return SelectFromBuilder(
       executor,
       config: config.copyWith({
-        #selecting: SelectableResult<(S, S0, S1, S2, S3, S4, S5, S6, S7, S8, S9, S10, S11, S12, S13, O)>([...result.selected, o]),
+        #selecting: SelectableResult<(S0, S1, S2, S3, S4, S5, S6, S7, S8, S9, S10, S11, S12, S13, O)>([...result.selected, o]),
         #joins: <Join>[
           ...config.get(#joins) ?? [],
           InnerJoin<O>(o, on: on),
@@ -340,7 +340,7 @@ extension SelectWithInnerJoin14<S extends Schema<S>, S0 extends Schema<S0>?, S1 
     return SelectFromBuilder(
       executor,
       config: config.copyWith({
-        #selecting: SelectableResult<(S, S0, S1, S2, S3, S4, S5, S6, S7, S8, S9, S10, S11, S12, S13, S14, O)>([...result.selected, o]),
+        #selecting: SelectableResult<(S0, S1, S2, S3, S4, S5, S6, S7, S8, S9, S10, S11, S12, S13, S14, O)>([...result.selected, o]),
         #joins: <Join>[
           ...config.get(#joins) ?? [],
           InnerJoin<O>(o, on: on),
@@ -362,7 +362,7 @@ extension SelectWithInnerJoin15<S extends Schema<S>, S0 extends Schema<S0>?, S1 
     return SelectFromBuilder(
       executor,
       config: config.copyWith({
-        #selecting: SelectableResult<(S, S0, S1, S2, S3, S4, S5, S6, S7, S8, S9, S10, S11, S12, S13, S14, S15, O)>([...result.selected, o]),
+        #selecting: SelectableResult<(S0, S1, S2, S3, S4, S5, S6, S7, S8, S9, S10, S11, S12, S13, S14, S15, O)>([...result.selected, o]),
         #joins: <Join>[
           ...config.get(#joins) ?? [],
           InnerJoin<O>(o, on: on),
@@ -384,7 +384,7 @@ extension SelectWithInnerJoin16<S extends Schema<S>, S0 extends Schema<S0>?, S1 
     return SelectFromBuilder(
       executor,
       config: config.copyWith({
-        #selecting: SelectableResult<(S, S0, S1, S2, S3, S4, S5, S6, S7, S8, S9, S10, S11, S12, S13, S14, S15, S16, O)>([...result.selected, o]),
+        #selecting: SelectableResult<(S0, S1, S2, S3, S4, S5, S6, S7, S8, S9, S10, S11, S12, S13, S14, S15, S16, O)>([...result.selected, o]),
         #joins: <Join>[
           ...config.get(#joins) ?? [],
           InnerJoin<O>(o, on: on),
@@ -406,7 +406,7 @@ extension SelectWithInnerJoin17<S extends Schema<S>, S0 extends Schema<S0>?, S1 
     return SelectFromBuilder(
       executor,
       config: config.copyWith({
-        #selecting: SelectableResult<(S, S0, S1, S2, S3, S4, S5, S6, S7, S8, S9, S10, S11, S12, S13, S14, S15, S16, S17, O)>([...result.selected, o]),
+        #selecting: SelectableResult<(S0, S1, S2, S3, S4, S5, S6, S7, S8, S9, S10, S11, S12, S13, S14, S15, S16, S17, O)>([...result.selected, o]),
         #joins: <Join>[
           ...config.get(#joins) ?? [],
           InnerJoin<O>(o, on: on),
@@ -428,7 +428,7 @@ extension SelectWithInnerJoin18<S extends Schema<S>, S0 extends Schema<S0>?, S1 
     return SelectFromBuilder(
       executor,
       config: config.copyWith({
-        #selecting: SelectableResult<(S, S0, S1, S2, S3, S4, S5, S6, S7, S8, S9, S10, S11, S12, S13, S14, S15, S16, S17, S18, O)>([...result.selected, o]),
+        #selecting: SelectableResult<(S0, S1, S2, S3, S4, S5, S6, S7, S8, S9, S10, S11, S12, S13, S14, S15, S16, S17, S18, O)>([...result.selected, o]),
         #joins: <Join>[
           ...config.get(#joins) ?? [],
           InnerJoin<O>(o, on: on),
@@ -450,7 +450,7 @@ extension SelectWithInnerJoin19<S extends Schema<S>, S0 extends Schema<S0>?, S1 
     return SelectFromBuilder(
       executor,
       config: config.copyWith({
-        #selecting: SelectableResult<(S, S0, S1, S2, S3, S4, S5, S6, S7, S8, S9, S10, S11, S12, S13, S14, S15, S16, S17, S18, S19, O)>([...result.selected, o]),
+        #selecting: SelectableResult<(S0, S1, S2, S3, S4, S5, S6, S7, S8, S9, S10, S11, S12, S13, S14, S15, S16, S17, S18, S19, O)>([...result.selected, o]),
         #joins: <Join>[
           ...config.get(#joins) ?? [],
           InnerJoin<O>(o, on: on),
