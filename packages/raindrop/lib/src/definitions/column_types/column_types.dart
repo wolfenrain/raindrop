@@ -6,10 +6,6 @@ export 'double.dart';
 export 'integer.dart';
 export 'text.dart';
 
-typedef ColumnBuilder<S extends Schema<S>, C extends ColumnType<V>,
-        V extends Object>
-    = T Function<T extends C?>(V, Field<S, V>, V?);
-
 extension ColumnBuilderProvider<S extends Schema<S>> on SchemaBuilder<S> {
   V? column<T extends ColumnType<V?>, V extends Object>(
     T Function(V) typeBuilder,
@@ -28,18 +24,6 @@ extension ColumnBuilderProvider<S extends Schema<S>> on SchemaBuilder<S> {
     required ColumnTransformer<I, O> transformer,
   }) {
     return _column(typeBuilder, name, field, value, transformer: transformer);
-  }
-}
-
-extension NestedColumnBuilderProvider<S extends Schema<S>,
-    C extends ColumnType<V>, V extends Object> on ColumnBuilder<S, C, V> {
-  R? column<T extends ColumnType<R?>, R extends Object>(
-    T Function(R) typeBuilder,
-    String name,
-    Field<S, R> field,
-    R? value,
-  ) {
-    return _column<S, T, R>(typeBuilder, name, field, value);
   }
 }
 

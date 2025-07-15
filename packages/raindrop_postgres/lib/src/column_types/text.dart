@@ -8,11 +8,8 @@ extension TextColumnDefinition<S extends Schema<S>> on SchemaBuilder<S> {
   ) {
     return column(TextColumn.new, name, field, value) as T;
   }
-}
 
-extension TextArrayDefinition<S extends Schema<S>>
-    on ColumnBuilder<S, TextColumn, String> {
-  T array<T extends TextArrayColumn?>(
+  T textArray<T extends TextArrayColumn?>(
     String name,
     Field<S, List<String>> field,
     List<String>? value,
