@@ -371,13 +371,12 @@ class PostgresDialect extends SqlDialect {
       if (chunk case final RawSQL chunk) {
         buffer.write(chunk.sql);
       } else if (chunk case final Column column) {
-        if (singleTable) {
-          buffer.write(escapeName(column.name));
-        } else {
-          buffer.write(
-            escapeName('${column.table.aliasOrName}.${column.name}'),
-          );
+        if (column.table.alias case final String alias) {
+          buffer.write('${escapeName(alias)}.');
+        } else if (!singleTable) {
+          buffer.write('${escapeName(column.table.name)}.');
         }
+        buffer.write(escapeName(column.name));
       } else if (chunk case final List<dynamic> values) {
         buffer.write('(');
         for (final value in values) {
