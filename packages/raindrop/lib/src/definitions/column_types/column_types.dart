@@ -35,7 +35,10 @@ V? _column<S extends Schema<S>, T extends ColumnType<V?>, V extends Object>(
   ColumnTransformer<V, Object?>? transformer,
 }) {
   if (Zone.current[#table] case final Table<S> table) {
-    ColumnType._typeToColumn[typeBuilder(value!)] = table.addColumn<V>(
+    if (value == null) {
+      throw StateError('Provide a fake value for $S.$name');
+    }
+    ColumnType._typeToColumn[typeBuilder(value)] = table.addColumn<V>(
       name,
       field,
       isNullable: null is V,
