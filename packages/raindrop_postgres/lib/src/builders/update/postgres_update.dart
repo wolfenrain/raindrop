@@ -6,7 +6,8 @@ export 'postgres_update_setting_builder.dart';
 /// {@template postgres_update}
 /// SQL update statement tailored for Postgres.
 /// {@endtemplate}
-class PostgresUpdate<S extends Schema<S>, V> extends Update<S, V> {
+class PostgresUpdate<S extends Schema<S>, V> extends Update<S, V>
+    with ReturningQuery {
   /// {@macro postgres_update}
   PostgresUpdate({
     required super.set,
@@ -15,6 +16,6 @@ class PostgresUpdate<S extends Schema<S>, V> extends Update<S, V> {
     this.withReturning = false,
   });
 
-  /// Indicates that this insert statement should return it's values or not.
+  @override
   final bool withReturning;
 }

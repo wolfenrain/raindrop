@@ -1,4 +1,5 @@
 export 'src/artifacts/artifacts.dart';
+export 'src/base_sql_dialect.dart';
 export 'src/builders/builders.dart';
 export 'src/cached_future.dart';
 export 'src/database_result.dart';

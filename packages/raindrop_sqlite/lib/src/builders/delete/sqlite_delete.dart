@@ -5,7 +5,8 @@ export 'sqlite_delete_returning_builder.dart';
 /// {@template sqlite_delete}
 /// SQL delete statement tailored for SQLite.
 /// {@endtemplate}
-class SQLiteDelete<S extends Schema<S>, V> extends Delete<S, V> {
+class SQLiteDelete<S extends Schema<S>, V> extends Delete<S, V>
+    with ReturningQuery {
   /// {@macro sqlite_delete}
   SQLiteDelete({
     required super.from,
@@ -13,6 +14,6 @@ class SQLiteDelete<S extends Schema<S>, V> extends Delete<S, V> {
     this.withReturning = false,
   });
 
-  /// Indicates that this insert statement should return it's values or not.
+  @override
   final bool withReturning;
 }
