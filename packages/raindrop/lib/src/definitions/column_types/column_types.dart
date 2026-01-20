@@ -49,7 +49,6 @@ V? _column<S extends Schema<S>, T extends ColumnType<V?>, V extends Object>(
   if (Zone.current[#read] case final Map<String, dynamic> read) {
     final value = read[name];
     if (value == null) return null;
-    if (transformer != null) return transformer.decode(value);
     return value as V;
   }
 
