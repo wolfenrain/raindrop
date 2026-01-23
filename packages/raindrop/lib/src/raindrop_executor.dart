@@ -62,34 +62,6 @@ This bypasses the current transaction context and could lead to inconsistent beh
     );
   }
 
-  /// Create an insert builder for inserting entities [into] the database.
-  InsertValuesBuilder<S, void> insert<S extends Schema<S>>({
-    required S into,
-  }) {
-    return delegate.insert(this, Table.get(into)! as Table<S>);
-  }
-
-  /// Create a select builder that can filter down on [selectable] if needed.
-  SelectBuilder<V> select<V extends Object?>([
-    Selectable<V>? selectable,
-  ]) {
-    return delegate.select(this, selectable);
-  }
-
-  /// Create an update builder that can update a [table].
-  UpdateSettingBuilder<S, void> update<S extends Schema<S>>(
-    S table,
-  ) {
-    return delegate.update(this, Table.get(table)! as Table<S>);
-  }
-
-  /// Create a delete builder that can delete data [from] the database.
-  DeleteAllBuilder<S, void> delete<S extends Schema<S>>({
-    required S from,
-  }) {
-    return delegate.delete(this, Table.get(from)! as Table<S>);
-  }
-
   /// Execute the [queryOrBuilder] on the database and return the mapped
   /// entities.
   Future<List<V>> query<S extends Schema<S>, V>(Query<S, V> queryOrBuilder) {
@@ -154,21 +126,18 @@ R _read<R>(Selectable<R> selectable, List<Object?> rows) {
 
 extension<R> on SelectableResult<R> {
   R readRecord(List<Object?> rows) {
-    switch (selected.length) {
-      case 2:
-        return (
+    return switch (selected.length) {
+      2 => (
           _read(selected[0], rows),
           _read(selected[1], rows),
-        ) as R;
-      case 3:
-        return (
+        ) as R,
+      3 => (
           _read(selected[0], rows),
           _read(selected[1], rows),
           _read(selected[2], rows),
-        ) as R;
-      default:
-        throw UnsupportedError('${selected.length}');
-    }
+        ) as R,
+      _ => throw UnsupportedError('${selected.length}'),
+    };
   }
 }
 

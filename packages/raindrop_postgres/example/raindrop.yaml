@@ -1,0 +1,8 @@
+# Required so the CLI can figure out what dialect u are using.
+dialect: postgres
+
+# Optional schemas path, used to generate migrations.
+schemas: lib/schemas
+
+# Optional output path for the generated migrations.
+# out: migrations/

@@ -11,9 +11,18 @@ extension ColumnBuilderProvider<S extends Schema<S>> on SchemaBuilder<S> {
     T Function(V) typeBuilder,
     String name,
     Field<S, V> field,
-    V? value,
-  ) {
-    return _column<S, T, V>(typeBuilder, name, field, value);
+    V? value, {
+    String? sqlType,
+    String? defaultValue,
+  }) {
+    return _column<S, T, V>(
+      typeBuilder,
+      name,
+      field,
+      value,
+      sqlType: sqlType,
+      defaultValue: defaultValue,
+    );
   }
 
   I? custom<I extends Object, O extends Object>(
@@ -22,8 +31,18 @@ extension ColumnBuilderProvider<S extends Schema<S>> on SchemaBuilder<S> {
     Field<S, I> field,
     I? value, {
     required ColumnTransformer<I, O> transformer,
+    String? sqlType,
+    String? defaultValue,
   }) {
-    return _column(typeBuilder, name, field, value, transformer: transformer);
+    return _column(
+      typeBuilder,
+      name,
+      field,
+      value,
+      transformer: transformer,
+      sqlType: sqlType,
+      defaultValue: defaultValue,
+    );
   }
 }
 
@@ -33,7 +52,10 @@ V? _column<S extends Schema<S>, T extends ColumnType<V?>, V extends Object>(
   Field<S, V> field,
   V? value, {
   ColumnTransformer<V, Object?>? transformer,
+  String? sqlType,
+  String? defaultValue,
 }) {
+  // If the zone has a table, start building up the registry.
   if (Zone.current[#table] case final Table<S> table) {
     if (value == null) {
       throw StateError('Provide a fake value for $S.$name');
@@ -43,9 +65,12 @@ V? _column<S extends Schema<S>, T extends ColumnType<V?>, V extends Object>(
       field,
       isNullable: null is V,
       transformer: transformer,
+      sqlType: sqlType,
+      defaultValue: defaultValue,
     );
   }
 
+  // If the zone has read data, read the value from there.
   if (Zone.current[#read] case final Map<String, dynamic> read) {
     final value = read[name];
     if (value == null) return null;
@@ -78,7 +103,9 @@ extension ColumnTypeX<V extends Object?> on ColumnType<V>? {
 extension PrimaryColumn<T extends ColumnType<V>, V extends Object?> on T? {
   T? primaryKey({required bool autoIncrement}) {
     if (Zone.current[#table] case final Table table) {
-      table.columns.last.isPrimaryKey = true;
+      table.columns.last
+        ..isPrimaryKey = true
+        ..autoIncrement = autoIncrement;
     }
 
     return this;
@@ -90,8 +117,13 @@ extension ColumnOperators<V extends Object?> on ColumnOf<V> {
   ColumnAlias<Schema<Object?>, V> as(String alias) => $.as(alias);
 
   /// The column of this specific type.
-  Column<Schema<Object?>, V> get $ =>
-      ColumnType._typeToColumn[this]! as Column<Schema<Object?>, V>;
+  Column<Schema<Object?>, V> get $ {
+    final column = ColumnType._typeToColumn[this];
+    if (column == null) {
+      throw StateError('Using an instance value instead of a schema!');
+    }
+    return column as Column<Schema<Object?>, V>;
+  }
 
   /// Row value for column is in the list of [values].
   SQL inList(List<V> values) => SQL([$, 'IN', values]);

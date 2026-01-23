@@ -77,8 +77,7 @@ abstract class BaseSqlDialect extends SqlDialect {
     //   _ => '',
     // };
     final groupBySQL = switch (select.groupBy) {
-      final Selectable<Object> groupBy =>
-        'GROUP BY (${translateSelection(
+      final Selectable<Object> groupBy => 'GROUP BY (${translateSelection(
           groupBy,
           values,
           singleTable: singleTable,
@@ -223,11 +222,15 @@ abstract class BaseSqlDialect extends SqlDialect {
     }
 
     if (select case final Table table) {
-      for (final column in table.columns) {
+      for (var i = 0; i < table.columns.length; i++) {
         chunks.add(
-          translateSelection(column, values, singleTable: singleTable),
+          translateSelection(
+            table.columns[i],
+            values,
+            singleTable: singleTable,
+          ),
         );
-        if (column != table.columns.last) {
+        if (i != table.columns.length - 1) {
           chunks.add(', ');
         }
       }
@@ -243,11 +246,15 @@ abstract class BaseSqlDialect extends SqlDialect {
         chunks.add(escapeName(column.name));
       }
     } else if (select case final SelectableResult<dynamic> result) {
-      for (final select in result.selected) {
+      for (var i = 0; i < result.selected.length; i++) {
         chunks.add(
-          translateSelection(select, values, singleTable: singleTable),
+          translateSelection(
+            result.selected[i],
+            values,
+            singleTable: singleTable,
+          ),
         );
-        if (select != result.selected.last) {
+        if (i != result.selected.length - 1) {
           chunks.add(', ');
         }
       }
@@ -266,11 +273,15 @@ abstract class BaseSqlDialect extends SqlDialect {
 
     if (update case final UpdateableTable update) {
       final table = update.table;
-      for (final column in table.columns) {
+      for (var i = 0; i < table.columns.length; i++) {
         chunks.add(
-          translateSelection(column, values, singleTable: singleTable),
+          translateSelection(
+            table.columns[i],
+            values,
+            singleTable: singleTable,
+          ),
         );
-        if (column != table.columns.last) {
+        if (i != table.columns.length - 1) {
           chunks.add(', ');
         }
       }
@@ -287,11 +298,15 @@ abstract class BaseSqlDialect extends SqlDialect {
         chunks.add(escapeName(column.name));
       }
     } else if (update case final UpdateableResult<dynamic> result) {
-      for (final update in result.updating) {
+      for (var i = 0; i < result.updating.length; i++) {
         chunks.add(
-          translateUpdateable(update, values, singleTable: singleTable),
+          translateUpdateable(
+            result.updating[i],
+            values,
+            singleTable: singleTable,
+          ),
         );
-        if (update != result.updating.last) {
+        if (i != result.updating.length - 1) {
           chunks.add(', ');
         }
       }
@@ -343,24 +358,27 @@ abstract class BaseSqlDialect extends SqlDialect {
       values.add(column.encode(value));
     } else if (updateSet case UpdateableTable(:final table, :final value)) {
       final buffer = StringBuffer();
-      for (final column in table.columns) {
+      for (var i = 0; i < table.columns.length; i++) {
+        final column = table.columns[i];
         final columnValue = column.readValueOf(value);
         if (column.isPrimaryKey && columnValue == null) continue;
 
         buffer.write('"${column.name}" = ${escapeParam(values.length)}');
         values.add(column.encode(columnValue));
-        if (column != table.columns.last) {
+        if (i != table.columns.length - 1) {
           buffer.write(', ');
         }
       }
       chunks.add(buffer.toString());
     } else if (updateSet case UpdateableResult(:final updating)) {
-      for (final update in updating) {
-        chunks.add(translateUpdateSet(update, values));
-        if (update != updating.last) {
-          chunks.add(', ');
+      final buffer = StringBuffer();
+      for (var i = 0; i < updating.length; i++) {
+        buffer.write(translateUpdateSet(updating[i], values));
+        if (i != updating.length - 1) {
+          buffer.write(', ');
         }
       }
+      chunks.add(buffer.toString());
     } else {
       throw UnsupportedError('$updateSet');
     }
@@ -375,7 +393,8 @@ abstract class BaseSqlDialect extends SqlDialect {
     required bool singleTable,
   }) {
     final buffer = StringBuffer();
-    for (final chunk in sql.chunks) {
+    for (var i = 0; i < sql.chunks.length; i++) {
+      final chunk = sql.chunks[i];
       if (chunk case final RawSQL chunk) {
         buffer.write(chunk.sql);
       } else if (chunk case final Column column) {
@@ -397,7 +416,7 @@ abstract class BaseSqlDialect extends SqlDialect {
         values.add(chunk);
       }
 
-      if (chunk != sql.chunks.last) {
+      if (i != sql.chunks.length - 1) {
         buffer.write(' ');
       }
     }

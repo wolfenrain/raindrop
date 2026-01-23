@@ -1,7 +1,7 @@
 import 'package:raindrop/raindrop.dart';
 
 /// {@template sql}
-/// SQL-based filter, makes it easy to add custom SQL code.
+/// SQL-based logic, makes it easy to add custom SQL code.
 /// {@endtemplate}
 class SQL extends Filter {
   /// {@macro sql}
@@ -21,7 +21,7 @@ class SQL extends Filter {
   SQL.function(String name, List<Object?> chunks)
       : this([RawSQL('$name('), ...chunks, const RawSQL(')')]);
 
-  /// The SQL chunks.
+  /// The chunks of the SQL portion.
   final List<Object?> chunks;
 
   @override

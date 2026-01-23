@@ -7,4 +7,7 @@ environment:
 workspace:
   - packages/raindrop
   - packages/raindrop_postgres
+  - packages/raindrop_postgres/example
   - packages/raindrop_sqlite
+  - packages/raindrop_sqlite/example
+  - packages/raindrop_cli

@@ -6,7 +6,7 @@ extension TextColumnDefinition<S extends Schema<S>> on SchemaBuilder<S> {
     Field<S, String> field,
     String? value,
   ) {
-    return column(TextColumn.new, name, field, value) as T;
+    return column(TextColumn.new, name, field, value, sqlType: 'TEXT') as T;
   }
 }
 

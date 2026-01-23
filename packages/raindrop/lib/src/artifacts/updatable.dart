@@ -37,14 +37,14 @@ class UpdateableTable<S extends Schema<S>> implements Updateable<S> {
 
 /// Provide a set method to a column to update a column.
 extension UpdateColumn<V> on ColumnOf<V> {
-  /// Make the column updateable by [value].
-  UpdateableColumn<V> set(V value) => UpdateableColumn($, value);
+  /// Set the column for a given row to [value].
+  UpdateableColumn<V> to(V value) => UpdateableColumn($, value);
 }
 
 /// Provide a set method to a table to update an instance.
 extension UpdateTable<S extends Schema<S>> on S {
-  /// Make the table updateable by [value].
-  UpdateableTable<S> set(S value) => UpdateableTable($, value);
+  /// Set the whole to the given [value].
+  UpdateableTable<S> to(S value) => UpdateableTable($, value);
 }
 
 /// {@template updatable_result}

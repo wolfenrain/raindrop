@@ -6,7 +6,7 @@ extension RealColumnDefinition<S extends Schema<S>> on SchemaBuilder<S> {
     Field<S, double> field,
     double? value,
   ) {
-    return column(RealColumn.new, name, field, value) as T;
+    return column(RealColumn.new, name, field, value, sqlType: 'REAL') as T;
   }
 }
 

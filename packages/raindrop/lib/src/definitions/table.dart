@@ -21,8 +21,17 @@ class SchemaFake {
 }
 
 /// {@macro table}
-S table<S extends Schema<S>>(String name, S Function() builder) {
-  return Table._(name, builder).schema;
+S table<S extends Schema<S>>(
+  String name,
+  S Function() builder, {
+  String? dialect,
+  void Function(S table)? extra,
+}) {
+  final table = Table<S>._(name, builder, dialect: dialect);
+  if (extra case final void Function(S table) extra) {
+    runZoned(() => extra(table.schema), zoneValues: {#extra: table});
+  }
+  return table.schema;
 }
 
 /// {@template table}
@@ -34,7 +43,9 @@ S table<S extends Schema<S>>(String name, S Function() builder) {
 /// {@endtemplate}
 class Table<S extends Schema<S>?> implements Selectable<S> {
   /// {@macro table}
-  Table._(this.name, this.builder, {this.alias}) : columns = [] {
+  Table._(this.name, this.builder, {this.alias, this.dialect})
+      : columns = [],
+        indexes = [] {
     schema = runZoned(builder, zoneValues: {#table: this});
     Table._schemaToTable[schema as Schema] = this;
   }
@@ -44,6 +55,9 @@ class Table<S extends Schema<S>?> implements Selectable<S> {
 
   /// Optional table to use for the table.
   final String? alias;
+
+  /// The SQL dialect for this table (e.g., 'postgres', 'sqlite').
+  final String? dialect;
 
   /// Returns [alias] or [name].
   String get aliasOrName => alias ?? name;
@@ -57,13 +71,17 @@ class Table<S extends Schema<S>?> implements Selectable<S> {
   /// The columns of the table.
   final List<Column<S, dynamic>> columns;
 
+  /// The indexes defined on this table.
+  final List<Index> indexes;
+
   /// Create a new instance with the [data].
   S create(Map<String, dynamic> data) {
     return runZoned(builder, zoneValues: {#read: data});
   }
 
   /// Create an aliased instance of the table.
-  Table<S> aliased(String alias) => Table<S>._(name, builder, alias: alias);
+  Table<S> aliased(String alias) =>
+      Table<S>._(name, builder, alias: alias, dialect: dialect);
 
   /// Returns the values of an schema [instance].
   List<dynamic> values(dynamic instance) {
@@ -82,6 +100,8 @@ class Table<S extends Schema<S>?> implements Selectable<S> {
     Field<S, V> field, {
     bool isNullable = false,
     ColumnTransformer<V, Object?>? transformer,
+    String? sqlType,
+    String? defaultValue,
   }) {
     final column = Column<S, V>(
       this,
@@ -89,10 +109,15 @@ class Table<S extends Schema<S>?> implements Selectable<S> {
       valueOf: field,
       isNullable: isNullable,
       transformer: transformer,
+      sqlType: sqlType,
+      defaultValue: defaultValue,
     );
     columns.add(column);
     return column;
   }
+
+  /// Adds an index to the table.
+  void addIndex(Index index) => indexes.add(index);
 
   bool _instanceOf(Schema r) => r is S;
 

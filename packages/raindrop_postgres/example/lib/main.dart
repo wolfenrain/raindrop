@@ -1,11 +1,10 @@
 import 'dart:io';
 
 import 'package:raindrop/raindrop.dart';
-import 'package:raindrop_sqlite/raindrop_sqlite.dart';
+import 'package:raindrop_postgres/raindrop_postgres.dart';
 
-// import 'schemas/items.dart';
-import 'schemas/pets.dart';
-import 'schemas/users.dart';
+import 'package:raindrop_postgres_example/schemas/pets.dart';
+import 'package:raindrop_postgres_example/schemas/users.dart';
 
 class ExampleLogger implements Logger {
   @override
@@ -16,7 +15,7 @@ class ExampleLogger implements Logger {
 
 void main() async {
   final db = Raindrop(
-    SQLiteDelegate.memory(),
+    PostgresDelegate(Uri.parse('')),
     logger: ExampleLogger(),
   );
 
@@ -44,7 +43,7 @@ CREATE TABLE IF NOT EXISTS pets (
   print('Inserted one user: $user');
 
   final namesAndTheirOccurrences = await db
-      .select((users.name.$, users.name.count()).$)
+      .select(users.name.$, users.name.count())
       .from(users)
       .where(users.deletedAt.isNull())
       .groupBy(users.name.$);
@@ -57,15 +56,15 @@ CREATE TABLE IF NOT EXISTS pets (
 
   final updatedNames = await db
       .update(users)
-      .set(users.name.set('anotherTest'))
+      .set(users.name.to('anotherTest'))
       .where(users.id.equals(1))
       .returning();
 
   print('Updated to the following names: $updatedNames');
 
-  final a = posts.as('a');
-  final b = posts.as('b');
-  final c = posts.as('c');
+  final a = pets.as('a');
+  final b = pets.as('b');
+  final c = pets.as('c');
   final result = await db
       .select()
       .from(users)
@@ -75,17 +74,9 @@ CREATE TABLE IF NOT EXISTS pets (
 
   print(result);
 
-  // final publicUser = (users.name, users.id).$;
-  // final publicItem = (items.id, items.label).$;
-  // final [((userName, userId), (itemsId, itemsLabel))] = await db
-  //     .select((publicUser, publicItem).$)
-  //     .from(users)
-  //     .join(items, on: items.userId.equals(users.id));
-  // print(userName);
-
   final softDeleted = await db
       .update(users)
-      .set(users.deletedAt.set(DateTime.now()))
+      .set(users.deletedAt.to(DateTime.now()))
       .where(users.id.equals(1))
       .returning();
 
@@ -99,21 +90,21 @@ CREATE TABLE IF NOT EXISTS pets (
   print('Deleted the following users: $deletedUsers');
 
   await Future.wait([
-    (() {
+    () {
       return db.transaction((tx) async {
         await tx.execute('SELECT 1');
         await tx.transaction((tx2) async {
           await tx2.execute('SELECT 2');
         });
       });
-    })(),
-    (() {
+    }(),
+    () {
       return db.transaction((tx) {
         return tx.transaction((tx2) {
           return tx2.execute('SELECT 3');
         });
       });
-    })(),
+    }(),
     db.execute('SELECT 4'),
   ]);
 

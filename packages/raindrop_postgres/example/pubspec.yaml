@@ -1,0 +1,16 @@
+name: raindrop_postgres_example
+publish_to: none
+resolution: workspace
+
+environment:
+  sdk: ">3.5.0-0<=4.0.0"
+
+dependencies:
+  raindrop:
+    path: ../../raindrop
+  raindrop_postgres:
+    path: ../
+
+dev_dependencies:
+  raindrop_cli:
+    path: ../../raindrop_cli

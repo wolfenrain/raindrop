@@ -12,6 +12,7 @@ extension DateTimeColumnDefinition<S extends Schema<S>> on SchemaBuilder<S> {
       field,
       value,
       transformer: const DateTimeTransfomer(),
+      sqlType: 'TIMESTAMP',
     ) as T;
   }
 }

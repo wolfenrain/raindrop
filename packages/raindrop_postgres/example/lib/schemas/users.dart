@@ -1,5 +1,5 @@
 import 'package:raindrop/raindrop.dart';
-import 'package:raindrop_sqlite/raindrop_sqlite.dart';
+import 'package:raindrop_postgres/raindrop_postgres.dart';
 
 class User extends Schema<User> {
   User({
@@ -20,7 +20,7 @@ class User extends Schema<User> {
   static const $ = SchemaBuilder<User>();
 }
 
-final users = table(
+final users = postgresTable(
   'users',
   () => User(
     id: fakes.primaryKey(),

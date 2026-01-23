@@ -1,5 +1,6 @@
 import 'package:raindrop/raindrop.dart';
 
+/// Schema used for when nothing has been selected yet.
 class NoSchema extends Schema<NoSchema> {}
 
 /// {@template select_builder}
@@ -11,27 +12,4 @@ class SelectBuilder<V extends Object?> extends QueryBuilder<NoSchema, V> {
     super.executor, {
     required super.config,
   });
-}
-
-/// Provide a from method when nothing is selected.
-extension NothingSelected on SelectBuilder<Object?> {
-  /// Create a from builder where the whole table gets selected.
-  SelectFromBuilder<S, S> from<S extends Schema<S>>(S from) {
-    final table = Table.get(from);
-    return SelectFromBuilder(
-      executor,
-      config: config.copyWith({#selecting: table, #from: table}),
-    );
-  }
-}
-
-/// Provide a from method when something is selected.
-extension SomethingSelected<V extends Object> on SelectBuilder<V> {
-  /// Create a from builder.
-  SelectFromBuilder<S, V> from<S extends Schema<S>>(S from) {
-    return SelectFromBuilder(
-      executor,
-      config: config.copyWith({#from: Table.get(from)}),
-    );
-  }
 }

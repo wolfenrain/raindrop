@@ -8,7 +8,7 @@ extension BlobColumnDefinition<S extends Schema<S>> on SchemaBuilder<S> {
     Field<S, Uint8List> field,
     Uint8List? value,
   ) {
-    return column(BlobColumn.new, name, field, value) as T;
+    return column(BlobColumn.new, name, field, value, sqlType: 'BLOB') as T;
   }
 }
 

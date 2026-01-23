@@ -14,6 +14,7 @@ extension BigIntColumnDefinition<S extends Schema<S>> on SchemaBuilder<S> {
       field,
       value,
       transformer: const BigIntTransfomer(),
+      sqlType: 'BLOB',
     ) as T;
   }
 }

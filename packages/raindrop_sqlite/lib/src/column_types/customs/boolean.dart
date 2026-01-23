@@ -13,6 +13,7 @@ extension BooleanColumnDefinition<S extends Schema<S>> on SchemaBuilder<S> {
       field,
       value,
       transformer: const BooleanTransfomer(),
+      sqlType: 'INTEGER',
     ) as T;
   }
 }

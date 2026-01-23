@@ -10,6 +10,9 @@ class Column<S extends Schema<S>?, V extends Object?> implements Selectable<V> {
     this.isNullable = false,
     this.isPrimaryKey = false,
     this.transformer,
+    this.sqlType,
+    this.autoIncrement = false,
+    this.defaultValue,
   });
 
   /// The table of the column.
@@ -51,10 +54,26 @@ class Column<S extends Schema<S>?, V extends Object?> implements Selectable<V> {
   /// If the column is nullable;
   final bool isNullable;
 
+  /// The SQL type name (e.g., 'INTEGER', 'TEXT', 'TIMESTAMP').
+  final String? sqlType;
+
+  /// Whether this column auto-increments (for primary keys).
+  bool autoIncrement;
+
+  /// Default value expression for the column.
+  final String? defaultValue;
+
   // TODO: should be on ColumnType
   /// Returns the nullable version of this column.
-  Column<S, V?> get nullable =>
-      Column(table, name, isNullable: true, isPrimaryKey: isPrimaryKey);
+  Column<S, V?> get nullable => Column(
+        table,
+        name,
+        isNullable: true,
+        isPrimaryKey: isPrimaryKey,
+        sqlType: sqlType,
+        autoIncrement: autoIncrement,
+        defaultValue: defaultValue,
+      );
 
   /// Make an alias of the column.
   ColumnAlias<S, V> as(String alias) {
@@ -64,6 +83,9 @@ class Column<S extends Schema<S>?, V extends Object?> implements Selectable<V> {
       isNullable: isNullable,
       isPrimaryKey: isPrimaryKey,
       alias: alias,
+      sqlType: sqlType,
+      autoIncrement: autoIncrement,
+      defaultValue: defaultValue,
     );
   }
 
@@ -86,6 +108,9 @@ class ColumnAlias<S extends Schema<S>?, V extends Object?>
     required super.isNullable,
     required super.isPrimaryKey,
     required this.alias,
+    super.sqlType,
+    super.autoIncrement,
+    super.defaultValue,
   });
 
   /// The alias of the column.

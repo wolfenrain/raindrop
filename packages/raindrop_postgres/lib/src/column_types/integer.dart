@@ -6,7 +6,7 @@ extension IntColumnDefinition<S extends Schema<S>> on SchemaBuilder<S> {
     Field<S, int> field,
     int? value,
   ) {
-    return column(IntColumn.new, name, field, value) as T;
+    return column(IntColumn.new, name, field, value, sqlType: 'INTEGER') as T;
   }
 }
 

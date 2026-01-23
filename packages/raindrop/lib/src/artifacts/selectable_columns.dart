@@ -1,94 +1,348 @@
 // ignore_for_file: public_member_api_docs, lines_longer_than_80_chars
-
 import 'package:raindrop/raindrop.dart';
 
-extension SelectableColumns2<V1, V2> on (ColumnOf<V1>, ColumnOf<V2>) {
-  SelectableResult<(V1, V2)> get $ {
-    return SelectableResult([this.$1.$, this.$2.$]);
+/// Extension that provides insert, select, update and delete methods.
+/// 
+/// This file is fully generated to allow for resolution logic of types.
+extension ISUDRaindropExecutor on RaindropExecutor<RaindropDelegate> {
+  /// Create an insert builder for inserting entities [into] the database.
+  InsertValuesBuilder<S, void> insert<S extends Schema<S>>({required S into}) {
+    return delegate.insert(this, Table.get(into)! as Table<S>);
+  }
+
+  /// Create a select builder that can filter down on columns if needed.
+  SelectingBuilder<V0, V1, V2, V3, V4, V5, V6, V7, V8, V9, V10, V11, V12, V13, V14, V15, V16, V17, V18, V19> select<V0 extends dynamic, V1 extends dynamic, V2 extends dynamic, V3 extends dynamic, V4 extends dynamic, V5 extends dynamic, V6 extends dynamic, V7 extends dynamic, V8 extends dynamic, V9 extends dynamic, V10 extends dynamic, V11 extends dynamic, V12 extends dynamic, V13 extends dynamic, V14 extends dynamic, V15 extends dynamic, V16 extends dynamic, V17 extends dynamic, V18 extends dynamic, V19 extends dynamic>([Selectable<V0>? s0, Selectable<V1>? s1, Selectable<V2>? s2, Selectable<V3>? s3, Selectable<V4>? s4, Selectable<V5>? s5, Selectable<V6>? s6, Selectable<V7>? s7, Selectable<V8>? s8, Selectable<V9>? s9, Selectable<V10>? s10, Selectable<V11>? s11, Selectable<V12>? s12, Selectable<V13>? s13, Selectable<V14>? s14, Selectable<V15>? s15, Selectable<V16>? s16, Selectable<V17>? s17, Selectable<V18>? s18, Selectable<V19>? s19]) {
+    return delegate.select(this, _Selecting(s0, s1, s2, s3, s4, s5, s6, s7, s8, s9, s10, s11, s12, s13, s14, s15, s16, s17, s18, s19));
+  }
+
+  /// Create an update builder that can update a [table].
+  UpdateSettingBuilder<S, void> update<S extends Schema<S>>(S table) {
+    return delegate.update(this, Table.get(table)! as Table<S>);
+  }
+
+  /// Create a delete builder that can delete data [from] the database.
+  DeleteAllBuilder<S, void> delete<S extends Schema<S>>({required S from}) {
+    return delegate.delete(this, Table.get(from)! as Table<S>);
   }
 }
-extension SelectableColumns3<V1, V2, V3> on (ColumnOf<V1>, ColumnOf<V2>, ColumnOf<V3>) {
-  SelectableResult<(V1, V2, V3)> get $ {
-    return SelectableResult([this.$1.$, this.$2.$, this.$3.$]);
+
+typedef SelectingBuilder<V0 extends dynamic, V1 extends dynamic, V2 extends dynamic, V3 extends dynamic, V4 extends dynamic, V5 extends dynamic, V6 extends dynamic, V7 extends dynamic, V8 extends dynamic, V9 extends dynamic, V10 extends dynamic, V11 extends dynamic, V12 extends dynamic, V13 extends dynamic, V14 extends dynamic, V15 extends dynamic, V16 extends dynamic, V17 extends dynamic, V18 extends dynamic, V19 extends dynamic> = SelectBuilder<(Selectable<V0>, Selectable<V1>, Selectable<V2>, Selectable<V3>, Selectable<V4>, Selectable<V5>, Selectable<V6>, Selectable<V7>, Selectable<V8>, Selectable<V9>, Selectable<V10>, Selectable<V11>, Selectable<V12>, Selectable<V13>, Selectable<V14>, Selectable<V15>, Selectable<V16>, Selectable<V17>, Selectable<V18>, Selectable<V19>)?>;
+
+typedef _Unused = Selectable<dynamic>;
+
+class _Selecting<S0 extends Selectable<Object?>?, S1 extends Selectable<Object?>?, S2 extends Selectable<Object?>?, S3 extends Selectable<Object?>?, S4 extends Selectable<Object?>?, S5 extends Selectable<Object?>?, S6 extends Selectable<Object?>?, S7 extends Selectable<Object?>?, S8 extends Selectable<Object?>?, S9 extends Selectable<Object?>?, S10 extends Selectable<Object?>?, S11 extends Selectable<Object?>?, S12 extends Selectable<Object?>?, S13 extends Selectable<Object?>?, S14 extends Selectable<Object?>?, S15 extends Selectable<Object?>?, S16 extends Selectable<Object?>?, S17 extends Selectable<Object?>?, S18 extends Selectable<Object?>?, S19 extends Selectable<Object?>?> implements Selectable<(S0, S1, S2, S3, S4, S5, S6, S7, S8, S9, S10, S11, S12, S13, S14, S15, S16, S17, S18, S19)?> {
+  const _Selecting(this.s0, this.s1, this.s2, this.s3, this.s4, this.s5, this.s6, this.s7, this.s8, this.s9, this.s10, this.s11, this.s12, this.s13, this.s14, this.s15, this.s16, this.s17, this.s18, this.s19);
+
+  final S0? s0;
+  final S1? s1;
+  final S2? s2;
+  final S3? s3;
+  final S4? s4;
+  final S5? s5;
+  final S6? s6;
+  final S7? s7;
+  final S8? s8;
+  final S9? s9;
+  final S10? s10;
+  final S11? s11;
+  final S12? s12;
+  final S13? s13;
+  final S14? s14;
+  final S15? s15;
+  final S16? s16;
+  final S17? s17;
+  final S18? s18;
+  final S19? s19;
+}
+
+extension SelectableColumns on SelectBuilder<(_Unused, _Unused, _Unused, _Unused, _Unused, _Unused, _Unused, _Unused, _Unused, _Unused, _Unused, _Unused, _Unused, _Unused, _Unused, _Unused, _Unused, _Unused, _Unused, _Unused)?> {
+  /// Create a from builder where the whole table gets selected.
+  SelectFromBuilder<S, S> from<S extends Schema<S>>(S from) {
+    final table = Table.get(from);
+    return SelectFromBuilder(
+      executor,
+      config: config.copyWith({#selecting: table, #from: table}),
+    );
   }
 }
-extension SelectableColumns4<V1, V2, V3, V4> on (ColumnOf<V1>, ColumnOf<V2>, ColumnOf<V3>, ColumnOf<V4>) {
-  SelectableResult<(V1, V2, V3, V4)> get $ {
-    return SelectableResult([this.$1.$, this.$2.$, this.$3.$, this.$4.$]);
+
+extension SelectableColumns0<V0 extends Object>
+    on SelectBuilder<(Selectable<V0>, _Unused, _Unused, _Unused, _Unused, _Unused, _Unused, _Unused, _Unused, _Unused, _Unused, _Unused, _Unused, _Unused, _Unused, _Unused, _Unused, _Unused, _Unused, _Unused)?> {
+  /// Create a from builder.
+  SelectFromBuilder<S, V0> from<S extends Schema<S>>(S from) {
+    final selecting = config[#selecting]! as _Selecting;
+    return SelectFromBuilder(
+      executor,
+      config: config.copyWith({
+        #selecting: selecting.s0,
+        #from: Table.get(from),
+      }),
+    );
   }
 }
-extension SelectableColumns5<V1, V2, V3, V4, V5> on (ColumnOf<V1>, ColumnOf<V2>, ColumnOf<V3>, ColumnOf<V4>, ColumnOf<V5>) {
-  SelectableResult<(V1, V2, V3, V4, V5)> get $ {
-    return SelectableResult([this.$1.$, this.$2.$, this.$3.$, this.$4.$, this.$5.$]);
+extension SelectableColumns1<V0 extends Object, V1 extends Object>
+    on SelectBuilder<(Selectable<V0>, Selectable<V1>, _Unused, _Unused, _Unused, _Unused, _Unused, _Unused, _Unused, _Unused, _Unused, _Unused, _Unused, _Unused, _Unused, _Unused, _Unused, _Unused, _Unused, _Unused)?> {
+  /// Create a from builder.
+  SelectFromBuilder<S, (V0, V1)> from<S extends Schema<S>>(S from) {
+    final selecting = config[#selecting]! as _Selecting;
+    return SelectFromBuilder(
+      executor,
+      config: config.copyWith({
+        #selecting: SelectableResult<(V0, V1)>([selecting.s0!, selecting.s1!]),
+        #from: Table.get(from),
+      }),
+    );
   }
 }
-extension SelectableColumns6<V1, V2, V3, V4, V5, V6> on (ColumnOf<V1>, ColumnOf<V2>, ColumnOf<V3>, ColumnOf<V4>, ColumnOf<V5>, ColumnOf<V6>) {
-  SelectableResult<(V1, V2, V3, V4, V5, V6)> get $ {
-    return SelectableResult([this.$1.$, this.$2.$, this.$3.$, this.$4.$, this.$5.$, this.$6.$]);
+extension SelectableColumns2<V0 extends Object, V1 extends Object, V2 extends Object>
+    on SelectBuilder<(Selectable<V0>, Selectable<V1>, Selectable<V2>, _Unused, _Unused, _Unused, _Unused, _Unused, _Unused, _Unused, _Unused, _Unused, _Unused, _Unused, _Unused, _Unused, _Unused, _Unused, _Unused, _Unused)?> {
+  /// Create a from builder.
+  SelectFromBuilder<S, (V0, V1, V2)> from<S extends Schema<S>>(S from) {
+    final selecting = config[#selecting]! as _Selecting;
+    return SelectFromBuilder(
+      executor,
+      config: config.copyWith({
+        #selecting: SelectableResult<(V0, V1, V2)>([selecting.s0!, selecting.s1!, selecting.s2!]),
+        #from: Table.get(from),
+      }),
+    );
   }
 }
-extension SelectableColumns7<V1, V2, V3, V4, V5, V6, V7> on (ColumnOf<V1>, ColumnOf<V2>, ColumnOf<V3>, ColumnOf<V4>, ColumnOf<V5>, ColumnOf<V6>, ColumnOf<V7>) {
-  SelectableResult<(V1, V2, V3, V4, V5, V6, V7)> get $ {
-    return SelectableResult([this.$1.$, this.$2.$, this.$3.$, this.$4.$, this.$5.$, this.$6.$, this.$7.$]);
+extension SelectableColumns3<V0 extends Object, V1 extends Object, V2 extends Object, V3 extends Object>
+    on SelectBuilder<(Selectable<V0>, Selectable<V1>, Selectable<V2>, Selectable<V3>, _Unused, _Unused, _Unused, _Unused, _Unused, _Unused, _Unused, _Unused, _Unused, _Unused, _Unused, _Unused, _Unused, _Unused, _Unused, _Unused)?> {
+  /// Create a from builder.
+  SelectFromBuilder<S, (V0, V1, V2, V3)> from<S extends Schema<S>>(S from) {
+    final selecting = config[#selecting]! as _Selecting;
+    return SelectFromBuilder(
+      executor,
+      config: config.copyWith({
+        #selecting: SelectableResult<(V0, V1, V2, V3)>([selecting.s0!, selecting.s1!, selecting.s2!, selecting.s3!]),
+        #from: Table.get(from),
+      }),
+    );
   }
 }
-extension SelectableColumns8<V1, V2, V3, V4, V5, V6, V7, V8> on (ColumnOf<V1>, ColumnOf<V2>, ColumnOf<V3>, ColumnOf<V4>, ColumnOf<V5>, ColumnOf<V6>, ColumnOf<V7>, ColumnOf<V8>) {
-  SelectableResult<(V1, V2, V3, V4, V5, V6, V7, V8)> get $ {
-    return SelectableResult([this.$1.$, this.$2.$, this.$3.$, this.$4.$, this.$5.$, this.$6.$, this.$7.$, this.$8.$]);
+extension SelectableColumns4<V0 extends Object, V1 extends Object, V2 extends Object, V3 extends Object, V4 extends Object>
+    on SelectBuilder<(Selectable<V0>, Selectable<V1>, Selectable<V2>, Selectable<V3>, Selectable<V4>, _Unused, _Unused, _Unused, _Unused, _Unused, _Unused, _Unused, _Unused, _Unused, _Unused, _Unused, _Unused, _Unused, _Unused, _Unused)?> {
+  /// Create a from builder.
+  SelectFromBuilder<S, (V0, V1, V2, V3, V4)> from<S extends Schema<S>>(S from) {
+    final selecting = config[#selecting]! as _Selecting;
+    return SelectFromBuilder(
+      executor,
+      config: config.copyWith({
+        #selecting: SelectableResult<(V0, V1, V2, V3, V4)>([selecting.s0!, selecting.s1!, selecting.s2!, selecting.s3!, selecting.s4!]),
+        #from: Table.get(from),
+      }),
+    );
   }
 }
-extension SelectableColumns9<V1, V2, V3, V4, V5, V6, V7, V8, V9> on (ColumnOf<V1>, ColumnOf<V2>, ColumnOf<V3>, ColumnOf<V4>, ColumnOf<V5>, ColumnOf<V6>, ColumnOf<V7>, ColumnOf<V8>, ColumnOf<V9>) {
-  SelectableResult<(V1, V2, V3, V4, V5, V6, V7, V8, V9)> get $ {
-    return SelectableResult([this.$1.$, this.$2.$, this.$3.$, this.$4.$, this.$5.$, this.$6.$, this.$7.$, this.$8.$, this.$9.$]);
+extension SelectableColumns5<V0 extends Object, V1 extends Object, V2 extends Object, V3 extends Object, V4 extends Object, V5 extends Object>
+    on SelectBuilder<(Selectable<V0>, Selectable<V1>, Selectable<V2>, Selectable<V3>, Selectable<V4>, Selectable<V5>, _Unused, _Unused, _Unused, _Unused, _Unused, _Unused, _Unused, _Unused, _Unused, _Unused, _Unused, _Unused, _Unused, _Unused)?> {
+  /// Create a from builder.
+  SelectFromBuilder<S, (V0, V1, V2, V3, V4, V5)> from<S extends Schema<S>>(S from) {
+    final selecting = config[#selecting]! as _Selecting;
+    return SelectFromBuilder(
+      executor,
+      config: config.copyWith({
+        #selecting: SelectableResult<(V0, V1, V2, V3, V4, V5)>([selecting.s0!, selecting.s1!, selecting.s2!, selecting.s3!, selecting.s4!, selecting.s5!]),
+        #from: Table.get(from),
+      }),
+    );
   }
 }
-extension SelectableColumns10<V1, V2, V3, V4, V5, V6, V7, V8, V9, V10> on (ColumnOf<V1>, ColumnOf<V2>, ColumnOf<V3>, ColumnOf<V4>, ColumnOf<V5>, ColumnOf<V6>, ColumnOf<V7>, ColumnOf<V8>, ColumnOf<V9>, ColumnOf<V10>) {
-  SelectableResult<(V1, V2, V3, V4, V5, V6, V7, V8, V9, V10)> get $ {
-    return SelectableResult([this.$1.$, this.$2.$, this.$3.$, this.$4.$, this.$5.$, this.$6.$, this.$7.$, this.$8.$, this.$9.$, this.$10.$]);
+extension SelectableColumns6<V0 extends Object, V1 extends Object, V2 extends Object, V3 extends Object, V4 extends Object, V5 extends Object, V6 extends Object>
+    on SelectBuilder<(Selectable<V0>, Selectable<V1>, Selectable<V2>, Selectable<V3>, Selectable<V4>, Selectable<V5>, Selectable<V6>, _Unused, _Unused, _Unused, _Unused, _Unused, _Unused, _Unused, _Unused, _Unused, _Unused, _Unused, _Unused, _Unused)?> {
+  /// Create a from builder.
+  SelectFromBuilder<S, (V0, V1, V2, V3, V4, V5, V6)> from<S extends Schema<S>>(S from) {
+    final selecting = config[#selecting]! as _Selecting;
+    return SelectFromBuilder(
+      executor,
+      config: config.copyWith({
+        #selecting: SelectableResult<(V0, V1, V2, V3, V4, V5, V6)>([selecting.s0!, selecting.s1!, selecting.s2!, selecting.s3!, selecting.s4!, selecting.s5!, selecting.s6!]),
+        #from: Table.get(from),
+      }),
+    );
   }
 }
-extension SelectableColumns11<V1, V2, V3, V4, V5, V6, V7, V8, V9, V10, V11> on (ColumnOf<V1>, ColumnOf<V2>, ColumnOf<V3>, ColumnOf<V4>, ColumnOf<V5>, ColumnOf<V6>, ColumnOf<V7>, ColumnOf<V8>, ColumnOf<V9>, ColumnOf<V10>, ColumnOf<V11>) {
-  SelectableResult<(V1, V2, V3, V4, V5, V6, V7, V8, V9, V10, V11)> get $ {
-    return SelectableResult([this.$1.$, this.$2.$, this.$3.$, this.$4.$, this.$5.$, this.$6.$, this.$7.$, this.$8.$, this.$9.$, this.$10.$, this.$11.$]);
+extension SelectableColumns7<V0 extends Object, V1 extends Object, V2 extends Object, V3 extends Object, V4 extends Object, V5 extends Object, V6 extends Object, V7 extends Object>
+    on SelectBuilder<(Selectable<V0>, Selectable<V1>, Selectable<V2>, Selectable<V3>, Selectable<V4>, Selectable<V5>, Selectable<V6>, Selectable<V7>, _Unused, _Unused, _Unused, _Unused, _Unused, _Unused, _Unused, _Unused, _Unused, _Unused, _Unused, _Unused)?> {
+  /// Create a from builder.
+  SelectFromBuilder<S, (V0, V1, V2, V3, V4, V5, V6, V7)> from<S extends Schema<S>>(S from) {
+    final selecting = config[#selecting]! as _Selecting;
+    return SelectFromBuilder(
+      executor,
+      config: config.copyWith({
+        #selecting: SelectableResult<(V0, V1, V2, V3, V4, V5, V6, V7)>([selecting.s0!, selecting.s1!, selecting.s2!, selecting.s3!, selecting.s4!, selecting.s5!, selecting.s6!, selecting.s7!]),
+        #from: Table.get(from),
+      }),
+    );
   }
 }
-extension SelectableColumns12<V1, V2, V3, V4, V5, V6, V7, V8, V9, V10, V11, V12> on (ColumnOf<V1>, ColumnOf<V2>, ColumnOf<V3>, ColumnOf<V4>, ColumnOf<V5>, ColumnOf<V6>, ColumnOf<V7>, ColumnOf<V8>, ColumnOf<V9>, ColumnOf<V10>, ColumnOf<V11>, ColumnOf<V12>) {
-  SelectableResult<(V1, V2, V3, V4, V5, V6, V7, V8, V9, V10, V11, V12)> get $ {
-    return SelectableResult([this.$1.$, this.$2.$, this.$3.$, this.$4.$, this.$5.$, this.$6.$, this.$7.$, this.$8.$, this.$9.$, this.$10.$, this.$11.$, this.$12.$]);
+extension SelectableColumns8<V0 extends Object, V1 extends Object, V2 extends Object, V3 extends Object, V4 extends Object, V5 extends Object, V6 extends Object, V7 extends Object, V8 extends Object>
+    on SelectBuilder<(Selectable<V0>, Selectable<V1>, Selectable<V2>, Selectable<V3>, Selectable<V4>, Selectable<V5>, Selectable<V6>, Selectable<V7>, Selectable<V8>, _Unused, _Unused, _Unused, _Unused, _Unused, _Unused, _Unused, _Unused, _Unused, _Unused, _Unused)?> {
+  /// Create a from builder.
+  SelectFromBuilder<S, (V0, V1, V2, V3, V4, V5, V6, V7, V8)> from<S extends Schema<S>>(S from) {
+    final selecting = config[#selecting]! as _Selecting;
+    return SelectFromBuilder(
+      executor,
+      config: config.copyWith({
+        #selecting: SelectableResult<(V0, V1, V2, V3, V4, V5, V6, V7, V8)>([selecting.s0!, selecting.s1!, selecting.s2!, selecting.s3!, selecting.s4!, selecting.s5!, selecting.s6!, selecting.s7!, selecting.s8!]),
+        #from: Table.get(from),
+      }),
+    );
   }
 }
-extension SelectableColumns13<V1, V2, V3, V4, V5, V6, V7, V8, V9, V10, V11, V12, V13> on (ColumnOf<V1>, ColumnOf<V2>, ColumnOf<V3>, ColumnOf<V4>, ColumnOf<V5>, ColumnOf<V6>, ColumnOf<V7>, ColumnOf<V8>, ColumnOf<V9>, ColumnOf<V10>, ColumnOf<V11>, ColumnOf<V12>, ColumnOf<V13>) {
-  SelectableResult<(V1, V2, V3, V4, V5, V6, V7, V8, V9, V10, V11, V12, V13)> get $ {
-    return SelectableResult([this.$1.$, this.$2.$, this.$3.$, this.$4.$, this.$5.$, this.$6.$, this.$7.$, this.$8.$, this.$9.$, this.$10.$, this.$11.$, this.$12.$, this.$13.$]);
+extension SelectableColumns9<V0 extends Object, V1 extends Object, V2 extends Object, V3 extends Object, V4 extends Object, V5 extends Object, V6 extends Object, V7 extends Object, V8 extends Object, V9 extends Object>
+    on SelectBuilder<(Selectable<V0>, Selectable<V1>, Selectable<V2>, Selectable<V3>, Selectable<V4>, Selectable<V5>, Selectable<V6>, Selectable<V7>, Selectable<V8>, Selectable<V9>, _Unused, _Unused, _Unused, _Unused, _Unused, _Unused, _Unused, _Unused, _Unused, _Unused)?> {
+  /// Create a from builder.
+  SelectFromBuilder<S, (V0, V1, V2, V3, V4, V5, V6, V7, V8, V9)> from<S extends Schema<S>>(S from) {
+    final selecting = config[#selecting]! as _Selecting;
+    return SelectFromBuilder(
+      executor,
+      config: config.copyWith({
+        #selecting: SelectableResult<(V0, V1, V2, V3, V4, V5, V6, V7, V8, V9)>([selecting.s0!, selecting.s1!, selecting.s2!, selecting.s3!, selecting.s4!, selecting.s5!, selecting.s6!, selecting.s7!, selecting.s8!, selecting.s9!]),
+        #from: Table.get(from),
+      }),
+    );
   }
 }
-extension SelectableColumns14<V1, V2, V3, V4, V5, V6, V7, V8, V9, V10, V11, V12, V13, V14> on (ColumnOf<V1>, ColumnOf<V2>, ColumnOf<V3>, ColumnOf<V4>, ColumnOf<V5>, ColumnOf<V6>, ColumnOf<V7>, ColumnOf<V8>, ColumnOf<V9>, ColumnOf<V10>, ColumnOf<V11>, ColumnOf<V12>, ColumnOf<V13>, ColumnOf<V14>) {
-  SelectableResult<(V1, V2, V3, V4, V5, V6, V7, V8, V9, V10, V11, V12, V13, V14)> get $ {
-    return SelectableResult([this.$1.$, this.$2.$, this.$3.$, this.$4.$, this.$5.$, this.$6.$, this.$7.$, this.$8.$, this.$9.$, this.$10.$, this.$11.$, this.$12.$, this.$13.$, this.$14.$]);
+extension SelectableColumns10<V0 extends Object, V1 extends Object, V2 extends Object, V3 extends Object, V4 extends Object, V5 extends Object, V6 extends Object, V7 extends Object, V8 extends Object, V9 extends Object, V10 extends Object>
+    on SelectBuilder<(Selectable<V0>, Selectable<V1>, Selectable<V2>, Selectable<V3>, Selectable<V4>, Selectable<V5>, Selectable<V6>, Selectable<V7>, Selectable<V8>, Selectable<V9>, Selectable<V10>, _Unused, _Unused, _Unused, _Unused, _Unused, _Unused, _Unused, _Unused, _Unused)?> {
+  /// Create a from builder.
+  SelectFromBuilder<S, (V0, V1, V2, V3, V4, V5, V6, V7, V8, V9, V10)> from<S extends Schema<S>>(S from) {
+    final selecting = config[#selecting]! as _Selecting;
+    return SelectFromBuilder(
+      executor,
+      config: config.copyWith({
+        #selecting: SelectableResult<(V0, V1, V2, V3, V4, V5, V6, V7, V8, V9, V10)>([selecting.s0!, selecting.s1!, selecting.s2!, selecting.s3!, selecting.s4!, selecting.s5!, selecting.s6!, selecting.s7!, selecting.s8!, selecting.s9!, selecting.s10!]),
+        #from: Table.get(from),
+      }),
+    );
   }
 }
-extension SelectableColumns15<V1, V2, V3, V4, V5, V6, V7, V8, V9, V10, V11, V12, V13, V14, V15> on (ColumnOf<V1>, ColumnOf<V2>, ColumnOf<V3>, ColumnOf<V4>, ColumnOf<V5>, ColumnOf<V6>, ColumnOf<V7>, ColumnOf<V8>, ColumnOf<V9>, ColumnOf<V10>, ColumnOf<V11>, ColumnOf<V12>, ColumnOf<V13>, ColumnOf<V14>, ColumnOf<V15>) {
-  SelectableResult<(V1, V2, V3, V4, V5, V6, V7, V8, V9, V10, V11, V12, V13, V14, V15)> get $ {
-    return SelectableResult([this.$1.$, this.$2.$, this.$3.$, this.$4.$, this.$5.$, this.$6.$, this.$7.$, this.$8.$, this.$9.$, this.$10.$, this.$11.$, this.$12.$, this.$13.$, this.$14.$, this.$15.$]);
+extension SelectableColumns11<V0 extends Object, V1 extends Object, V2 extends Object, V3 extends Object, V4 extends Object, V5 extends Object, V6 extends Object, V7 extends Object, V8 extends Object, V9 extends Object, V10 extends Object, V11 extends Object>
+    on SelectBuilder<(Selectable<V0>, Selectable<V1>, Selectable<V2>, Selectable<V3>, Selectable<V4>, Selectable<V5>, Selectable<V6>, Selectable<V7>, Selectable<V8>, Selectable<V9>, Selectable<V10>, Selectable<V11>, _Unused, _Unused, _Unused, _Unused, _Unused, _Unused, _Unused, _Unused)?> {
+  /// Create a from builder.
+  SelectFromBuilder<S, (V0, V1, V2, V3, V4, V5, V6, V7, V8, V9, V10, V11)> from<S extends Schema<S>>(S from) {
+    final selecting = config[#selecting]! as _Selecting;
+    return SelectFromBuilder(
+      executor,
+      config: config.copyWith({
+        #selecting: SelectableResult<(V0, V1, V2, V3, V4, V5, V6, V7, V8, V9, V10, V11)>([selecting.s0!, selecting.s1!, selecting.s2!, selecting.s3!, selecting.s4!, selecting.s5!, selecting.s6!, selecting.s7!, selecting.s8!, selecting.s9!, selecting.s10!, selecting.s11!]),
+        #from: Table.get(from),
+      }),
+    );
   }
 }
-extension SelectableColumns16<V1, V2, V3, V4, V5, V6, V7, V8, V9, V10, V11, V12, V13, V14, V15, V16> on (ColumnOf<V1>, ColumnOf<V2>, ColumnOf<V3>, ColumnOf<V4>, ColumnOf<V5>, ColumnOf<V6>, ColumnOf<V7>, ColumnOf<V8>, ColumnOf<V9>, ColumnOf<V10>, ColumnOf<V11>, ColumnOf<V12>, ColumnOf<V13>, ColumnOf<V14>, ColumnOf<V15>, ColumnOf<V16>) {
-  SelectableResult<(V1, V2, V3, V4, V5, V6, V7, V8, V9, V10, V11, V12, V13, V14, V15, V16)> get $ {
-    return SelectableResult([this.$1.$, this.$2.$, this.$3.$, this.$4.$, this.$5.$, this.$6.$, this.$7.$, this.$8.$, this.$9.$, this.$10.$, this.$11.$, this.$12.$, this.$13.$, this.$14.$, this.$15.$, this.$16.$]);
+extension SelectableColumns12<V0 extends Object, V1 extends Object, V2 extends Object, V3 extends Object, V4 extends Object, V5 extends Object, V6 extends Object, V7 extends Object, V8 extends Object, V9 extends Object, V10 extends Object, V11 extends Object, V12 extends Object>
+    on SelectBuilder<(Selectable<V0>, Selectable<V1>, Selectable<V2>, Selectable<V3>, Selectable<V4>, Selectable<V5>, Selectable<V6>, Selectable<V7>, Selectable<V8>, Selectable<V9>, Selectable<V10>, Selectable<V11>, Selectable<V12>, _Unused, _Unused, _Unused, _Unused, _Unused, _Unused, _Unused)?> {
+  /// Create a from builder.
+  SelectFromBuilder<S, (V0, V1, V2, V3, V4, V5, V6, V7, V8, V9, V10, V11, V12)> from<S extends Schema<S>>(S from) {
+    final selecting = config[#selecting]! as _Selecting;
+    return SelectFromBuilder(
+      executor,
+      config: config.copyWith({
+        #selecting: SelectableResult<(V0, V1, V2, V3, V4, V5, V6, V7, V8, V9, V10, V11, V12)>([selecting.s0!, selecting.s1!, selecting.s2!, selecting.s3!, selecting.s4!, selecting.s5!, selecting.s6!, selecting.s7!, selecting.s8!, selecting.s9!, selecting.s10!, selecting.s11!, selecting.s12!]),
+        #from: Table.get(from),
+      }),
+    );
   }
 }
-extension SelectableColumns17<V1, V2, V3, V4, V5, V6, V7, V8, V9, V10, V11, V12, V13, V14, V15, V16, V17> on (ColumnOf<V1>, ColumnOf<V2>, ColumnOf<V3>, ColumnOf<V4>, ColumnOf<V5>, ColumnOf<V6>, ColumnOf<V7>, ColumnOf<V8>, ColumnOf<V9>, ColumnOf<V10>, ColumnOf<V11>, ColumnOf<V12>, ColumnOf<V13>, ColumnOf<V14>, ColumnOf<V15>, ColumnOf<V16>, ColumnOf<V17>) {
-  SelectableResult<(V1, V2, V3, V4, V5, V6, V7, V8, V9, V10, V11, V12, V13, V14, V15, V16, V17)> get $ {
-    return SelectableResult([this.$1.$, this.$2.$, this.$3.$, this.$4.$, this.$5.$, this.$6.$, this.$7.$, this.$8.$, this.$9.$, this.$10.$, this.$11.$, this.$12.$, this.$13.$, this.$14.$, this.$15.$, this.$16.$, this.$17.$]);
+extension SelectableColumns13<V0 extends Object, V1 extends Object, V2 extends Object, V3 extends Object, V4 extends Object, V5 extends Object, V6 extends Object, V7 extends Object, V8 extends Object, V9 extends Object, V10 extends Object, V11 extends Object, V12 extends Object, V13 extends Object>
+    on SelectBuilder<(Selectable<V0>, Selectable<V1>, Selectable<V2>, Selectable<V3>, Selectable<V4>, Selectable<V5>, Selectable<V6>, Selectable<V7>, Selectable<V8>, Selectable<V9>, Selectable<V10>, Selectable<V11>, Selectable<V12>, Selectable<V13>, _Unused, _Unused, _Unused, _Unused, _Unused, _Unused)?> {
+  /// Create a from builder.
+  SelectFromBuilder<S, (V0, V1, V2, V3, V4, V5, V6, V7, V8, V9, V10, V11, V12, V13)> from<S extends Schema<S>>(S from) {
+    final selecting = config[#selecting]! as _Selecting;
+    return SelectFromBuilder(
+      executor,
+      config: config.copyWith({
+        #selecting: SelectableResult<(V0, V1, V2, V3, V4, V5, V6, V7, V8, V9, V10, V11, V12, V13)>([selecting.s0!, selecting.s1!, selecting.s2!, selecting.s3!, selecting.s4!, selecting.s5!, selecting.s6!, selecting.s7!, selecting.s8!, selecting.s9!, selecting.s10!, selecting.s11!, selecting.s12!, selecting.s13!]),
+        #from: Table.get(from),
+      }),
+    );
   }
 }
-extension SelectableColumns18<V1, V2, V3, V4, V5, V6, V7, V8, V9, V10, V11, V12, V13, V14, V15, V16, V17, V18> on (ColumnOf<V1>, ColumnOf<V2>, ColumnOf<V3>, ColumnOf<V4>, ColumnOf<V5>, ColumnOf<V6>, ColumnOf<V7>, ColumnOf<V8>, ColumnOf<V9>, ColumnOf<V10>, ColumnOf<V11>, ColumnOf<V12>, ColumnOf<V13>, ColumnOf<V14>, ColumnOf<V15>, ColumnOf<V16>, ColumnOf<V17>, ColumnOf<V18>) {
-  SelectableResult<(V1, V2, V3, V4, V5, V6, V7, V8, V9, V10, V11, V12, V13, V14, V15, V16, V17, V18)> get $ {
-    return SelectableResult([this.$1.$, this.$2.$, this.$3.$, this.$4.$, this.$5.$, this.$6.$, this.$7.$, this.$8.$, this.$9.$, this.$10.$, this.$11.$, this.$12.$, this.$13.$, this.$14.$, this.$15.$, this.$16.$, this.$17.$, this.$18.$]);
+extension SelectableColumns14<V0 extends Object, V1 extends Object, V2 extends Object, V3 extends Object, V4 extends Object, V5 extends Object, V6 extends Object, V7 extends Object, V8 extends Object, V9 extends Object, V10 extends Object, V11 extends Object, V12 extends Object, V13 extends Object, V14 extends Object>
+    on SelectBuilder<(Selectable<V0>, Selectable<V1>, Selectable<V2>, Selectable<V3>, Selectable<V4>, Selectable<V5>, Selectable<V6>, Selectable<V7>, Selectable<V8>, Selectable<V9>, Selectable<V10>, Selectable<V11>, Selectable<V12>, Selectable<V13>, Selectable<V14>, _Unused, _Unused, _Unused, _Unused, _Unused)?> {
+  /// Create a from builder.
+  SelectFromBuilder<S, (V0, V1, V2, V3, V4, V5, V6, V7, V8, V9, V10, V11, V12, V13, V14)> from<S extends Schema<S>>(S from) {
+    final selecting = config[#selecting]! as _Selecting;
+    return SelectFromBuilder(
+      executor,
+      config: config.copyWith({
+        #selecting: SelectableResult<(V0, V1, V2, V3, V4, V5, V6, V7, V8, V9, V10, V11, V12, V13, V14)>([selecting.s0!, selecting.s1!, selecting.s2!, selecting.s3!, selecting.s4!, selecting.s5!, selecting.s6!, selecting.s7!, selecting.s8!, selecting.s9!, selecting.s10!, selecting.s11!, selecting.s12!, selecting.s13!, selecting.s14!]),
+        #from: Table.get(from),
+      }),
+    );
   }
 }
-extension SelectableColumns19<V1, V2, V3, V4, V5, V6, V7, V8, V9, V10, V11, V12, V13, V14, V15, V16, V17, V18, V19> on (ColumnOf<V1>, ColumnOf<V2>, ColumnOf<V3>, ColumnOf<V4>, ColumnOf<V5>, ColumnOf<V6>, ColumnOf<V7>, ColumnOf<V8>, ColumnOf<V9>, ColumnOf<V10>, ColumnOf<V11>, ColumnOf<V12>, ColumnOf<V13>, ColumnOf<V14>, ColumnOf<V15>, ColumnOf<V16>, ColumnOf<V17>, ColumnOf<V18>, ColumnOf<V19>) {
-  SelectableResult<(V1, V2, V3, V4, V5, V6, V7, V8, V9, V10, V11, V12, V13, V14, V15, V16, V17, V18, V19)> get $ {
-    return SelectableResult([this.$1.$, this.$2.$, this.$3.$, this.$4.$, this.$5.$, this.$6.$, this.$7.$, this.$8.$, this.$9.$, this.$10.$, this.$11.$, this.$12.$, this.$13.$, this.$14.$, this.$15.$, this.$16.$, this.$17.$, this.$18.$, this.$19.$]);
+extension SelectableColumns15<V0 extends Object, V1 extends Object, V2 extends Object, V3 extends Object, V4 extends Object, V5 extends Object, V6 extends Object, V7 extends Object, V8 extends Object, V9 extends Object, V10 extends Object, V11 extends Object, V12 extends Object, V13 extends Object, V14 extends Object, V15 extends Object>
+    on SelectBuilder<(Selectable<V0>, Selectable<V1>, Selectable<V2>, Selectable<V3>, Selectable<V4>, Selectable<V5>, Selectable<V6>, Selectable<V7>, Selectable<V8>, Selectable<V9>, Selectable<V10>, Selectable<V11>, Selectable<V12>, Selectable<V13>, Selectable<V14>, Selectable<V15>, _Unused, _Unused, _Unused, _Unused)?> {
+  /// Create a from builder.
+  SelectFromBuilder<S, (V0, V1, V2, V3, V4, V5, V6, V7, V8, V9, V10, V11, V12, V13, V14, V15)> from<S extends Schema<S>>(S from) {
+    final selecting = config[#selecting]! as _Selecting;
+    return SelectFromBuilder(
+      executor,
+      config: config.copyWith({
+        #selecting: SelectableResult<(V0, V1, V2, V3, V4, V5, V6, V7, V8, V9, V10, V11, V12, V13, V14, V15)>([selecting.s0!, selecting.s1!, selecting.s2!, selecting.s3!, selecting.s4!, selecting.s5!, selecting.s6!, selecting.s7!, selecting.s8!, selecting.s9!, selecting.s10!, selecting.s11!, selecting.s12!, selecting.s13!, selecting.s14!, selecting.s15!]),
+        #from: Table.get(from),
+      }),
+    );
+  }
+}
+extension SelectableColumns16<V0 extends Object, V1 extends Object, V2 extends Object, V3 extends Object, V4 extends Object, V5 extends Object, V6 extends Object, V7 extends Object, V8 extends Object, V9 extends Object, V10 extends Object, V11 extends Object, V12 extends Object, V13 extends Object, V14 extends Object, V15 extends Object, V16 extends Object>
+    on SelectBuilder<(Selectable<V0>, Selectable<V1>, Selectable<V2>, Selectable<V3>, Selectable<V4>, Selectable<V5>, Selectable<V6>, Selectable<V7>, Selectable<V8>, Selectable<V9>, Selectable<V10>, Selectable<V11>, Selectable<V12>, Selectable<V13>, Selectable<V14>, Selectable<V15>, Selectable<V16>, _Unused, _Unused, _Unused)?> {
+  /// Create a from builder.
+  SelectFromBuilder<S, (V0, V1, V2, V3, V4, V5, V6, V7, V8, V9, V10, V11, V12, V13, V14, V15, V16)> from<S extends Schema<S>>(S from) {
+    final selecting = config[#selecting]! as _Selecting;
+    return SelectFromBuilder(
+      executor,
+      config: config.copyWith({
+        #selecting: SelectableResult<(V0, V1, V2, V3, V4, V5, V6, V7, V8, V9, V10, V11, V12, V13, V14, V15, V16)>([selecting.s0!, selecting.s1!, selecting.s2!, selecting.s3!, selecting.s4!, selecting.s5!, selecting.s6!, selecting.s7!, selecting.s8!, selecting.s9!, selecting.s10!, selecting.s11!, selecting.s12!, selecting.s13!, selecting.s14!, selecting.s15!, selecting.s16!]),
+        #from: Table.get(from),
+      }),
+    );
+  }
+}
+extension SelectableColumns17<V0 extends Object, V1 extends Object, V2 extends Object, V3 extends Object, V4 extends Object, V5 extends Object, V6 extends Object, V7 extends Object, V8 extends Object, V9 extends Object, V10 extends Object, V11 extends Object, V12 extends Object, V13 extends Object, V14 extends Object, V15 extends Object, V16 extends Object, V17 extends Object>
+    on SelectBuilder<(Selectable<V0>, Selectable<V1>, Selectable<V2>, Selectable<V3>, Selectable<V4>, Selectable<V5>, Selectable<V6>, Selectable<V7>, Selectable<V8>, Selectable<V9>, Selectable<V10>, Selectable<V11>, Selectable<V12>, Selectable<V13>, Selectable<V14>, Selectable<V15>, Selectable<V16>, Selectable<V17>, _Unused, _Unused)?> {
+  /// Create a from builder.
+  SelectFromBuilder<S, (V0, V1, V2, V3, V4, V5, V6, V7, V8, V9, V10, V11, V12, V13, V14, V15, V16, V17)> from<S extends Schema<S>>(S from) {
+    final selecting = config[#selecting]! as _Selecting;
+    return SelectFromBuilder(
+      executor,
+      config: config.copyWith({
+        #selecting: SelectableResult<(V0, V1, V2, V3, V4, V5, V6, V7, V8, V9, V10, V11, V12, V13, V14, V15, V16, V17)>([selecting.s0!, selecting.s1!, selecting.s2!, selecting.s3!, selecting.s4!, selecting.s5!, selecting.s6!, selecting.s7!, selecting.s8!, selecting.s9!, selecting.s10!, selecting.s11!, selecting.s12!, selecting.s13!, selecting.s14!, selecting.s15!, selecting.s16!, selecting.s17!]),
+        #from: Table.get(from),
+      }),
+    );
+  }
+}
+extension SelectableColumns18<V0 extends Object, V1 extends Object, V2 extends Object, V3 extends Object, V4 extends Object, V5 extends Object, V6 extends Object, V7 extends Object, V8 extends Object, V9 extends Object, V10 extends Object, V11 extends Object, V12 extends Object, V13 extends Object, V14 extends Object, V15 extends Object, V16 extends Object, V17 extends Object, V18 extends Object>
+    on SelectBuilder<(Selectable<V0>, Selectable<V1>, Selectable<V2>, Selectable<V3>, Selectable<V4>, Selectable<V5>, Selectable<V6>, Selectable<V7>, Selectable<V8>, Selectable<V9>, Selectable<V10>, Selectable<V11>, Selectable<V12>, Selectable<V13>, Selectable<V14>, Selectable<V15>, Selectable<V16>, Selectable<V17>, Selectable<V18>, _Unused)?> {
+  /// Create a from builder.
+  SelectFromBuilder<S, (V0, V1, V2, V3, V4, V5, V6, V7, V8, V9, V10, V11, V12, V13, V14, V15, V16, V17, V18)> from<S extends Schema<S>>(S from) {
+    final selecting = config[#selecting]! as _Selecting;
+    return SelectFromBuilder(
+      executor,
+      config: config.copyWith({
+        #selecting: SelectableResult<(V0, V1, V2, V3, V4, V5, V6, V7, V8, V9, V10, V11, V12, V13, V14, V15, V16, V17, V18)>([selecting.s0!, selecting.s1!, selecting.s2!, selecting.s3!, selecting.s4!, selecting.s5!, selecting.s6!, selecting.s7!, selecting.s8!, selecting.s9!, selecting.s10!, selecting.s11!, selecting.s12!, selecting.s13!, selecting.s14!, selecting.s15!, selecting.s16!, selecting.s17!, selecting.s18!]),
+        #from: Table.get(from),
+      }),
+    );
+  }
+}
+extension SelectableColumns19<V0 extends Object, V1 extends Object, V2 extends Object, V3 extends Object, V4 extends Object, V5 extends Object, V6 extends Object, V7 extends Object, V8 extends Object, V9 extends Object, V10 extends Object, V11 extends Object, V12 extends Object, V13 extends Object, V14 extends Object, V15 extends Object, V16 extends Object, V17 extends Object, V18 extends Object, V19 extends Object>
+    on SelectBuilder<(Selectable<V0>, Selectable<V1>, Selectable<V2>, Selectable<V3>, Selectable<V4>, Selectable<V5>, Selectable<V6>, Selectable<V7>, Selectable<V8>, Selectable<V9>, Selectable<V10>, Selectable<V11>, Selectable<V12>, Selectable<V13>, Selectable<V14>, Selectable<V15>, Selectable<V16>, Selectable<V17>, Selectable<V18>, Selectable<V19>)?> {
+  /// Create a from builder.
+  SelectFromBuilder<S, (V0, V1, V2, V3, V4, V5, V6, V7, V8, V9, V10, V11, V12, V13, V14, V15, V16, V17, V18, V19)> from<S extends Schema<S>>(S from) {
+    final selecting = config[#selecting]! as _Selecting;
+    return SelectFromBuilder(
+      executor,
+      config: config.copyWith({
+        #selecting: SelectableResult<(V0, V1, V2, V3, V4, V5, V6, V7, V8, V9, V10, V11, V12, V13, V14, V15, V16, V17, V18, V19)>([selecting.s0!, selecting.s1!, selecting.s2!, selecting.s3!, selecting.s4!, selecting.s5!, selecting.s6!, selecting.s7!, selecting.s8!, selecting.s9!, selecting.s10!, selecting.s11!, selecting.s12!, selecting.s13!, selecting.s14!, selecting.s15!, selecting.s16!, selecting.s17!, selecting.s18!, selecting.s19!]),
+        #from: Table.get(from),
+      }),
+    );
   }
 }
