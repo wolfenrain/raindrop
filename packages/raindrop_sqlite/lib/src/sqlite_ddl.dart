@@ -3,14 +3,14 @@ import 'dart:isolate';
 import 'package:raindrop/ddl.dart';
 import 'package:raindrop_sqlite/src/sqlite_dialect.dart';
 
-void main(List<String> args, SendPort sendPort) => SqliteDdlGenerator(sendPort);
+void main(List<String> args, SendPort sendPort) => SQLiteDdlGenerator(sendPort);
 
 /// {@template sqlite_ddl_generator}
 /// DDL generator for SQLite.
 /// {@endtemplate}
-class SqliteDdlGenerator extends DdlGenerator {
+class SQLiteDdlGenerator extends DdlGenerator {
   /// {@macro sqlite_ddl_generator}
-  SqliteDdlGenerator(super.sendPort) : super(dialect: const SQLiteDialect());
+  SQLiteDdlGenerator(super.sendPort) : super(dialect: const SQLiteDialect());
 
   @override
   String createTable(String tableName, List<ColumnInfo> columns) {
