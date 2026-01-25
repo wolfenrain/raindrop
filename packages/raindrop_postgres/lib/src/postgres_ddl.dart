@@ -131,6 +131,14 @@ class PostgresDdlGenerator extends DdlGenerator {
       parts.add('DEFAULT ${column.defaultValue}');
     }
 
+    if (column.foreignKey case final fk?) {
+      parts.add(
+        'REFERENCES ${escapeName(fk.referencedTable)}(${escapeName(fk.referencedColumn)})',
+      );
+      if (fk.onDelete != null) parts.add('ON DELETE ${fk.onDelete}');
+      if (fk.onUpdate != null) parts.add('ON UPDATE ${fk.onUpdate}');
+    }
+
     return parts.join(' ');
   }
 }

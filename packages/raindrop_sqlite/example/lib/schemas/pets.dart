@@ -1,13 +1,17 @@
 import 'package:raindrop/raindrop.dart';
 import 'package:raindrop_sqlite/raindrop_sqlite.dart';
 
+import 'users.dart';
+
 class Pet extends Schema<Pet> {
   Pet({
     required String name,
     int? userId,
     int? id,
   })  : id = $.integer('id', (s) => s.id, id).primaryKey(autoIncrement: true),
-        ownerId = $.integer('owner_id', (s) => s.ownerId, userId),
+        ownerId = $
+            .integer('owner_id', (s) => s.ownerId, userId)
+            .references(() => users.id, onDelete: ReferentialAction.cascade),
         name = $.text('name', (s) => s.name, name);
 
   final IntColumn? id;
@@ -27,6 +31,6 @@ final pets = sqliteTable(
     name: fakes.text(),
   ),
   (table) {
-    index('pets_owner').on(table.ownerId, table.id);
+    index('pets_owner').on(table.ownerId!, table.id);
   },
 );

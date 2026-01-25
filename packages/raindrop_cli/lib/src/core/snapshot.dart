@@ -186,6 +186,66 @@ class TableSnapshot {
   }
 }
 
+/// Represents foreign key reference information in a snapshot.
+class ForeignKeySnapshotRef {
+  const ForeignKeySnapshotRef({
+    required this.referencedTable,
+    required this.referencedColumn,
+    this.onDelete,
+    this.onUpdate,
+  });
+
+  /// The name of the referenced table.
+  final String referencedTable;
+
+  /// The name of the referenced column.
+  final String referencedColumn;
+
+  /// The ON DELETE action (e.g., 'CASCADE', 'SET NULL').
+  final String? onDelete;
+
+  /// The ON UPDATE action (e.g., 'CASCADE', 'SET NULL').
+  final String? onUpdate;
+
+  factory ForeignKeySnapshotRef.fromMap(Map<String, dynamic> data) {
+    return ForeignKeySnapshotRef(
+      referencedTable: data['referencedTable'] as String,
+      referencedColumn: data['referencedColumn'] as String,
+      onDelete: data['onDelete'] as String?,
+      onUpdate: data['onUpdate'] as String?,
+    );
+  }
+
+  Map<String, dynamic> toMap() {
+    return {
+      'referencedTable': referencedTable,
+      'referencedColumn': referencedColumn,
+      if (onDelete != null) 'onDelete': onDelete,
+      if (onUpdate != null) 'onUpdate': onUpdate,
+    };
+  }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    return other is ForeignKeySnapshotRef &&
+        other.referencedTable == referencedTable &&
+        other.referencedColumn == referencedColumn &&
+        other.onDelete == onDelete &&
+        other.onUpdate == onUpdate;
+  }
+
+  @override
+  int get hashCode {
+    return Object.hash(
+      referencedTable,
+      referencedColumn,
+      onDelete,
+      onUpdate,
+    );
+  }
+}
+
 /// Represents a snapshot of a single column.
 class ColumnSnapshot {
   const ColumnSnapshot({
@@ -195,6 +255,7 @@ class ColumnSnapshot {
     this.primaryKey = false,
     this.autoIncrement = false,
     this.defaultValue,
+    this.foreignKey,
   });
 
   /// The column name.
@@ -215,6 +276,9 @@ class ColumnSnapshot {
   /// The default value expression.
   final String? defaultValue;
 
+  /// Foreign key reference information.
+  final ForeignKeySnapshotRef? foreignKey;
+
   /// Creates a column snapshot from a map.
   factory ColumnSnapshot.fromMap(String name, Map<String, dynamic> data) {
     return ColumnSnapshot(
@@ -224,6 +288,10 @@ class ColumnSnapshot {
       primaryKey: data['primaryKey'] as bool? ?? false,
       autoIncrement: data['autoincrement'] as bool? ?? false,
       defaultValue: data['default'] as String?,
+      foreignKey: switch (data['foreignKey']) {
+        final Map<String, dynamic> data => ForeignKeySnapshotRef.fromMap(data),
+        _ => null,
+      },
     );
   }
 
@@ -236,6 +304,7 @@ class ColumnSnapshot {
       'notNull': !nullable,
       if (autoIncrement) 'autoincrement': autoIncrement,
       if (defaultValue != null) 'default': defaultValue,
+      if (foreignKey != null) 'foreignKey': foreignKey!.toMap(),
     };
   }
 
@@ -248,7 +317,8 @@ class ColumnSnapshot {
         other.nullable == nullable &&
         other.primaryKey == primaryKey &&
         other.autoIncrement == autoIncrement &&
-        other.defaultValue == defaultValue;
+        other.defaultValue == defaultValue &&
+        other.foreignKey == foreignKey;
   }
 
   @override
@@ -260,6 +330,7 @@ class ColumnSnapshot {
       primaryKey,
       autoIncrement,
       defaultValue,
+      foreignKey,
     );
   }
 }

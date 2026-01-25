@@ -159,12 +159,16 @@ class ColumnExtractor extends RecursiveAstVisitor<void> {
       autoIncrement = ai;
     });
 
+    // Check for references call
+    final foreignKey = _checkReferencesCall(node);
+
     _currentColumns![columnName] = ColumnSnapshot(
       name: columnName,
       type: sqlType,
       nullable: isNullable,
       primaryKey: isPrimaryKey,
       autoIncrement: autoIncrement,
+      foreignKey: foreignKey,
     );
 
     super.visitMethodInvocation(node);
@@ -252,6 +256,93 @@ class ColumnExtractor extends RecursiveAstVisitor<void> {
         // This is already handled in visitMethodInvocation
       }
     }
+  }
+
+  ForeignKeySnapshotRef? _checkReferencesCall(MethodInvocation node) {
+    // Look for .references() in the chain
+    // Walk up the AST to find a references call
+    AstNode? current = node.parent;
+    while (current != null) {
+      if (current is MethodInvocation &&
+          current.methodName.name == 'references') {
+        return _extractForeignKeyInfo(current);
+      }
+      // Stop if we've gone past the expression statement
+      if (current is ExpressionStatement) break;
+      current = current.parent;
+    }
+    return null;
+  }
+
+  ForeignKeySnapshotRef? _extractForeignKeyInfo(MethodInvocation node) {
+    final args = node.argumentList.arguments;
+    if (args.isEmpty) return null;
+
+    // First argument is the column getter function
+    final columnGetterArg = args[0];
+    String? referencedTable;
+    String? referencedColumn;
+
+    // Extract table and column from the function expression
+    // e.g., () => users.id
+    if (columnGetterArg is FunctionExpression) {
+      final body = columnGetterArg.body;
+      if (body is ExpressionFunctionBody) {
+        final expr = body.expression;
+        if (expr is PrefixedIdentifier) {
+          // users.id -> table=users, column=id
+          referencedTable = expr.prefix.name;
+          referencedColumn = expr.identifier.name;
+        } else if (expr is PropertyAccess) {
+          // users.id (when resolved differently)
+          final target = expr.target;
+          if (target is SimpleIdentifier) {
+            referencedTable = target.name;
+          }
+          referencedColumn = expr.propertyName.name;
+        }
+      }
+    }
+
+    if (referencedTable == null || referencedColumn == null) return null;
+
+    // Extract onDelete and onUpdate named arguments
+    String? onDelete;
+    String? onUpdate;
+
+    for (final arg in args) {
+      if (arg is NamedExpression) {
+        final name = arg.name.label.name;
+        final expr = arg.expression;
+        if (expr is PrefixedIdentifier) {
+          // ReferentialAction.cascade
+          final value = _referentialActionToSql(expr.identifier.name);
+          if (name == 'onDelete') {
+            onDelete = value;
+          } else if (name == 'onUpdate') {
+            onUpdate = value;
+          }
+        }
+      }
+    }
+
+    return ForeignKeySnapshotRef(
+      referencedTable: referencedTable,
+      referencedColumn: referencedColumn,
+      onDelete: onDelete,
+      onUpdate: onUpdate,
+    );
+  }
+
+  String? _referentialActionToSql(String action) {
+    return switch (action) {
+      'cascade' => 'CASCADE',
+      'setNull' => 'SET NULL',
+      'setDefault' => 'SET DEFAULT',
+      'restrict' => 'RESTRICT',
+      'noAction' => 'NO ACTION',
+      _ => null,
+    };
   }
 }
 

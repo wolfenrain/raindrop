@@ -136,3 +136,28 @@ extension ColumnOperators<V extends Object?> on ColumnOf<V> {
   /// Row value for column is null.
   SQL isNull() => SQL([$, const RawSQL('IS NULL')]);
 }
+
+/// Extension to add foreign key references to columns.
+extension ReferencesColumn<T extends ColumnType<V>, V extends Object?> on T? {
+  /// Adds a foreign key reference to another column.
+  ///
+  /// Example:
+  /// ```dart
+  /// $.integer('owner_id', (s) => s.ownerId, userId)
+  ///     .references(() => users.id, onDelete: ReferentialAction.cascade)
+  /// ```
+  T references(
+    ColumnOf Function() columnGetter, {
+    ReferentialAction? onDelete,
+    ReferentialAction? onUpdate,
+  }) {
+    if (Zone.current[#table] case final Table table) {
+      table.columns.last.foreignKeyReference = ForeignKeyReference(
+        referencedColumnGetter: () => columnGetter().$,
+        onDelete: onDelete,
+        onUpdate: onUpdate,
+      );
+    }
+    return this as T;
+  }
+}

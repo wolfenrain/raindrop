@@ -168,13 +168,14 @@ class SchemaDiffer {
   /// Checks if two columns match for a potential rename operation.
   ///
   /// Columns match if they have the same type, nullability, primary key status,
-  /// auto-increment setting, and default value.
+  /// auto-increment setting, default value, and foreign key reference.
   bool _columnsMatchForRename(ColumnSnapshot old, ColumnSnapshot new_) {
     return old.type == new_.type &&
         old.nullable == new_.nullable &&
         old.primaryKey == new_.primaryKey &&
         old.autoIncrement == new_.autoIncrement &&
-        old.defaultValue == new_.defaultValue;
+        old.defaultValue == new_.defaultValue &&
+        old.foreignKey == new_.foreignKey;
   }
 
   /// Converts a [ColumnSnapshot] to a [ColumnInfo].
@@ -186,6 +187,15 @@ class SchemaDiffer {
       primaryKey: snapshot.primaryKey,
       autoIncrement: snapshot.autoIncrement,
       defaultValue: snapshot.defaultValue,
+      foreignKey: switch (snapshot.foreignKey) {
+        ForeignKeySnapshotRef foreignKey => ForeignKeyInfo(
+            referencedTable: foreignKey.referencedTable,
+            referencedColumn: foreignKey.referencedColumn,
+            onDelete: foreignKey.onDelete,
+            onUpdate: foreignKey.onUpdate,
+          ),
+        _ => null,
+      },
     );
   }
 }

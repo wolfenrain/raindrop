@@ -1,13 +1,17 @@
 import 'package:raindrop/raindrop.dart';
 import 'package:raindrop_postgres/raindrop_postgres.dart';
 
+import 'users.dart';
+
 class Pet extends Schema<Pet> {
   Pet({
     required String name,
     int? userId,
     int? id,
   })  : id = $.integer('id', (s) => s.id, id).primaryKey(autoIncrement: true),
-        ownerId = $.integer('owner_id', (s) => s.ownerId, userId),
+        ownerId = $
+            .integer('owner_id', (s) => s.ownerId, userId)
+            .references(() => users.id, onDelete: ReferentialAction.cascade),
         name = $.text('name', (s) => s.name, name);
 
   final IntColumn? id;

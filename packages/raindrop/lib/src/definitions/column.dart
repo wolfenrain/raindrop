@@ -13,6 +13,7 @@ class Column<S extends Schema<S>?, V extends Object?> implements Selectable<V> {
     this.sqlType,
     this.autoIncrement = false,
     this.defaultValue,
+    this.foreignKeyReference,
   });
 
   /// The table of the column.
@@ -63,6 +64,9 @@ class Column<S extends Schema<S>?, V extends Object?> implements Selectable<V> {
   /// Default value expression for the column.
   final String? defaultValue;
 
+  /// Foreign key reference for this column.
+  ForeignKeyReference? foreignKeyReference;
+
   // TODO: should be on ColumnType
   /// Returns the nullable version of this column.
   Column<S, V?> get nullable => Column(
@@ -73,6 +77,7 @@ class Column<S extends Schema<S>?, V extends Object?> implements Selectable<V> {
         sqlType: sqlType,
         autoIncrement: autoIncrement,
         defaultValue: defaultValue,
+        foreignKeyReference: foreignKeyReference,
       );
 
   /// Make an alias of the column.
@@ -86,6 +91,7 @@ class Column<S extends Schema<S>?, V extends Object?> implements Selectable<V> {
       sqlType: sqlType,
       autoIncrement: autoIncrement,
       defaultValue: defaultValue,
+      foreignKeyReference: foreignKeyReference,
     );
   }
 
@@ -111,6 +117,7 @@ class ColumnAlias<S extends Schema<S>?, V extends Object?>
     super.sqlType,
     super.autoIncrement,
     super.defaultValue,
+    super.foreignKeyReference,
   });
 
   /// The alias of the column.

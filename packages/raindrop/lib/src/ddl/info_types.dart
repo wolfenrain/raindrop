@@ -1,3 +1,71 @@
+/// {@template foreign_key_info}
+/// Foreign key information for DDL generation.
+///
+/// This is a simple data class that holds the information needed to generate
+/// foreign key constraints in DDL statements.
+/// {@endtemplate}
+class ForeignKeyInfo {
+  /// {@macro foreign_key_info}
+  const ForeignKeyInfo({
+    required this.referencedTable,
+    required this.referencedColumn,
+    this.onDelete,
+    this.onUpdate,
+  });
+
+  /// Creates a [ForeignKeyInfo] from a map representation.
+  factory ForeignKeyInfo.fromMap(Map<String, dynamic> map) {
+    return ForeignKeyInfo(
+      referencedTable: map['referencedTable'] as String,
+      referencedColumn: map['referencedColumn'] as String,
+      onDelete: map['onDelete'] as String?,
+      onUpdate: map['onUpdate'] as String?,
+    );
+  }
+
+  /// The name of the referenced table.
+  final String referencedTable;
+
+  /// The name of the referenced column.
+  final String referencedColumn;
+
+  /// The ON DELETE action (e.g., 'CASCADE', 'SET NULL').
+  final String? onDelete;
+
+  /// The ON UPDATE action (e.g., 'CASCADE', 'SET NULL').
+  final String? onUpdate;
+
+  /// Converts this foreign key info to a map representation.
+  Map<String, dynamic> toMap() {
+    return {
+      'referencedTable': referencedTable,
+      'referencedColumn': referencedColumn,
+      if (onDelete != null) 'onDelete': onDelete,
+      if (onUpdate != null) 'onUpdate': onUpdate,
+    };
+  }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    return other is ForeignKeyInfo &&
+        other.referencedTable == referencedTable &&
+        other.referencedColumn == referencedColumn &&
+        other.onDelete == onDelete &&
+        other.onUpdate == onUpdate;
+  }
+
+  @override
+  int get hashCode {
+    return Object.hash(
+      referencedTable,
+      referencedColumn,
+      onDelete,
+      onUpdate,
+    );
+  }
+}
+
 /// {@template column_info}
 /// Column information for DDL generation.
 ///
@@ -13,6 +81,7 @@ class ColumnInfo {
     this.primaryKey = false,
     this.autoIncrement = false,
     this.defaultValue,
+    this.foreignKey,
   });
 
   /// Creates a [ColumnInfo] from a map representation.
@@ -24,6 +93,9 @@ class ColumnInfo {
       primaryKey: map['primaryKey'] as bool? ?? false,
       autoIncrement: map['autoIncrement'] as bool? ?? false,
       defaultValue: map['defaultValue'] as String?,
+      foreignKey: map['foreignKey'] != null
+          ? ForeignKeyInfo.fromMap(map['foreignKey'] as Map<String, dynamic>)
+          : null,
     );
   }
 
@@ -45,6 +117,9 @@ class ColumnInfo {
   /// The default value expression.
   final String? defaultValue;
 
+  /// Foreign key constraint information.
+  final ForeignKeyInfo? foreignKey;
+
   /// Converts this column info to a map representation.
   Map<String, dynamic> toMap() {
     return {
@@ -54,6 +129,7 @@ class ColumnInfo {
       'primaryKey': primaryKey,
       'autoIncrement': autoIncrement,
       if (defaultValue != null) 'defaultValue': defaultValue,
+      if (foreignKey != null) 'foreignKey': foreignKey!.toMap(),
     };
   }
 
@@ -66,7 +142,8 @@ class ColumnInfo {
         other.nullable == nullable &&
         other.primaryKey == primaryKey &&
         other.autoIncrement == autoIncrement &&
-        other.defaultValue == defaultValue;
+        other.defaultValue == defaultValue &&
+        other.foreignKey == foreignKey;
   }
 
   @override
@@ -78,6 +155,7 @@ class ColumnInfo {
       primaryKey,
       autoIncrement,
       defaultValue,
+      foreignKey,
     );
   }
 }
