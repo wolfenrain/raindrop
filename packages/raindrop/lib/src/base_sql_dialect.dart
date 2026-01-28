@@ -19,7 +19,10 @@ abstract class BaseSqlDialect extends SqlDialect {
     final sqlValues = <int, List<String>>{};
     for (var i = 0; i < table.columns.length; i++) {
       final column = table.columns[i];
-      if (column.isPrimaryKey) continue;
+      if (column.isPrimaryKey) {
+        final hasValue = insertValues.any((values) => values[i] != null);
+        if (!hasValue) continue;
+      }
       sqlColumns.add(escapeName(column.name));
 
       for (var j = 0; j < insertValues.length; j++) {
