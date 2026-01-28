@@ -240,13 +240,14 @@ abstract class BaseSqlDialect extends SqlDialect {
     } else if (select case final Column column) {
       if (column is ColumnTransform) {
         chunks.add(translateSQL(column.sql, values, singleTable: singleTable));
-      } else {
-        if (column.table.alias case final String alias) {
-          chunks.add('${escapeName(alias)}.');
-        } else if (!singleTable) {
-          chunks.add('${escapeName(column.table.name)}.');
-        }
+      } else if (singleTable) {
         chunks.add(escapeName(column.name));
+      } else {
+        // Use table prefix and alias to avoid column name collisions in joins
+        final prefix = column.table.alias ?? column.table.name;
+        final colName = escapeName(column.name);
+        final alias = escapeName('${prefix}__${column.name}');
+        chunks.add('${escapeName(prefix)}.$colName AS $alias');
       }
     } else if (select case final SelectableResult<dynamic> result) {
       for (var i = 0; i < result.selected.length; i++) {
