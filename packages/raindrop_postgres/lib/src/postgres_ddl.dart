@@ -63,8 +63,8 @@ class PostgresDdlGenerator extends DdlGenerator {
     }
 
     // Nullability change
-    if (oldColumn.nullable != newColumn.nullable) {
-      if (newColumn.nullable) {
+    if (oldColumn.isNullable != newColumn.isNullable) {
+      if (newColumn.isNullable) {
         statements.add(
           'ALTER TABLE $table ALTER COLUMN $column DROP NOT NULL;',
         );
@@ -123,7 +123,7 @@ class PostgresDdlGenerator extends DdlGenerator {
       parts.add('PRIMARY KEY');
     }
 
-    if (!column.nullable && !column.primaryKey) {
+    if (!column.isNullable && !column.primaryKey) {
       parts.add('NOT NULL');
     }
 

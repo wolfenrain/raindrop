@@ -77,7 +77,7 @@ class ColumnInfo {
   const ColumnInfo({
     required this.name,
     required this.type,
-    required this.nullable,
+    required this.isNullable,
     this.primaryKey = false,
     this.autoIncrement = false,
     this.defaultValue,
@@ -89,7 +89,7 @@ class ColumnInfo {
     return ColumnInfo(
       name: map['name'] as String,
       type: map['type'] as String,
-      nullable: map['nullable'] as bool,
+      isNullable: map['isNullable'] as bool,
       primaryKey: map['primaryKey'] as bool? ?? false,
       autoIncrement: map['autoIncrement'] as bool? ?? false,
       defaultValue: map['defaultValue'] as String?,
@@ -106,7 +106,7 @@ class ColumnInfo {
   final String type;
 
   /// Whether the column is nullable.
-  final bool nullable;
+  final bool isNullable;
 
   /// Whether this is a primary key column.
   final bool primaryKey;
@@ -125,7 +125,7 @@ class ColumnInfo {
     return {
       'name': name,
       'type': type,
-      'nullable': nullable,
+      'isNullable': isNullable,
       'primaryKey': primaryKey,
       'autoIncrement': autoIncrement,
       if (defaultValue != null) 'defaultValue': defaultValue,
@@ -139,7 +139,7 @@ class ColumnInfo {
     return other is ColumnInfo &&
         other.name == name &&
         other.type == type &&
-        other.nullable == nullable &&
+        other.isNullable == isNullable &&
         other.primaryKey == primaryKey &&
         other.autoIncrement == autoIncrement &&
         other.defaultValue == defaultValue &&
@@ -151,7 +151,7 @@ class ColumnInfo {
     return Object.hash(
       name,
       type,
-      nullable,
+      isNullable,
       primaryKey,
       autoIncrement,
       defaultValue,

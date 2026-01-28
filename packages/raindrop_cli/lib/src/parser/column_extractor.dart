@@ -165,7 +165,7 @@ class ColumnExtractor extends RecursiveAstVisitor<void> {
     _currentColumns![columnName] = ColumnSnapshot(
       name: columnName,
       type: sqlType,
-      nullable: isNullable,
+      isNullable: isNullable,
       primaryKey: isPrimaryKey,
       autoIncrement: autoIncrement,
       foreignKey: foreignKey,
@@ -180,24 +180,37 @@ class ColumnExtractor extends RecursiveAstVisitor<void> {
   }
 
   bool _isNullableColumn(MethodInvocation node) {
-    // Check if the parent is an assignment to a nullable field
-    final parent = node.parent;
-    if (parent is AssignmentExpression) {
-      final leftSide = parent.leftHandSide;
-      if (leftSide is SimpleIdentifier) {
-        // Check the field declaration type
-        // This is a simplified check - a full implementation would
-        // resolve the type
-        return false;
-      }
+    // Walk up to find the assignment expression in the initializer list
+    AstNode? current = node;
+    while (current != null && current is! ConstructorFieldInitializer) {
+      current = current.parent;
     }
 
-    // Check if there's a null value passed (third argument)
-    final args = node.argumentList.arguments;
-    if (args.length >= 3) {
-      final valueArg = args[2];
-      if (valueArg is NullLiteral) {
-        return true;
+    if (current is ConstructorFieldInitializer) {
+      // Get the field name being assigned to
+      final fieldName = current.fieldName.name;
+
+      // Find the class declaration
+      AstNode? classNode = current;
+      while (classNode != null && classNode is! ClassDeclaration) {
+        classNode = classNode.parent;
+      }
+
+      if (classNode is ClassDeclaration) {
+        // Find the field declaration with this name
+        for (final member in classNode.members) {
+          if (member is FieldDeclaration) {
+            for (final variable in member.fields.variables) {
+              if (variable.name.lexeme == fieldName) {
+                // Check if the field type is nullable
+                final type = member.fields.type;
+                if (type is NamedType) {
+                  return type.question != null;
+                }
+              }
+            }
+          }
+        }
       }
     }
 

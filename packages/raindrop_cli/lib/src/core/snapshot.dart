@@ -251,7 +251,7 @@ class ColumnSnapshot {
   const ColumnSnapshot({
     required this.name,
     required this.type,
-    required this.nullable,
+    required this.isNullable,
     this.primaryKey = false,
     this.autoIncrement = false,
     this.defaultValue,
@@ -265,7 +265,7 @@ class ColumnSnapshot {
   final String type;
 
   /// Whether the column is nullable.
-  final bool nullable;
+  final bool isNullable;
 
   /// Whether this is a primary key column.
   final bool primaryKey;
@@ -284,7 +284,7 @@ class ColumnSnapshot {
     return ColumnSnapshot(
       name: name,
       type: data['type'] as String,
-      nullable: !(data['notNull'] as bool? ?? false),
+      isNullable: data['isNullable'] as bool? ?? false,
       primaryKey: data['primaryKey'] as bool? ?? false,
       autoIncrement: data['autoincrement'] as bool? ?? false,
       defaultValue: data['default'] as String?,
@@ -301,7 +301,7 @@ class ColumnSnapshot {
       'name': name,
       'type': type,
       'primaryKey': primaryKey,
-      'notNull': !nullable,
+      'isNullable': isNullable,
       if (autoIncrement) 'autoincrement': autoIncrement,
       if (defaultValue != null) 'default': defaultValue,
       if (foreignKey != null) 'foreignKey': foreignKey!.toMap(),
@@ -314,7 +314,7 @@ class ColumnSnapshot {
     return other is ColumnSnapshot &&
         other.name == name &&
         other.type == type &&
-        other.nullable == nullable &&
+        other.isNullable == isNullable &&
         other.primaryKey == primaryKey &&
         other.autoIncrement == autoIncrement &&
         other.defaultValue == defaultValue &&
@@ -326,7 +326,7 @@ class ColumnSnapshot {
     return Object.hash(
       name,
       type,
-      nullable,
+      isNullable,
       primaryKey,
       autoIncrement,
       defaultValue,

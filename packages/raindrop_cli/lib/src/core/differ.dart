@@ -171,7 +171,7 @@ class SchemaDiffer {
   /// auto-increment setting, default value, and foreign key reference.
   bool _columnsMatchForRename(ColumnSnapshot old, ColumnSnapshot new_) {
     return old.type == new_.type &&
-        old.nullable == new_.nullable &&
+        old.isNullable == new_.isNullable &&
         old.primaryKey == new_.primaryKey &&
         old.autoIncrement == new_.autoIncrement &&
         old.defaultValue == new_.defaultValue &&
@@ -183,7 +183,7 @@ class SchemaDiffer {
     return ColumnInfo(
       name: snapshot.name,
       type: snapshot.type,
-      nullable: snapshot.nullable,
+      isNullable: snapshot.isNullable,
       primaryKey: snapshot.primaryKey,
       autoIncrement: snapshot.autoIncrement,
       defaultValue: snapshot.defaultValue,

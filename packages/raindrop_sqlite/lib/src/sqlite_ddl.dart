@@ -61,8 +61,8 @@ class SQLiteDdlGenerator extends DdlGenerator {
     }
 
     // Nullability change
-    if (oldColumn.nullable != newColumn.nullable) {
-      if (newColumn.nullable) {
+    if (oldColumn.isNullable != newColumn.isNullable) {
+      if (newColumn.isNullable) {
         statements.add(
           'ALTER TABLE $table ALTER COLUMN $column DROP NOT NULL;',
         );
@@ -118,7 +118,7 @@ class SQLiteDdlGenerator extends DdlGenerator {
       }
     }
 
-    if (!column.nullable && !column.primaryKey) {
+    if (!column.isNullable && !column.primaryKey) {
       parts.add('NOT NULL');
     }
 
