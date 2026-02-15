@@ -390,6 +390,56 @@ abstract class BaseSqlDialect extends SqlDialect {
     return chunks.join(' ');
   }
 
+  @override
+  Future<void> ensureMigrationStorage(
+    Future<DatabaseResult> Function(String sql, [List<Object?> values]) execute,
+  ) async {
+    final table = escapeName('_raindrop_migrations');
+    final id = escapeName('id');
+    final tag = escapeName('tag');
+    final checksum = escapeName('checksum');
+    final appliedAt = escapeName('applied_at');
+    await execute(
+      'CREATE TABLE IF NOT EXISTS $table '
+      '($id INTEGER PRIMARY KEY, '
+      '$tag TEXT NOT NULL UNIQUE, '
+      '$checksum TEXT NOT NULL, '
+      '$appliedAt INTEGER NOT NULL)',
+    );
+  }
+
+  @override
+  Future<List<({String tag, String checksum})>> loadAppliedMigrations(
+    Future<DatabaseResult> Function(String sql, [List<Object?> values]) execute,
+  ) async {
+    final table = escapeName('_raindrop_migrations');
+    final tag = escapeName('tag');
+    final checksum = escapeName('checksum');
+    final id = escapeName('id');
+    final result =
+        await execute('SELECT $tag, $checksum FROM $table ORDER BY $id');
+    return result.rows.map((row) {
+      return (tag: row[0]! as String, checksum: row[1]! as String);
+    }).toList();
+  }
+
+  @override
+  Future<void> recordMigration(
+    Future<DatabaseResult> Function(String sql, [List<Object?> values]) execute,
+    {required String tag,
+    required String checksum,}
+  ) async {
+    final table = escapeName('_raindrop_migrations');
+    final tagCol = escapeName('tag');
+    final checksumCol = escapeName('checksum');
+    final appliedAt = escapeName('applied_at');
+    await execute(
+      'INSERT INTO $table ($tagCol, $checksumCol, $appliedAt) '
+      'VALUES (${escapeParam(0)}, ${escapeParam(1)}, ${escapeParam(2)})',
+      [tag, checksum, DateTime.now().millisecondsSinceEpoch],
+    );
+  }
+
   /// Translate a [sql] into a SQL string.
   String translateSQL(
     SQL sql,

@@ -10,6 +10,7 @@ class RaindropConfig {
     required this.outPath,
     required this.configDir,
     required this.dialect,
+    this.dartPath,
   });
 
   /// Path to the directory containing schema files (absolute path).
@@ -20,6 +21,10 @@ class RaindropConfig {
 
   /// The SQL dialect to use (postgres or sqlite).
   final String dialect;
+
+  /// Optional path to generate a Dart migrations file (absolute path).
+  /// If set, `generate` also produces this Dart file alongside .sql files.
+  final String? dartPath;
 
   /// Directory containing the config file (absolute path).
   /// Used for resolving relative paths.
@@ -71,11 +76,17 @@ class RaindropConfig {
       p.join(configDir, yaml?['out'] as String? ?? 'migrations'),
     );
 
+    // Resolve optional dart output path
+    final dartRaw = yaml?['dart'] as String?;
+    final dartPath =
+        dartRaw != null ? p.normalize(p.join(configDir, dartRaw)) : null;
+
     return RaindropConfig(
       schemaPath: schemaPath,
       outPath: outPath,
       dialect: dialect,
       configDir: configDir,
+      dartPath: dartPath,
     );
   }
 }

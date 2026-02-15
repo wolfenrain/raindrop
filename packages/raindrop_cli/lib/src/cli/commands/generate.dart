@@ -24,6 +24,11 @@ class GenerateCommand extends Command<int> {
       help: 'Show what would be generated without creating files.',
       defaultsTo: false,
     );
+    argParser.addOption(
+      'dart',
+      help: 'Generate a Dart file with embedded migrations at the given path. '
+          'Defaults to {out}/migrations.dart if no path is provided.',
+    );
   }
 
   @override
@@ -40,6 +45,12 @@ class GenerateCommand extends Command<int> {
 
     // Load configuration
     final config = await RaindropConfig.load(configPath);
+
+    // Determine dart output path.
+    final dartOutputPath = switch (argResults!['dart'] as String?) {
+      final String path => p.normalize(p.join(config.configDir, path)),
+      _ => config.dartPath,
+    };
 
     // Load the journal
     final journal = await MigrationJournal.load(
@@ -113,10 +124,8 @@ class GenerateCommand extends Command<int> {
       metaDir.createSync(recursive: true);
     }
 
-    // Create migration file
     final migrationPath = p.join(config.outPath, '$tag.sql');
-    final migrationFile = File(migrationPath);
-    await migrationFile.writeAsString(sql);
+    await File(migrationPath).writeAsString(sql);
 
     // Save the snapshot
     final snapshotPath = config.snapshotPath(migrationIndex);
@@ -143,7 +152,15 @@ class GenerateCommand extends Command<int> {
 
     await updatedJournal.save(config.journalPath);
 
+    // Write Dart migrations file if configured or --dart flag passed
+    if (dartOutputPath != null) {
+      await _generateDartFile(config, updatedJournal, dartOutputPath);
+    }
+
     print('Generated migration: $migrationPath');
+    if (dartOutputPath != null) {
+      print('Generated Dart migrations file: $dartOutputPath');
+    }
     print('');
     print('Changes:');
     for (final op in operations) {
@@ -151,6 +168,37 @@ class GenerateCommand extends Command<int> {
     }
 
     return 0;
+  }
+
+  Future<void> _generateDartFile(
+    RaindropConfig config,
+    MigrationJournal journal,
+    String outputPath,
+  ) async {
+    final buffer = StringBuffer()
+      ..writeln("import 'package:raindrop/raindrop.dart';")
+      ..writeln()
+      ..writeln('/// Generated migrations. Do not edit by hand.')
+      ..writeln('final migrations = [');
+
+    for (final entry in journal.entries) {
+      final sql =
+          await File(p.join(config.outPath, '${entry.tag}.sql')).readAsString();
+      final escapedSql = sql.replaceAll("'''", r"\'''");
+      buffer
+        ..writeln("  const Migration('${entry.tag}', '''")
+        ..write(escapedSql)
+        ..writeln("'''),");
+    }
+
+    buffer.writeln('];');
+
+    final dartFile = File(outputPath);
+    final dartDir = Directory(dartFile.parent.path);
+    if (!dartDir.existsSync()) {
+      dartDir.createSync(recursive: true);
+    }
+    await dartFile.writeAsString(buffer.toString());
   }
 
   String _sanitizeName(String name) {

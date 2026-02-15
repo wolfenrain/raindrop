@@ -62,4 +62,29 @@ abstract class SqlDialect {
     bool singleTable = false,
     int level = 0,
   });
+
+  /// Ensures that the migration tracking storage exists.
+  ///
+  /// Use [execute] to run any necessary setup queries.
+  Future<void> ensureMigrationStorage(
+    Future<DatabaseResult> Function(String sql, [List<Object?> values]) execute,
+  );
+
+  /// Loads all previously applied migrations.
+  ///
+  /// Must return a list of `(tag, checksum)` pairs, ordered by application
+  /// order.
+  Future<List<({String tag, String checksum})>> loadAppliedMigrations(
+    Future<DatabaseResult> Function(String sql, [List<Object?> values]) execute,
+  );
+
+  /// Records a migration as applied.
+  ///
+  /// Called after a migration has been successfully executed within
+  /// a transaction. Use [execute] to persist the record.
+  Future<void> recordMigration(
+    Future<DatabaseResult> Function(String sql, [List<Object?> values]) execute,
+    {required String tag,
+    required String checksum,}
+  );
 }

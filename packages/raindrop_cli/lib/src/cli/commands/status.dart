@@ -29,6 +29,7 @@ class StatusCommand extends Command<int> {
     print('  Output path: ${config.outPath}');
     print('  Meta path: ${config.metaPath}');
     print('  Dialect: ${config.dialect}');
+    print('  Dart output: ${config.dartPath ?? 'not configured'}');
     print('');
 
     // Load the journal
