@@ -6,3 +6,7 @@ schemas: lib/schemas
 
 # Optional output path for the generated migrations.
 # out: migrations/
+
+# Optional: path to generate a Dart migrations file (relative to config dir).
+# If set, `generate` also produces this Dart file alongside .sql files.
+dart: lib/database/migrations.dart

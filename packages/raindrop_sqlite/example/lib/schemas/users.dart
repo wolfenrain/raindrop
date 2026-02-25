@@ -8,7 +8,7 @@ class User extends Schema<User> {
     int? id,
   })  : id = $.integer('id', (s) => s.id, id).primaryKey(autoIncrement: true),
         name = $.text('name', (s) => s.name, name),
-        deletedAt = $.dateTime('deleted_at', (s) => s.deletedAt, deletedAt);
+        deletedAt = $.dateTime('deletedAt', (s) => s.deletedAt, deletedAt);
 
   final IntColumn? id;
 

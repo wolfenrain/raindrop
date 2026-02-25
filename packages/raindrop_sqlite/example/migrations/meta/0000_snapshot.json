@@ -1,0 +1,72 @@
+{
+  "version": "1",
+  "dialect": "sqlite",
+  "id": "30914f74-a90a-45bd-a5b2-e7e967e15138",
+  "prevId": "00000000-0000-0000-0000-000000000000",
+  "tables": {
+    "pets": {
+      "name": "pets",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "INTEGER",
+          "primaryKey": true,
+          "isNullable": true,
+          "autoincrement": true
+        },
+        "owner_id": {
+          "name": "owner_id",
+          "type": "INTEGER",
+          "primaryKey": false,
+          "isNullable": false,
+          "foreignKey": {
+            "referencedTable": "users",
+            "referencedColumn": "id",
+            "onDelete": "CASCADE"
+          }
+        },
+        "name": {
+          "name": "name",
+          "type": "TEXT",
+          "primaryKey": false,
+          "isNullable": false
+        }
+      }
+    },
+    "users": {
+      "name": "users",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "INTEGER",
+          "primaryKey": true,
+          "isNullable": true,
+          "autoincrement": true
+        },
+        "name": {
+          "name": "name",
+          "type": "TEXT",
+          "primaryKey": false,
+          "isNullable": false
+        },
+        "deleted_at": {
+          "name": "deleted_at",
+          "type": "INTEGER",
+          "primaryKey": false,
+          "isNullable": true
+        }
+      }
+    }
+  },
+  "indexes": {
+    "pets_owner": {
+      "name": "pets_owner",
+      "tableName": "pets",
+      "columns": [
+        "id"
+      ],
+      "isUnique": false
+    }
+  },
+  "foreignKeys": {}
+}

@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:raindrop/raindrop.dart';
 import 'package:raindrop_sqlite/raindrop_sqlite.dart';
+import 'package:raindrop_sqlite_example/database/migrations.dart';
 
 // import 'schemas/items.dart';
 import 'package:raindrop_sqlite_example/schemas/pets.dart';
@@ -20,19 +21,8 @@ void main() async {
     logger: ExampleLogger(),
   );
 
-  await db.execute('''
-CREATE TABLE IF NOT EXISTS users (
-  id INTEGER NOT NULL PRIMARY KEY,
-  name TEXT NOT NULL,
-  deleted_at INTEGER
-);''');
-
-  await db.execute('''
-CREATE TABLE IF NOT EXISTS pets (
-  id INTEGER NOT NULL PRIMARY KEY,
-  name TEXT NOT NULL,
-  owner_id INTEGER NULL
-);''');
+  // Run migrations programmatically using embedded SQL.
+  await migrate(db, migrations);
 
   await db.ensureOpen();
   final testUser = User(name: 'testing');
@@ -57,10 +47,11 @@ CREATE TABLE IF NOT EXISTS pets (
   // print(test3);
 
   final namesAndTheirOccurrences = await db
-      .select(users.name.$, users.name.count())
+      .select(users.name.$, users.name.count(), users.deletedAt.$)
       .from(users)
       .where(users.deletedAt.isNull())
       .groupBy(users.name.$);
+
   print('Found the following names: $namesAndTheirOccurrences');
 
   final usersFound = await db.select().from(users).where(
