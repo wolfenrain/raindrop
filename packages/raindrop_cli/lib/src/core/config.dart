@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:args/args.dart';
 import 'package:path/path.dart' as p;
 import 'package:yaml/yaml.dart';
 
@@ -129,6 +130,61 @@ class RaindropConfig {
       configDir: configDir,
       dartPath: dartPath,
       migrationNaming: migrationNaming,
+    );
+  }
+
+  /// Loads config from [raindrop.yaml] when present; otherwise requires
+  /// `--dialect`, `--schemas`, and `--out` on [global].
+  ///
+  /// When a YAML file exists, any CLI flag that was explicitly passed overrides
+  /// the corresponding YAML field (paths are relative to the YAML file's
+  /// directory). When there is no YAML file, paths are relative to the current
+  /// working directory.
+  static Future<RaindropConfig> loadResolved(ArgResults global) async {
+    final configPath = global['config'] as String;
+    final file = File(configPath);
+    final hasConfig = file.existsSync();
+
+    final dialect = global['dialect'] as String?;
+    final schemas = global['schemas'] as String?;
+    final out = global['out'] as String?;
+    final migrationNaming = global['migration-naming'] as String?;
+    final dart = global['dart'] as String?;
+
+    final baseDir = Directory.current.path;
+
+    if (!hasConfig) {
+      if (dialect == null || schemas == null || out == null) {
+        throw StateError(
+          'Configuration file not found: $configPath\n'
+          'Create raindrop.yaml or pass --dialect, --schemas, and --out.',
+        );
+      }
+
+      return RaindropConfig(
+        schemaPath: p.normalize(p.join(baseDir, global['schemas'] as String)),
+        outPath: p.normalize(p.join(baseDir, global['out'] as String)),
+        dialect: global['dialect'] as String,
+        configDir: baseDir,
+        dartPath: dart != null && dart.isNotEmpty
+            ? p.normalize(p.join(baseDir, dart))
+            : null,
+        migrationNaming: _parseMigrationNaming(migrationNaming),
+      );
+    }
+
+    final base = await RaindropConfig.load(configPath);
+
+    return RaindropConfig(
+      schemaPath: schemas != null
+          ? p.normalize(p.join(baseDir, schemas))
+          : base.schemaPath,
+      outPath: out != null ? p.normalize(p.join(baseDir, out)) : base.outPath,
+      dialect: dialect != null ? dialect : base.dialect,
+      configDir: base.configDir,
+      dartPath:
+          dart != null ? p.normalize(p.join(baseDir, dart)) : base.dartPath,
+      migrationNaming: _parseMigrationNaming(migrationNaming),
     );
   }
 }

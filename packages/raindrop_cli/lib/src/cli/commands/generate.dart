@@ -41,10 +41,9 @@ class GenerateCommand extends Command<int> {
   Future<int> run() async {
     final migrationName = argResults!['name'] as String;
     final dryRun = argResults!['dry-run'] as bool;
-    final configPath = globalResults!['config'] as String;
 
     // Load configuration
-    final config = await RaindropConfig.load(configPath);
+    final config = await RaindropConfig.loadResolved(globalResults!);
 
     // Determine dart output path.
     final dartOutputPath = switch (argResults!['dart'] as String?) {

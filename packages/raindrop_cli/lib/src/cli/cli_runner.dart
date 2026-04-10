@@ -22,8 +22,37 @@ class CliRunner extends CommandRunner<int> {
     argParser.addOption(
       'config',
       abbr: 'c',
-      help: 'Path to the configuration file.',
+      help: 'Path to the configuration file. If the file does not exist, '
+          'use --dialect, --schemas, and --out instead.',
       defaultsTo: 'raindrop.yaml',
+    );
+    argParser.addOption(
+      'dialect',
+      help: 'SQL dialect (e.g. sqlite, postgres). Required when no config file '
+          'exists; otherwise overrides raindrop.yaml when passed.',
+    );
+    argParser.addOption(
+      'schemas',
+      help: 'Directory of schema Dart files (relative to the config file '
+          'directory, or to the current directory when there is no config file). '
+          'Required when no config file exists.',
+    );
+    argParser.addOption(
+      'out',
+      help:
+          'Directory for generated migrations (same resolution as --schemas). '
+          'Required when no config file exists.',
+    );
+    argParser.addOption(
+      'migration-naming',
+      help: 'Migration filename prefix style: integer (default) or timestamp. '
+          'Overrides raindrop.yaml when passed.',
+      allowed: ['integer', 'timestamp'],
+    );
+    argParser.addOption(
+      'dart',
+      help: 'Optional path for generated Dart migrations embedding (relative '
+          'resolution matches --schemas). Overrides raindrop.yaml "dart:" when passed.',
     );
 
     addCommand(GenerateCommand());
