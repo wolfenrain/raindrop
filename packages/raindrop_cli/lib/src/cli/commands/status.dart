@@ -30,6 +30,7 @@ class StatusCommand extends Command<int> {
     print('  Meta path: ${config.metaPath}');
     print('  Dialect: ${config.dialect}');
     print('  Dart output: ${config.dartPath ?? 'not configured'}');
+    print('  Migration naming: ${config.migrationNaming.name}');
     print('');
 
     // Load the journal
