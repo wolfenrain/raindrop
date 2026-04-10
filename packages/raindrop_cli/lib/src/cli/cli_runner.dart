@@ -3,6 +3,7 @@ import 'package:args/command_runner.dart';
 
 import 'package:raindrop_cli/src/cli/commands/generate.dart';
 import 'package:raindrop_cli/src/cli/commands/status.dart';
+import 'package:raindrop_cli/src/cli/raindrop_global_options.dart';
 
 export 'package:args/command_runner.dart' show UsageException;
 
@@ -13,18 +14,7 @@ class CliRunner extends CommandRunner<int> {
           'raindrop',
           'CLI tool for generating SQL migrations from Raindrop schema definitions.',
         ) {
-    argParser.addFlag(
-      'version',
-      abbr: 'v',
-      negatable: false,
-      help: 'Print the version of raindrop_cli.',
-    );
-    argParser.addOption(
-      'config',
-      abbr: 'c',
-      help: 'Path to the configuration file.',
-      defaultsTo: 'raindrop.yaml',
-    );
+    addRaindropGlobalOptions(argParser);
 
     addCommand(GenerateCommand());
     addCommand(StatusCommand());

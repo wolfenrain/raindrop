@@ -19,10 +19,8 @@ class StatusCommand extends Command<int> {
 
   @override
   Future<int> run() async {
-    final configPath = globalResults!['config'] as String;
-
     // Load configuration
-    final config = await RaindropConfig.load(configPath);
+    final config = await RaindropConfig.loadResolved(globalResults!);
 
     print('Configuration:');
     print('  Schema path: ${config.schemaPath}');

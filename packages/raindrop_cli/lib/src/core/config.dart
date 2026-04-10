@@ -1,6 +1,8 @@
 import 'dart:io';
 
+import 'package:args/args.dart';
 import 'package:path/path.dart' as p;
+import 'package:raindrop_cli/src/cli/raindrop_global_options.dart';
 import 'package:yaml/yaml.dart';
 
 /// How migration SQL filenames are prefixed (before `_description`).
@@ -131,4 +133,78 @@ class RaindropConfig {
       migrationNaming: migrationNaming,
     );
   }
+
+  /// Loads config from [raindrop.yaml] when present; otherwise requires
+  /// `--dialect`, `--schemas`, and `--out` on [global].
+  ///
+  /// When a YAML file exists, any CLI flag that was explicitly passed overrides
+  /// the corresponding YAML field (paths are relative to the YAML file's
+  /// directory). When there is no YAML file, paths are relative to the current
+  /// working directory.
+  static Future<RaindropConfig> loadResolved(ArgResults global) async {
+    final configPath = global['config'] as String;
+    final file = File(configPath);
+    final hasConfig = file.existsSync();
+
+    if (!hasConfig) {
+      if (!global.wasParsed('dialect') ||
+          !global.wasParsed('schemas') ||
+          !global.wasParsed('out')) {
+        throw StateError(
+          'Configuration file not found: $configPath\n'
+          'Create raindrop.yaml or pass --dialect, --schemas, and --out.',
+        );
+      }
+      final baseDir = Directory.current.path;
+      final migrationNaming = global.wasParsed('migration-naming')
+          ? _parseMigrationNaming(global['migration-naming'] as String?)
+          : MigrationNaming.integer;
+      final dartRaw = global.wasParsed('dart') ? global['dart'] as String? : null;
+      return RaindropConfig(
+        schemaPath: p.normalize(p.join(baseDir, global['schemas'] as String)),
+        outPath: p.normalize(p.join(baseDir, global['out'] as String)),
+        dialect: global['dialect'] as String,
+        configDir: baseDir,
+        dartPath: dartRaw != null && dartRaw.isNotEmpty
+            ? p.normalize(p.join(baseDir, dartRaw))
+            : null,
+        migrationNaming: migrationNaming,
+      );
+    }
+
+    final base = await RaindropConfig.load(configPath);
+    final configDir = base.configDir;
+
+    return RaindropConfig(
+      schemaPath: global.wasParsed('schemas')
+          ? p.normalize(p.join(configDir, global['schemas'] as String))
+          : base.schemaPath,
+      outPath: global.wasParsed('out')
+          ? p.normalize(p.join(configDir, global['out'] as String))
+          : base.outPath,
+      dialect: global.wasParsed('dialect')
+          ? (global['dialect'] as String)
+          : base.dialect,
+      configDir: base.configDir,
+      dartPath: global.wasParsed('dart')
+          ? _resolveDartCliArg(global['dart'] as String?, configDir)
+          : base.dartPath,
+      migrationNaming: global.wasParsed('migration-naming')
+          ? _parseMigrationNaming(global['migration-naming'] as String?)
+          : base.migrationNaming,
+    );
+  }
+
+  /// Same global flags as `dart run raindrop_cli:raindrop` (without subcommands).
+  static Future<RaindropConfig> loadFromGlobalArgs(List<String> args) async {
+    final parser = ArgParser();
+    addRaindropGlobalOptions(parser);
+    final results = parser.parse(args);
+    return loadResolved(results);
+  }
+}
+
+String? _resolveDartCliArg(String? raw, String configDir) {
+  if (raw == null || raw.isEmpty) return null;
+  return p.normalize(p.join(configDir, raw));
 }
