@@ -109,11 +109,9 @@ class GenerateCommand extends Command<int> {
       projectPath: projectPath,
     );
 
-    // The differ can emit operations the dialect does not turn into SQL (e.g.
-    // metadata-only column changes). Do not write an empty migration file.
     if (sql.trim().isEmpty) {
       print(
-        'No changes were made; nothing to migrate (no SQL for the current diff).',
+        'Nothing to migrate: no SQL for the current diff.',
       );
       return 0;
     }
