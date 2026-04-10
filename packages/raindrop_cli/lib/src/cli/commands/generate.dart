@@ -109,6 +109,13 @@ class GenerateCommand extends Command<int> {
       projectPath: projectPath,
     );
 
+    if (sql.trim().isEmpty) {
+      print(
+        'Nothing to migrate: no SQL for the current diff.',
+      );
+      return 0;
+    }
+
     if (dryRun) {
       print('Would generate migration: $tag.sql');
       print('');
