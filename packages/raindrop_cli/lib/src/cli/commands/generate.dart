@@ -94,8 +94,13 @@ class GenerateCommand extends Command<int> {
 
     // Determine migration index and tag
     final migrationIndex = journal.nextIndex;
-    final indexStr = migrationIndex.toString().padLeft(4, '0');
-    final tag = '${indexStr}_${_sanitizeName(migrationName)}';
+    final now = DateTime.now();
+    final prefix = migrationTagPrefix(
+      naming: config.migrationNaming,
+      migrationIndex: migrationIndex,
+      at: now,
+    );
+    final tag = '${prefix}_${_sanitizeName(migrationName)}';
 
     // Generate SQL using the dialect's DDL generator via isolate
     final sql = await DdlRunner.generate(
@@ -132,7 +137,7 @@ class GenerateCommand extends Command<int> {
     await currentSnapshot.save(snapshotPath);
 
     // Update the journal
-    final timestamp = DateTime.now().millisecondsSinceEpoch;
+    final timestamp = now.millisecondsSinceEpoch;
     final entry = JournalEntry(
       idx: migrationIndex,
       version: SchemaSnapshot.currentVersion,
