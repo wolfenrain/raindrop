@@ -101,6 +101,20 @@ extension ColumnTypeX<V extends Object?> on ColumnType<V>? {
 }
 
 extension PrimaryColumn<T extends ColumnType<V>, V extends Object?> on T? {
+  /// Marks this column as the primary key (no auto-increment).
+  T? primaryKey() {
+    if (Zone.current[#table] case final Table table) {
+      table.columns.last
+        ..isPrimaryKey = true
+        ..autoIncrement = false;
+    }
+
+    return this;
+  }
+}
+
+extension PrimaryColumnInteger<T extends ColumnType<int>> on T? {
+  /// Marks this integer column as the primary key, optionally with auto-increment.
   T? primaryKey({required bool autoIncrement}) {
     if (Zone.current[#table] case final Table table) {
       table.columns.last
