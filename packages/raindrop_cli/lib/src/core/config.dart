@@ -3,6 +3,40 @@ import 'dart:io';
 import 'package:path/path.dart' as p;
 import 'package:yaml/yaml.dart';
 
+/// How migration SQL filenames are prefixed (before `_description`).
+enum MigrationNaming {
+  /// `0000_`, `0001_`, … (default).
+  integer,
+
+  /// Milliseconds since epoch, zero-padded to 15 digits for stable
+  /// lexicographic sort when loading `*.sql` from disk.
+  timestamp,
+}
+
+/// Builds the prefix segment of a migration tag (before `_name`).
+String migrationTagPrefix({
+  required MigrationNaming naming,
+  required int migrationIndex,
+  required DateTime at,
+}) {
+  return switch (naming) {
+    MigrationNaming.integer => migrationIndex.toString().padLeft(4, '0'),
+    MigrationNaming.timestamp =>
+      at.millisecondsSinceEpoch.toString().padLeft(15, '0'),
+  };
+}
+
+MigrationNaming _parseMigrationNaming(String? raw) {
+  return switch (raw?.toLowerCase().trim()) {
+    'integer' || null => MigrationNaming.integer,
+    'timestamp' => MigrationNaming.timestamp,
+    _ => throw StateError(
+        'Invalid "migration_naming" in raindrop.yaml: "$raw". '
+        'Use "integer" or "timestamp".',
+      ),
+  };
+}
+
 /// Configuration for the raindrop CLI tool.
 class RaindropConfig {
   const RaindropConfig({
@@ -11,6 +45,7 @@ class RaindropConfig {
     required this.configDir,
     required this.dialect,
     this.dartPath,
+    this.migrationNaming = MigrationNaming.integer,
   });
 
   /// Path to the directory containing schema files (absolute path).
@@ -25,6 +60,9 @@ class RaindropConfig {
   /// Optional path to generate a Dart migrations file (absolute path).
   /// If set, `generate` also produces this Dart file alongside .sql files.
   final String? dartPath;
+
+  /// Prefix style for generated migration SQL filenames (`0000_…` vs epoch `…_`).
+  final MigrationNaming migrationNaming;
 
   /// Directory containing the config file (absolute path).
   /// Used for resolving relative paths.
@@ -81,12 +119,16 @@ class RaindropConfig {
     final dartPath =
         dartRaw != null ? p.normalize(p.join(configDir, dartRaw)) : null;
 
+    final migrationNaming =
+        _parseMigrationNaming(yaml?['migration_naming'] as String?);
+
     return RaindropConfig(
       schemaPath: schemaPath,
       outPath: outPath,
       dialect: dialect,
       configDir: configDir,
       dartPath: dartPath,
+      migrationNaming: migrationNaming,
     );
   }
 }

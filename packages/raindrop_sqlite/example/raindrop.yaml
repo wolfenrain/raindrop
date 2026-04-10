@@ -7,6 +7,9 @@ schemas: lib/schemas
 # Optional output path for the generated migrations.
 # out: migrations/
 
+# Optional: migration filename prefix — "integer" (0000_, 0001_, …) or "timestamp" (epoch ms, zero-padded to 15 digits)
+# migration_naming: integer
+
 # Optional: path to generate a Dart migrations file (relative to config dir).
 # If set, `generate` also produces this Dart file alongside .sql files.
 dart: lib/database/migrations.dart
