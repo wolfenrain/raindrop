@@ -113,6 +113,12 @@ extension PrimaryColumn<T extends ColumnType<V>, V extends Object?> on T? {
   }
 }
 
+extension PrimaryColumnNonNull<T extends ColumnType<V>, V extends Object?>
+    on T {
+  /// Marks this column as the primary key (no auto-increment).
+  T primaryKey() => PrimaryColumn(this).primaryKey()!;
+}
+
 extension PrimaryColumnInteger<T extends ColumnType<int>> on T? {
   /// Marks this integer column as the primary key, optionally with auto-increment.
   T? primaryKey({required bool autoIncrement}) {
@@ -124,6 +130,12 @@ extension PrimaryColumnInteger<T extends ColumnType<int>> on T? {
 
     return this;
   }
+}
+
+extension PrimaryColumnIntegerNonNull<T extends ColumnType<int>> on T {
+  /// Marks this integer column as the primary key, optionally with auto-increment.
+  T primaryKey({required bool autoIncrement}) =>
+      PrimaryColumnInteger(this).primaryKey(autoIncrement: autoIncrement)!;
 }
 
 extension ColumnOperators<V extends Object?> on ColumnOf<V> {
