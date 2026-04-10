@@ -19,29 +19,22 @@ String migrationTagPrefix({
   required int migrationIndex,
   required DateTime at,
 }) {
-  switch (naming) {
-    case MigrationNaming.integer:
-      return migrationIndex.toString().padLeft(4, '0');
-    case MigrationNaming.timestamp:
-      return at.millisecondsSinceEpoch.toString().padLeft(15, '0');
-  }
+  return switch (naming) {
+    MigrationNaming.integer => migrationIndex.toString().padLeft(4, '0'),
+    MigrationNaming.timestamp =>
+      at.millisecondsSinceEpoch.toString().padLeft(15, '0'),
+  };
 }
 
 MigrationNaming _parseMigrationNaming(String? raw) {
-  if (raw == null) {
-    return MigrationNaming.integer;
-  }
-  switch (raw.toLowerCase().trim()) {
-    case 'integer':
-      return MigrationNaming.integer;
-    case 'timestamp':
-      return MigrationNaming.timestamp;
-    default:
-      throw StateError(
+  return switch (raw?.toLowerCase().trim()) {
+    'integer' || null => MigrationNaming.integer,
+    'timestamp' => MigrationNaming.timestamp,
+    _ => throw StateError(
         'Invalid "migration_naming" in raindrop.yaml: "$raw". '
         'Use "integer" or "timestamp".',
-      );
-  }
+      ),
+  };
 }
 
 /// Configuration for the raindrop CLI tool.
