@@ -31,15 +31,15 @@ class LogicalFilter extends Filter {
   final bool or;
 }
 
-extension FilterX on Filter? {
-  operator &(Filter? right) {
+extension FilterX<F extends Filter?> on F {
+  Filter? operator &(Filter? right) {
     final left = this;
     if (left == null) return right;
 
     return left & right;
   }
 
-  operator |(Filter? right) {
+  Filter? operator |(Filter? right) {
     final left = this;
     if (left == null) return right;
 
