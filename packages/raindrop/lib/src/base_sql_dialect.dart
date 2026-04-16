@@ -7,6 +7,10 @@ abstract class BaseSqlDialect extends SqlDialect {
   /// {@macro base_sql_dialect}
   const BaseSqlDialect();
 
+  /// Whether [translateUpdate] / [translateDelete] should honor
+  /// [LimitedModifyQuery.limit] (e.g. SQLite 3.35+).
+  bool get supportsLimitOnModify => false;
+
   @override
   String translateInsert<S extends Schema<S>, V>(
     Insert<S, V> insert,
@@ -128,7 +132,7 @@ abstract class BaseSqlDialect extends SqlDialect {
       _ => '',
     };
 
-    return [
+    final sql = [
       'UPDATE',
       tableSQL,
       'SET',
@@ -136,6 +140,7 @@ abstract class BaseSqlDialect extends SqlDialect {
       if (whereSQL.isNotEmpty) whereSQL,
       if (returningSQL.isNotEmpty) returningSQL,
     ].join(' ');
+    return _maybeAppendModifyLimit(sql, update);
   }
 
   @override
@@ -154,12 +159,28 @@ abstract class BaseSqlDialect extends SqlDialect {
       _ => '',
     };
 
-    return [
+    final sql = [
       'DELETE FROM',
       tableSQL,
       if (whereSQL.isNotEmpty) whereSQL,
       if (returningSQL.isNotEmpty) returningSQL,
     ].join(' ');
+    return _maybeAppendModifyLimit(sql, delete);
+  }
+
+  String _maybeAppendModifyLimit(String sql, Object query) {
+    if (!supportsLimitOnModify) return sql;
+    final lim = switch (query) {
+      final LimitedModifyQuery q => q.limit,
+      _ => null,
+    };
+    if (lim == null) return sql;
+    const token = ' RETURNING ';
+    final i = sql.indexOf(token);
+    if (i >= 0) {
+      return '${sql.substring(0, i)} LIMIT $lim${sql.substring(i)}';
+    }
+    return '$sql LIMIT $lim';
   }
 
   @override
