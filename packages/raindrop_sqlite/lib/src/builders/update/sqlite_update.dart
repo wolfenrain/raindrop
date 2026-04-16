@@ -1,5 +1,7 @@
 import 'package:raindrop/raindrop.dart';
 
+import '../sqlite_limited_query.dart';
+
 export 'sqlite_update_returning_builder.dart';
 export 'sqlite_update_setting_builder.dart';
 
@@ -7,15 +9,19 @@ export 'sqlite_update_setting_builder.dart';
 /// SQL update statement tailored for SQLite.
 /// {@endtemplate}
 class SQLiteUpdate<S extends Schema<S>, V> extends Update<S, V>
-    with ReturningQuery {
+    with ReturningQuery, SQLiteLimitedQuery {
   /// {@macro sqlite_update}
   SQLiteUpdate({
     required super.set,
     required super.table,
     super.where,
     this.withReturning = false,
+    this.limit,
   });
 
   @override
   final bool withReturning;
+
+  @override
+  final int? limit;
 }

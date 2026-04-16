@@ -12,6 +12,17 @@ class SQLiteUpdateReturningBuilder<S extends Schema<S>, V, R>
       set: config.get(#set)!,
       where: config.get(#where),
       withReturning: config.get(#withReturning) ?? false,
+      limit: config.get(#limit) as int?,
+    );
+  }
+}
+
+extension SQLiteUpdateLimitExtension<S extends Schema<S>, V, R>
+    on UpdateWhereBuilder<S, V, R> {
+  SQLiteUpdateReturningBuilder<S, V, R> limit(int limit) {
+    return SQLiteUpdateReturningBuilder(
+      executor,
+      config: config.copyWith({#limit: limit}),
     );
   }
 }
