@@ -30,3 +30,19 @@ class LogicalFilter extends Filter {
   /// If true it uses OR operations, otherwise AND operations.
   final bool or;
 }
+
+extension FilterX on Filter? {
+  operator &(Filter? right) {
+    final left = this;
+    if (left == null) return right;
+
+    return left & right;
+  }
+
+  operator |(Filter? right) {
+    final left = this;
+    if (left == null) return right;
+
+    return left | right;
+  }
+}
