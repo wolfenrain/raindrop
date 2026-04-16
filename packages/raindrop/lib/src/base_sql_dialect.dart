@@ -7,10 +7,6 @@ abstract class BaseSqlDialect extends SqlDialect {
   /// {@macro base_sql_dialect}
   const BaseSqlDialect();
 
-  /// Whether [translateUpdate] / [translateDelete] should honor
-  /// [LimitedModifyQuery.limit] (e.g. SQLite 3.35+).
-  bool get supportsLimitOnModify => false;
-
   @override
   String translateInsert<S extends Schema<S>, V>(
     Insert<S, V> insert,
@@ -169,7 +165,6 @@ abstract class BaseSqlDialect extends SqlDialect {
   }
 
   String _maybeAppendModifyLimit(String sql, Object query) {
-    if (!supportsLimitOnModify) return sql;
     final lim = switch (query) {
       final LimitedModifyQuery q => q.limit,
       _ => null,
@@ -446,10 +441,11 @@ abstract class BaseSqlDialect extends SqlDialect {
 
   @override
   Future<void> recordMigration(
-    Future<DatabaseResult> Function(String sql, [List<Object?> values]) execute,
-    {required String tag,
-    required String checksum,}
-  ) async {
+    Future<DatabaseResult> Function(String sql, [List<Object?> values])
+        execute, {
+    required String tag,
+    required String checksum,
+  }) async {
     final table = escapeName('_raindrop_migrations');
     final tagCol = escapeName('tag');
     final checksumCol = escapeName('checksum');

@@ -8,9 +8,6 @@ class SQLiteDialect extends BaseSqlDialect {
   const SQLiteDialect();
 
   @override
-  bool get supportsLimitOnModify => true;
-
-  @override
   String escapeName(String name) => '"$name"';
 
   @override
