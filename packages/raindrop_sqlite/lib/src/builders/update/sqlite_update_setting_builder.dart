@@ -24,7 +24,8 @@ class SQLiteUpdateWhereBuilder<S extends Schema<S>, V, R>
       table: config.get(#table)!,
       set: config.get(#set)!,
       where: config.get(#where),
-      withReturning: config.get(#withReturning)!,
+      withReturning: config.get(#withReturning) as bool? ?? false,
+      limit: config.get(#limit) as int?,
     );
   }
 }

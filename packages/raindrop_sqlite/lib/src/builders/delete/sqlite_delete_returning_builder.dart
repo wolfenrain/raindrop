@@ -13,7 +13,18 @@ class SQLiteDeleteReturningBuilder<S extends Schema<S>, V>
     return SQLiteDelete(
       from: config.get(#from)!,
       where: config.get(#where),
-      withReturning: config.get(#withReturning)!,
+      withReturning: config.get(#withReturning) as bool? ?? false,
+      limit: config.get(#limit) as int?,
+    );
+  }
+}
+
+extension SQLiteDeleteLimitExtension<S extends Schema<S>, V>
+    on DeleteWhereBuilder<S, V> {
+  SQLiteDeleteReturningBuilder<S, V> limit(int limit) {
+    return SQLiteDeleteReturningBuilder(
+      executor,
+      config: config.copyWith({#limit: limit}),
     );
   }
 }
