@@ -72,9 +72,14 @@ V? _column<S extends Schema<S>, T extends ColumnType<V?>, V extends Object>(
 
   // If the zone has read data, read the value from there.
   if (Zone.current[#read] case final Map<String, dynamic> read) {
-    final value = read[name];
-    if (value == null) return null;
-    return value as V;
+    return switch (read[name]) {
+      null => null,
+      final V value => value,
+      final v => switch (transformer?.decode(v)) {
+          null => null,
+          final V value => value,
+        },
+    };
   }
 
   return value;
