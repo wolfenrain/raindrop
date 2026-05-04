@@ -100,15 +100,23 @@ mixin _DatabaseDelegate on Delegate {
 
   @override
   Future<DatabaseResult> execute(String query, List<Object?> values) {
-    final resultSet = _database.select(query, values);
+    final stmt = _database.prepare(query);
+    try {
+      final modifiesDatabase = !stmt.isReadOnly;
+      final resultSet = stmt.select(values);
+      final lastRowId = _database.lastInsertRowId;
 
-    return Future.value(
-      DatabaseResult(
-        columns: resultSet.columnNames,
-        rows: [...resultSet.map((row) => row.values)],
-        rowsAffected: 0, // TODO: implement
-        lastInsertedRowId: null,
-      ),
-    );
+      return Future.value(
+        DatabaseResult(
+          columns: resultSet.columnNames,
+          rows: [...resultSet.map((row) => row.values)],
+          rowsAffected: modifiesDatabase ? _database.updatedRows : 0,
+          lastInsertedRowId:
+              modifiesDatabase && lastRowId != 0 ? lastRowId : null,
+        ),
+      );
+    } finally {
+      stmt.dispose();
+    }
   }
 }
