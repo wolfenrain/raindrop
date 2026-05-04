@@ -9,6 +9,24 @@ extension UpdatableColumnsOn<S extends Schema<RR>, RR, R> on UpdateSettingBuilde
       config: config.copyWith({#set: _Set(u0, u1, u2, u3, u4, u5, u6, u7, u8, u9, u10, u11, u12, u13, u14, u15, u16, u17, u18, u19)}),
     );
   }
+
+  /// Set columns from a list or iterable (e.g. built dynamically, or more than
+  /// [set]'s positional limit). Must be non-empty.
+  ///
+  /// ```dart
+  /// db.update(users).setAll([users.name.to('new'), users.age.to(25)]);
+  /// ```
+  UpdateWhereBuilder<S, RR, List<Object?>?, R> setAll(
+      Iterable<Updateable<dynamic>> updates) {
+    final list = List<Updateable>.from(updates);
+    if (list.isEmpty) {
+      throw ArgumentError.value(updates, 'updates', 'must not be empty');
+    }
+    return UpdateWhereBuilder(
+      executor,
+      config: config.copyWith({#set: UpdateableResult<List<Object?>>(list)}),
+    );
+  }
 }
 
 typedef UpdateSetWhereBuilder<S extends Schema<RR>, RR, V0 extends dynamic, V1 extends dynamic, V2 extends dynamic, V3 extends dynamic, V4 extends dynamic, V5 extends dynamic, V6 extends dynamic, V7 extends dynamic, V8 extends dynamic, V9 extends dynamic, V10 extends dynamic, V11 extends dynamic, V12 extends dynamic, V13 extends dynamic, V14 extends dynamic, V15 extends dynamic, V16 extends dynamic, V17 extends dynamic, V18 extends dynamic, V19 extends dynamic, R> = UpdateWhereBuilder<S, RR, (Updateable<V0>, Updateable<V1>, Updateable<V2>, Updateable<V3>, Updateable<V4>, Updateable<V5>, Updateable<V6>, Updateable<V7>, Updateable<V8>, Updateable<V9>, Updateable<V10>, Updateable<V11>, Updateable<V12>, Updateable<V13>, Updateable<V14>, Updateable<V15>, Updateable<V16>, Updateable<V17>, Updateable<V18>, Updateable<V19>)?, R>;
@@ -38,6 +56,17 @@ class _Set<U0 extends Updateable<Object?>?, U1 extends Updateable<Object?>?, U2 
   final U17? u17;
   final U18? u18;
   final U19? u19;
+}
+
+extension UpdatableSetAllWhere<S extends Schema<RR>, RR, R>
+    on UpdateWhereBuilder<S, RR, List<Object?>?, R> {
+  /// Filter the update query.
+  UpdateWhereBuilder<S, RR, List<Object?>, R> where(Filter where) {
+    return UpdateWhereBuilder(
+      executor,
+      config: config.copyWith({#where: where}),
+    );
+  }
 }
 
 extension UpdatableColumns0<S extends Schema<RR>, RR, R, V0 extends Object> on UpdateWhereBuilder<S, RR, (Updateable<V0>, _Unused, _Unused, _Unused, _Unused, _Unused, _Unused, _Unused, _Unused, _Unused, _Unused, _Unused, _Unused, _Unused, _Unused, _Unused, _Unused, _Unused, _Unused, _Unused)?, R> {
