@@ -34,7 +34,9 @@ mixin ColumnOperand<V> implements Future<V> {
   Future<V> whenComplete(FutureOr<void> Function() action) => _notAFuture();
 }
 
-typedef Field<R, V extends Object> = V? Function(R);
+/// Row field getter for schema [R]. Use [W] such that `null is W` matches
+/// column nullability (e.g. [int] vs [int?], [IntColumn] vs [IntColumn?]).
+typedef Field<R, W extends Object?> = W Function(R);
 
 class Column<R, V extends Object?>
     with ColumnOperand<V>

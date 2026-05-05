@@ -1,19 +1,34 @@
 import 'package:raindrop/raindrop.dart';
 
 extension TextColumnDefinition<R> on SchemaBuilder<R> {
-  T text<T extends TextColumn?>(
+  T text<T extends TextColumn?, W extends Object?>(
     String name,
-    Field<R, String> field,
-  ) {
-    return column(TextColumn.new, name, field, sqlType: 'TEXT') as T;
+    Field<R, W> field, {
+    String? sqlType,
+    String? defaultValue,
+  }) {
+    return column<TextColumn, String, W>(
+      TextColumn.new,
+      name,
+      field,
+      sqlType: sqlType ?? 'TEXT',
+      defaultValue: defaultValue,
+    ) as T;
   }
 
-  T textArray<T extends TextArrayColumn?>(
+  T textArray<T extends TextArrayColumn?, W extends Object?>(
     String name,
-    Field<R, List<String>> field,
-  ) {
-    return column(TextArrayColumn.new, name, field, sqlType: 'TEXT[]')
-        as T;
+    Field<R, W> field, {
+    String? sqlType,
+    String? defaultValue,
+  }) {
+    return column<TextArrayColumn, List<String>, W>(
+      TextArrayColumn.new,
+      name,
+      field,
+      sqlType: sqlType ?? 'TEXT[]',
+      defaultValue: defaultValue,
+    ) as T;
   }
 }
 

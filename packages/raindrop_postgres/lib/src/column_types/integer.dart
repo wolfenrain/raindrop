@@ -1,11 +1,19 @@
 import 'package:raindrop/raindrop.dart';
 
 extension IntColumnDefinition<R> on SchemaBuilder<R> {
-  T integer<T extends IntColumn?>(
+  T integer<T extends IntColumn?, W extends Object?>(
     String name,
-    Field<R, int> field,
-  ) {
-    return column(IntColumn.new, name, field, sqlType: 'INTEGER') as T;
+    Field<R, W> field, {
+    String? sqlType,
+    String? defaultValue,
+  }) {
+    return column<IntColumn, int, W>(
+      IntColumn.new,
+      name,
+      field,
+      sqlType: sqlType ?? 'INTEGER',
+      defaultValue: defaultValue,
+    ) as T;
   }
 }
 

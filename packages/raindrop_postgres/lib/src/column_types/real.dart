@@ -1,11 +1,19 @@
 import 'package:raindrop/raindrop.dart';
 
 extension RealColumnDefinition<R> on SchemaBuilder<R> {
-  T real<T extends RealColumn?>(
+  T real<T extends RealColumn?, W extends Object?>(
     String name,
-    Field<R, double> field,
-  ) {
-    return column(RealColumn.new, name, field, sqlType: 'REAL') as T;
+    Field<R, W> field, {
+    String? sqlType,
+    String? defaultValue,
+  }) {
+    return column<RealColumn, double, W>(
+      RealColumn.new,
+      name,
+      field,
+      sqlType: sqlType ?? 'REAL',
+      defaultValue: defaultValue,
+    ) as T;
   }
 }
 

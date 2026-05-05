@@ -11,7 +11,9 @@ class _Item {
 
 class _ItemSchema extends Schema<_Item> {
   _ItemSchema(super.$)
-      : id = $.integer('id', (s) => s.id).primaryKey(autoIncrement: true),
+      : id = $.integer('id', (s) => s.id).primaryKey(
+            autoIncrement: true,
+          ),
         label = $.text('label', (s) => s.label);
 
   @override

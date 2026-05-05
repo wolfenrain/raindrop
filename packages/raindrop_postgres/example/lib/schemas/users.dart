@@ -16,7 +16,9 @@ class User {
 
 class UserSchema extends Schema<User> {
   UserSchema(super.$)
-      : id = $.integer('id', (s) => s.id).primaryKey(autoIncrement: true),
+      : id = $.integer('id', (s) => s.id).primaryKey(
+            autoIncrement: true,
+          ),
         name = $.text('name', (s) => s.name),
         deletedAt = $.dateTime('deleted_at', (s) => s.deletedAt);
 

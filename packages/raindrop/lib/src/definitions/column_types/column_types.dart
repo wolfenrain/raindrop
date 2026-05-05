@@ -7,14 +7,17 @@ export 'text.dart';
 extension ColumnBuilderProvider<R> on SchemaBuilder<R> {
   /// Register a plain column, wrapping the created [Column] in the column-type
   /// handle produced by [typeBuilder].
-  T column<T extends ColumnType<V?>, V extends Object>(
+  ///
+  /// [T] is the column-type handle ([IntColumn] vs [IntColumn?]); [W] is the
+  /// field value type ([int] vs [int?]). [Column.isNullable] is `null is W`.
+  T column<T extends ColumnType<V?>, V extends Object, W extends Object?>(
     T Function(Column<dynamic, V>) typeBuilder,
     String name,
-    Field<R, V> field, {
+    Field<R, W> field, {
     String? sqlType,
     String? defaultValue,
   }) {
-    return _column<R, T, V>(
+    return _column<R, T, V, W>(
       this,
       typeBuilder,
       name,
@@ -26,15 +29,16 @@ extension ColumnBuilderProvider<R> on SchemaBuilder<R> {
 
   /// Register a column with a custom [transformer] between the in-memory
   /// type [I] and the SQL storage type [O].
-  T custom<T extends ColumnType<I?>, I extends Object, O extends Object>(
+  T custom<T extends ColumnType<I?>, I extends Object, O extends Object,
+      W extends Object?>(
     T Function(Column<dynamic, I>) typeBuilder,
     String name,
-    Field<R, I> field, {
+    Field<R, W> field, {
     required ColumnTransformer<I, O> transformer,
     String? sqlType,
     String? defaultValue,
   }) {
-    return _column<R, T, I>(
+    return _column<R, T, I, W>(
       this,
       typeBuilder,
       name,
@@ -46,19 +50,19 @@ extension ColumnBuilderProvider<R> on SchemaBuilder<R> {
   }
 }
 
-T _column<R, T extends ColumnType<V?>, V extends Object>(
+T _column<R, T extends ColumnType<V?>, V extends Object, W extends Object?>(
   SchemaBuilder<R> $,
   T Function(Column<dynamic, V>) typeBuilder,
   String name,
-  Field<R, V> field, {
+  Field<R, W> field, {
   ColumnTransformer<V, Object?>? transformer,
   String? sqlType,
   String? defaultValue,
 }) {
   final column = $.table.addColumn<V>(
     name,
-    field,
-    isNullable: null is V,
+    field as Field<R, V>,
+    isNullable: null is W,
     transformer: transformer,
     sqlType: sqlType,
     defaultValue: defaultValue,

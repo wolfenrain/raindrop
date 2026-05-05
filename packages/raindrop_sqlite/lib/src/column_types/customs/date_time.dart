@@ -1,16 +1,19 @@
 import 'package:raindrop/raindrop.dart';
 
 extension DateTimeColumnDefinition<R> on SchemaBuilder<R> {
-  T dateTime<T extends DateTimeColumn?>(
+  T dateTime<T extends DateTimeColumn?, W extends Object?>(
     String name,
-    Field<R, DateTime> field,
-  ) {
-    return custom(
+    Field<R, W> field, {
+    String? sqlType,
+    String? defaultValue,
+  }) {
+    return custom<DateTimeColumn, DateTime, int, W>(
       DateTimeColumn.new,
       name,
       field,
       transformer: const DateTimeTransfomer(),
-      sqlType: 'INTEGER',
+      sqlType: sqlType ?? 'INTEGER',
+      defaultValue: defaultValue,
     ) as T;
   }
 }
