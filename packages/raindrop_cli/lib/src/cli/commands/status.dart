@@ -6,8 +6,9 @@ import 'package:path/path.dart' as p;
 import 'package:raindrop_cli/src/core/config.dart';
 import 'package:raindrop_cli/src/core/differ.dart';
 import 'package:raindrop_cli/src/core/journal.dart';
+import 'package:raindrop_cli/src/core/project_root.dart';
 import 'package:raindrop_cli/src/core/snapshot.dart';
-import 'package:raindrop_cli/src/parser/schema_parser.dart';
+import 'package:raindrop_cli/src/runtime/runtime_schema_loader.dart';
 
 /// Command to show migration status.
 class StatusCommand extends Command<int> {
@@ -37,10 +38,9 @@ class StatusCommand extends Command<int> {
       config.dialect,
     );
 
-    // Parse current schema
-    final parser = SchemaParser();
-    final currentSnapshot = await parser.parseDirectory(
-      config.schemaPath,
+    final currentSnapshot = await RuntimeSchemaLoader.load(
+      projectRoot: findPubspecRootContaining(config.schemaPath),
+      schemaPath: config.schemaPath,
       dialect: config.dialect,
       prevId: journal.previousId,
     );

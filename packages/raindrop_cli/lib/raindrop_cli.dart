@@ -4,6 +4,5 @@ export 'src/core/journal.dart';
 export 'src/core/snapshot.dart';
 export 'src/ddl/ddl_runner.dart';
 export 'src/migration/migration_tracker.dart';
-export 'src/parser/column_extractor.dart';
-export 'src/parser/schema_parser.dart';
-export 'src/parser/table_visitor.dart';
+export 'src/runtime/runtime_schema_loader.dart';
+export 'src/runtime/schema_table_discovery.dart';

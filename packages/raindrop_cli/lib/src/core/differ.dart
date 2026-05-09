@@ -84,7 +84,7 @@ class SchemaDiffer {
     return IndexInfo(
       name: snapshot.name,
       tableName: snapshot.tableName,
-      columns: snapshot.columns,
+      columns: List<String>.from(snapshot.columns),
       isUnique: snapshot.isUnique,
       where: snapshot.where,
     );

@@ -243,7 +243,7 @@ class IndexInfo {
     return {
       'name': name,
       'tableName': tableName,
-      'columns': columns,
+      'columns': List<String>.from(columns),
       'isUnique': isUnique,
       if (where != null) 'where': where,
     };

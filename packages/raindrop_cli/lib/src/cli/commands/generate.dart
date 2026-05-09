@@ -6,9 +6,10 @@ import 'package:path/path.dart' as p;
 import 'package:raindrop_cli/src/core/config.dart';
 import 'package:raindrop_cli/src/core/differ.dart';
 import 'package:raindrop_cli/src/core/journal.dart';
+import 'package:raindrop_cli/src/core/project_root.dart';
 import 'package:raindrop_cli/src/core/snapshot.dart';
 import 'package:raindrop_cli/src/ddl/ddl_runner.dart';
-import 'package:raindrop_cli/src/parser/schema_parser.dart';
+import 'package:raindrop_cli/src/runtime/runtime_schema_loader.dart';
 
 /// Command to generate a new migration from schema changes.
 class GenerateCommand extends Command<int> {
@@ -28,13 +29,6 @@ class GenerateCommand extends Command<int> {
       'dart',
       help: 'Generate a Dart file with embedded migrations at the given path. '
           'Defaults to {out}/migrations.dart if no path is provided.',
-    );
-    argParser.addOption(
-      'current-snapshot',
-      help: 'Use a pre-built schema snapshot (JSON) as the current state '
-          'instead of parsing the schema directory. Lets you feed a snapshot '
-          'built by runtime introspection, which captures what the static '
-          'parser cannot (e.g. filter-DSL partial-index predicates).',
     );
   }
 
@@ -72,28 +66,13 @@ class GenerateCommand extends Command<int> {
       previousSnapshot = await SchemaSnapshot.load(snapshotPath);
     }
 
-    // Build the current snapshot: either load a pre-built one (runtime
-    // introspection) or parse the schema directory statically.
-    final SchemaSnapshot currentSnapshot;
-    if ((argResults!['current-snapshot'] as String?) case final snapshotArg?) {
-      final loaded = await SchemaSnapshot.load(
-        p.normalize(p.join(config.configDir, snapshotArg)),
-      );
-      if (loaded == null) {
-        print('Current snapshot not found: $snapshotArg');
-        return 1;
-      }
-      currentSnapshot = loaded.copyWith(
-        id: SchemaSnapshot.generateId(),
-        prevId: journal.previousId,
-      );
-    } else {
-      currentSnapshot = await SchemaParser().parseDirectory(
-        config.schemaPath,
-        dialect: config.dialect,
-        prevId: journal.previousId,
-      );
-    }
+    // Resolve schema via live Table metadata (generated runner under .dart_tool/raindrop)
+    final currentSnapshot = await RuntimeSchemaLoader.load(
+      projectRoot: findPubspecRootContaining(config.schemaPath),
+      schemaPath: config.schemaPath,
+      dialect: config.dialect,
+      prevId: journal.previousId,
+    );
 
     if (currentSnapshot.tables.isEmpty) {
       print(
@@ -110,8 +89,8 @@ class GenerateCommand extends Command<int> {
       return 0;
     }
 
-    // Find project root (where pubspec.yaml lives) for package resolution
-    final projectPath = _findProjectRoot(config.configDir);
+    // Package resolution for DDL isolate (`package_config` of the tool package).
+    final projectPath = findProjectRoot(config.configDir);
 
     // Determine migration index and tag
     final migrationIndex = journal.nextIndex;
@@ -239,24 +218,5 @@ class GenerateCommand extends Command<int> {
         .toLowerCase()
         .replaceAll(RegExp(r'[^a-z0-9_]'), '_')
         .replaceAll(RegExp(r'_+'), '_');
-  }
-
-  /// Find the project root by walking up from the given directory until
-  /// finding a pubspec.yaml file.
-  String _findProjectRoot(String startDir) {
-    var current = startDir;
-    while (true) {
-      final pubspecPath = p.join(current, 'pubspec.yaml');
-      if (File(pubspecPath).existsSync()) {
-        return current;
-      }
-      final parent = p.dirname(current);
-      if (parent == current) {
-        // Reached filesystem root without finding pubspec.yaml
-        // Fall back to config directory
-        return startDir;
-      }
-      current = parent;
-    }
   }
 }
