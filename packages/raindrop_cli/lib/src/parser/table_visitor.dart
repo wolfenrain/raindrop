@@ -301,13 +301,13 @@ class TableDefinitionVisitor extends RecursiveAstVisitor<void> {
 
   /// Extracts the dialect from a method invocation's function definition.
   String? _extractDialectFromFunction(MethodInvocation node) {
-    final element = node.methodName.staticElement;
+    final element = node.methodName.element;
     return _extractDialectFromElement(element);
   }
 
   /// Extracts the dialect from an identifier's function definition.
   String? _extractDialectFromIdentifier(SimpleIdentifier identifier) {
-    final element = identifier.staticElement;
+    final element = identifier.element;
     return _extractDialectFromElement(element);
   }
 
@@ -345,7 +345,7 @@ class TableDefinitionVisitor extends RecursiveAstVisitor<void> {
       final result = session.getParsedLibraryByElement(element.library);
       if (result is! ParsedLibraryResult) return null;
 
-      final declaration = result.getElementDeclaration(element);
+      final declaration = result.getFragmentDeclaration(element.firstFragment);
       if (declaration == null) return null;
 
       final node = declaration.node;
@@ -371,7 +371,7 @@ class TableDefinitionVisitor extends RecursiveAstVisitor<void> {
       if (expression is MethodInvocation) {
         return expression.methodName.name;
       } else if (expression is InstanceCreationExpression) {
-        return expression.constructorName.type.name2.lexeme;
+        return expression.constructorName.type.name.lexeme;
       }
     } else if (body is BlockFunctionBody) {
       // Look for return statement
@@ -381,7 +381,7 @@ class TableDefinitionVisitor extends RecursiveAstVisitor<void> {
           if (expression is MethodInvocation) {
             return expression.methodName.name;
           } else if (expression is InstanceCreationExpression) {
-            return expression.constructorName.type.name2.lexeme;
+            return expression.constructorName.type.name.lexeme;
           }
         }
       }

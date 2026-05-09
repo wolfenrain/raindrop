@@ -35,7 +35,7 @@ class ColumnExtractor extends RecursiveAstVisitor<void> {
   /// Looks for the `sqlType` named argument in the method body's call to
   /// `column()` or `custom()`.
   String? _extractSqlTypeFromMethod(MethodInvocation node) {
-    final element = node.methodName.staticElement;
+    final element = node.methodName.element;
     if (element == null) return null;
 
     // Check cache first
@@ -70,7 +70,7 @@ class ColumnExtractor extends RecursiveAstVisitor<void> {
       final result = session.getParsedLibraryByElement(element.library);
       if (result is! ParsedLibraryResult) return null;
 
-      final declaration = result.getElementDeclaration(element);
+      final declaration = result.getFragmentDeclaration(element.firstFragment);
       if (declaration == null) return null;
 
       final node = declaration.node;
@@ -87,15 +87,13 @@ class ColumnExtractor extends RecursiveAstVisitor<void> {
 
   @override
   void visitClassDeclaration(ClassDeclaration node) {
-    // Check if this class extends Schema
-    final extendsClause = node.extendsClause;
-    if (extendsClause != null) {
-      final superclass = extendsClause.superclass;
-      if (_isSchemaType(superclass)) {
-        _currentSchemaClass = node.name.lexeme;
-        _currentColumns = {};
-        schemaColumns[_currentSchemaClass!] = _currentColumns!;
-      }
+    // Treat any class that transitively extends Schema as a schema (e.g. User
+    // extends Auth extends Schema), not only direct subclasses of Schema.
+    final element = node.declaredFragment?.element;
+    if (element != null && _extendsSchema(element)) {
+      _currentSchemaClass = node.name.lexeme;
+      _currentColumns = {};
+      schemaColumns[_currentSchemaClass!] = _currentColumns!;
     }
 
     super.visitClassDeclaration(node);
@@ -174,9 +172,16 @@ class ColumnExtractor extends RecursiveAstVisitor<void> {
     super.visitMethodInvocation(node);
   }
 
-  bool _isSchemaType(NamedType type) {
-    final typeName = type.name2.lexeme;
-    return typeName == 'Schema';
+  /// Whether [element]'s superclass chain includes [Schema].
+  bool _extendsSchema(ClassElement element) {
+    var current = element.supertype;
+    while (current != null) {
+      if (current.element.name == 'Schema') {
+        return true;
+      }
+      current = current.superclass;
+    }
+    return false;
   }
 
   bool _isNullableColumn(MethodInvocation node) {

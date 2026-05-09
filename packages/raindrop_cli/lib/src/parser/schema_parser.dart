@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:analyzer/dart/analysis/analysis_context_collection.dart';
 import 'package:analyzer/dart/analysis/results.dart';
+import 'package:analyzer/dart/element/element.dart';
 import 'package:path/path.dart' as p;
 
 import 'package:raindrop_cli/src/core/snapshot.dart';
@@ -59,6 +60,11 @@ class SchemaParser {
       includedPaths: [p.absolute(path)],
     );
 
+    // First pass: collect columns for every schema class from all files, and
+    // cache resolved units (columns may live on superclasses in other files).
+    final globalSchemaColumns = <String, Map<String, ColumnSnapshot>>{};
+    final resolvedByPath = <String, ResolvedUnitResult>{};
+
     for (final filePath in dartFiles) {
       final context = collection.contextFor(filePath);
       final result = await context.currentSession.getResolvedUnit(filePath);
@@ -66,19 +72,31 @@ class SchemaParser {
       if (result is! ResolvedUnitResult) {
         continue;
       }
+      resolvedByPath[filePath] = result;
 
-      // Visit the AST to find table definitions matching the dialect
+      final extractor = ColumnExtractor();
+      result.unit.accept(extractor);
+      for (final e in extractor.schemaColumns.entries) {
+        globalSchemaColumns[e.key] = e.value;
+      }
+    }
+
+    // Second pass: find tables and merge columns along Schema inheritance.
+    for (final filePath in dartFiles) {
+      final result = resolvedByPath[filePath];
+      if (result == null) {
+        continue;
+      }
+
       final visitor = TableDefinitionVisitor(expectedDialect: dialect);
       result.unit.accept(visitor);
 
-      // Extract column definitions for all schema types in this file
-      final extractor = ColumnExtractor();
-      result.unit.accept(extractor);
-
-      // Process found table definitions
       for (final tableDef in visitor.tableDefinitions) {
-        // Extract columns from the schema class
-        final columns = _extractColumnsFromExtractor(extractor, tableDef);
+        final columns = await _columnsForTableSchema(
+          globalSchemaColumns,
+          tableDef,
+          result,
+        );
 
         if (columns.isNotEmpty) {
           tables[tableDef.tableName] = TableSnapshot(
@@ -86,7 +104,6 @@ class SchemaParser {
             columns: columns,
           );
 
-          // Extract indexes for this table
           final tableIndexes = _extractIndexes(
             tableDef,
             columns,
@@ -108,18 +125,119 @@ class SchemaParser {
     );
   }
 
-  /// Extracts column definitions from a pre-populated column extractor.
-  Map<String, ColumnSnapshot> _extractColumnsFromExtractor(
-    ColumnExtractor extractor,
+  /// Resolves columns for [tableDef]'s schema type, merging superclass fields
+  /// up to [Schema] when the table maps to a subclass (e.g. User + Auth).
+  Future<Map<String, ColumnSnapshot>> _columnsForTableSchema(
+    Map<String, Map<String, ColumnSnapshot>> globalSchemaColumns,
     TableDefinition tableDef,
-  ) {
-    // Try to find columns for this table's schema type
+    ResolvedUnitResult unit,
+  ) async {
     final schemaType = tableDef.schemaType;
-    if (schemaType != null && extractor.schemaColumns.containsKey(schemaType)) {
-      return extractor.schemaColumns[schemaType]!;
+    if (schemaType == null) {
+      return {};
     }
 
-    return {};
+    final element = _findSchemaClassElement(unit, schemaType);
+    if (element == null) {
+      final own = globalSchemaColumns[schemaType];
+      if (own == null) {
+        return {};
+      }
+      return Map<String, ColumnSnapshot>.from(own);
+    }
+
+    final chain = <ClassElement>[];
+    var current = element;
+    while (true) {
+      if (current.name == 'Schema') {
+        break;
+      }
+      chain.add(current);
+      final supertype = current.supertype;
+      if (supertype == null) {
+        break;
+      }
+      final superInterface = supertype.element;
+      if (superInterface is! ClassElement) {
+        break;
+      }
+      current = superInterface;
+    }
+
+    if (chain.isEmpty) {
+      final own = globalSchemaColumns[schemaType];
+      return own == null ? {} : Map<String, ColumnSnapshot>.from(own);
+    }
+
+    for (final c in chain) {
+      await _ensureColumnsForClassElement(c, globalSchemaColumns);
+    }
+
+    final merged = <String, ColumnSnapshot>{};
+    for (final c in chain.reversed) {
+      merged.addAll(globalSchemaColumns[c.name] ?? {});
+    }
+    return merged;
+  }
+
+  /// Parses the library compilation unit for [clazz] when its columns are
+  /// missing from [globalSchemaColumns] (e.g. superclass in another package).
+  Future<void> _ensureColumnsForClassElement(
+    ClassElement clazz,
+    Map<String, Map<String, ColumnSnapshot>> globalSchemaColumns,
+  ) async {
+    final name = clazz.name;
+    final existing = globalSchemaColumns[name];
+    if (existing != null && existing.isNotEmpty) {
+      return;
+    }
+
+    final session = clazz.session;
+    if (session == null) {
+      return;
+    }
+
+    final path = clazz.firstFragment.libraryFragment.source.fullName;
+
+    final result = await session.getResolvedUnit(path);
+    if (result is! ResolvedUnitResult) {
+      return;
+    }
+
+    final extractor = ColumnExtractor();
+    result.unit.accept(extractor);
+    for (final entry in extractor.schemaColumns.entries) {
+      final prior = globalSchemaColumns[entry.key];
+      if (prior == null || prior.isEmpty) {
+        globalSchemaColumns[entry.key] =
+            Map<String, ColumnSnapshot>.from(entry.value);
+      }
+    }
+  }
+
+  /// Locates a [ClassElement] by simple [name], searching the library and its
+  /// transitive imports.
+  ClassElement? _findSchemaClassElement(ResolvedUnitResult unit, String name) {
+    final visited = <LibraryElement>{};
+
+    ClassElement? dfs(LibraryElement library) {
+      if (!visited.add(library)) {
+        return null;
+      }
+      final local = library.getClass(name);
+      if (local != null) {
+        return local;
+      }
+      for (final imported in library.firstFragment.importedLibraries) {
+        final found = dfs(imported);
+        if (found != null) {
+          return found;
+        }
+      }
+      return null;
+    }
+
+    return dfs(unit.libraryElement);
   }
 
   /// Extracts index snapshots from a table definition.
