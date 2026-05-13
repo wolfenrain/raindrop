@@ -250,7 +250,7 @@ void main() {
     goldenTest(
       'with limit',
       (db) =>
-          db.delete(from: users).where(users.age.greaterThan(18)).limit(10),
+          db.delete(from: users).where(users.age.greaterThan(0)).limit(10),
     );
   });
 }
