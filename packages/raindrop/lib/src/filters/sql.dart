@@ -5,18 +5,7 @@ import 'package:raindrop/raindrop.dart';
 /// {@endtemplate}
 class SQL extends Filter {
   /// {@macro sql}
-  SQL(List<Object?> chunks)
-      : chunks = [
-          ...chunks.map((e) {
-            if (e case final ColumnType type) {
-              try {
-                return type.$;
-              } catch (err) {
-                return e;
-              }
-            }
-          }),
-        ];
+  SQL(List<Object?> chunks) : chunks = [...chunks];
 
   SQL.function(String name, List<Object?> chunks)
       : this([RawSQL('$name('), ...chunks, const RawSQL(')')]);
