@@ -121,6 +121,8 @@ class Table<S extends Schema<S>?> implements Selectable<S> {
 
   bool _instanceOf(Schema r) => r is S;
 
+  operator [](String name) => columns.firstWhere((c) => c.name == name);
+
   /// Get the table by using a schema reference.
   static Table? get(Schema schema) => _schemaToTable[schema];
 
