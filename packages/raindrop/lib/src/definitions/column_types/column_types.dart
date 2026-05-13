@@ -157,7 +157,7 @@ extension ColumnOperators<V extends Object?> on ColumnOf<V> {
   }
 
   /// Row value for column is in the list of [values].
-  SQL inList(List<V> values) => SQL([$, 'IN', values]);
+  SQL inList(List<V> values) => SQL([$, const RawSQL('IN'), values]);
 
   /// Returns the count of what is being selected.
   ColumnTransform<Schema<Object?>, int> count() => $.transform(

@@ -475,11 +475,12 @@ abstract class BaseSqlDialect extends SqlDialect {
           buffer.write('${escapeName(column.table.name)}.');
         }
         buffer.write(escapeName(column.name));
-      } else if (chunk case final List<dynamic> values) {
+      } else if (chunk case final List<dynamic> list) {
         buffer.write('(');
-        for (final value in values) {
+        for (var j = 0; j < list.length; j++) {
+          if (j > 0) buffer.write(', ');
           buffer.write(escapeParam(values.length));
-          values.add(value);
+          values.add(list[j]);
         }
         buffer.write(')');
       } else {
