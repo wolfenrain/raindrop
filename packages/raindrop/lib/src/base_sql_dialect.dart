@@ -16,7 +16,7 @@ abstract class BaseSqlDialect extends SqlDialect {
     final insertValues = insert.values.map(table.values).toList();
 
     final sqlColumns = <String>[];
-    final sqlValues = <int, List<String>>{};
+    final includedColumnIndices = <int>[];
     for (var i = 0; i < table.columns.length; i++) {
       final column = table.columns[i];
       if (column.isPrimaryKey) {
@@ -24,23 +24,22 @@ abstract class BaseSqlDialect extends SqlDialect {
         if (!hasValue) continue;
       }
       sqlColumns.add(escapeName(column.name));
+      includedColumnIndices.add(i);
+    }
 
-      for (var j = 0; j < insertValues.length; j++) {
-        final value = insertValues[j][i];
-        sqlValues[j] ??= [];
-        if (value == null) {
-          sqlValues[j]!.add('null');
-        } else {
-          sqlValues[j]!.add(escapeParam(values.length));
-          values.add(value);
-        }
+    final sqlValues = <List<String>>[];
+    for (final row in insertValues) {
+      final rowPlaceholders = <String>[];
+      for (final i in includedColumnIndices) {
+        rowPlaceholders.add(escapeParam(values.length));
+        values.add(row[i]);
       }
+      sqlValues.add(rowPlaceholders);
     }
 
     final tableSQL = translateTable(table);
     final columnsSQL = sqlColumns.join(', ');
-    final valuesSQL =
-        sqlValues.values.map((e) => '(${e.join(', ')})').join(', ');
+    final valuesSQL = sqlValues.map((e) => '(${e.join(', ')})').join(', ');
     final returningSQL = switch (insert) {
       final ReturningQuery query when query.withReturning =>
         'RETURNING ${translateSelection(insert.into, values)}',
@@ -80,11 +79,11 @@ abstract class BaseSqlDialect extends SqlDialect {
     //   _ => '',
     // };
     final groupBySQL = switch (select.groupBy) {
-      final Selectable<Object> groupBy => 'GROUP BY (${translateSelection(
+      final Selectable<Object> groupBy => 'GROUP BY ${translateSelection(
           groupBy,
           values,
           singleTable: singleTable,
-        )})',
+        )}',
       _ => '',
     };
     final limitSQL = switch (select.limit) {
@@ -146,7 +145,8 @@ abstract class BaseSqlDialect extends SqlDialect {
   ) {
     final tableSQL = translateTable(delete.from);
     final whereSQL = switch (delete.where) {
-      final Filter filter => 'WHERE ${translateFilter(filter, values)}',
+      final Filter filter =>
+        'WHERE ${translateFilter(filter, values, singleTable: true)}',
       _ => '',
     };
     final returningSQL = switch (delete) {
@@ -487,11 +487,19 @@ abstract class BaseSqlDialect extends SqlDialect {
         values.add(chunk);
       }
 
-      if (i != sql.chunks.length - 1) {
+      if (i != sql.chunks.length - 1 &&
+          !_endsWithOpenParen(chunk) &&
+          !_startsWithCloseParen(sql.chunks[i + 1])) {
         buffer.write(' ');
       }
     }
 
     return buffer.toString();
   }
+
+  bool _endsWithOpenParen(Object? chunk) =>
+      chunk is RawSQL && chunk.sql.endsWith('(');
+
+  bool _startsWithCloseParen(Object? chunk) =>
+      chunk is RawSQL && chunk.sql.startsWith(')');
 }
