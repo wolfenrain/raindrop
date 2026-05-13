@@ -170,14 +170,26 @@ class DropColumn extends DiffOperation {
 /// {@endtemplate}
 class AlterColumn extends DiffOperation {
   /// {@macro alter_column}
-  const AlterColumn(this.tableName, this.oldColumn, this.newColumn);
+  const AlterColumn(
+    this.tableName,
+    this.oldColumn,
+    this.newColumn,
+    this.tableColumns,
+  );
 
   /// Creates an [AlterColumn] from a map representation.
   factory AlterColumn.fromMap(Map<String, dynamic> map) {
+    final cols = map['tableColumns'] as List<dynamic>?;
     return AlterColumn(
       map['tableName'] as String,
       ColumnInfo.fromMap(map['oldColumn'] as Map<String, dynamic>),
       ColumnInfo.fromMap(map['newColumn'] as Map<String, dynamic>),
+      cols != null
+          ? cols
+              .map(
+                  (c) => ColumnInfo.fromMap((c as Map).cast<String, dynamic>()))
+              .toList()
+          : const <ColumnInfo>[],
     );
   }
 
@@ -190,6 +202,10 @@ class AlterColumn extends DiffOperation {
   /// The column after alteration.
   final ColumnInfo newColumn;
 
+  /// Column definitions for the table after applying this alteration alone,
+  /// in [old] table column order. Used by SQLite (table rebuild).
+  final List<ColumnInfo> tableColumns;
+
   @override
   String describe() => 'Alter column "${oldColumn.name}" in table "$tableName"';
 
@@ -200,6 +216,7 @@ class AlterColumn extends DiffOperation {
       'tableName': tableName,
       'oldColumn': oldColumn.toMap(),
       'newColumn': newColumn.toMap(),
+      'tableColumns': tableColumns.map((c) => c.toMap()).toList(),
     };
   }
 }

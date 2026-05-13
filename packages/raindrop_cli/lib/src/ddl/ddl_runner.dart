@@ -15,10 +15,10 @@ class DdlRunner {
   /// This method:
   /// 1. Resolves the dialect package location from the user's pub cache
   /// 2. Spawns an isolate that loads the DDL generator
-  /// 3. Sends the operations and receives the generated SQL
+  /// 3. Sends the operations and receives the generated SQL and warnings
   ///
   /// Throws an [ArgumentError] if the dialect package is not found.
-  static Future<String> generate(
+  static Future<DdlGenerateResult> generate(
     String dialect,
     List<DiffOperation> operations, {
     String? projectPath,
@@ -30,7 +30,11 @@ class DdlRunner {
       'operations': operations.map((op) => op.toMap()).toList(),
     });
 
-    return response['sql'] as String;
+    final warningsRaw = response['warnings'] as List<dynamic>?;
+    return DdlGenerateResult(
+      sql: response['sql'] as String,
+      warnings: warningsRaw?.cast<String>() ?? const [],
+    );
   }
 
   /// Resolves the entry point URI for a dialect package.

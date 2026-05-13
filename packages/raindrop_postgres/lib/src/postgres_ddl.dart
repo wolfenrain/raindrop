@@ -50,6 +50,7 @@ class PostgresDdlGenerator extends DdlGenerator {
     String tableName,
     ColumnInfo oldColumn,
     ColumnInfo newColumn,
+    List<ColumnInfo> _,
   ) {
     final statements = <String>[];
     final table = escapeName(tableName);

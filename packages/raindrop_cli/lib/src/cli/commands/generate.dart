@@ -102,11 +102,16 @@ class GenerateCommand extends Command<int> {
     final tag = '${prefix}_${_sanitizeName(migrationName)}';
 
     // Generate SQL using the dialect's DDL generator via isolate
-    final sql = await DdlRunner.generate(
+    final ddlResult = await DdlRunner.generate(
       currentSnapshot.dialect,
       operations,
       projectPath: projectPath,
     );
+    final sql = ddlResult.sql;
+
+    for (final warning in ddlResult.warnings) {
+      print('Warning: $warning');
+    }
 
     if (sql.trim().isEmpty) {
       print(

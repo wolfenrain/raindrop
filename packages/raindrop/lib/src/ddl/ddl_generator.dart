@@ -39,7 +39,11 @@ abstract class DdlGenerator {
                     .toList(),
               );
 
-              replyPort.send({'success': true, 'sql': sql});
+              replyPort.send({
+                'success': true,
+                'sql': sql,
+                'warnings': List<String>.from(_generationWarnings),
+              });
             default:
               replyPort.send(
                 {'success': false, 'error': 'Unknown action: $action'},
@@ -55,8 +59,16 @@ abstract class DdlGenerator {
   /// The SQL dialect used by this generator.
   final SqlDialect dialect;
 
+  final List<String> _generationWarnings = [];
+
+  /// Records a non-fatal issue for the host (e.g. CLI) to surface.
+  ///
+  /// Cleared at the start of each [generate] call.
+  void warn(String message) => _generationWarnings.add(message);
+
   /// Generates SQL DDL statements from a list of diff operations.
   String generate(List<DiffOperation> operations) {
+    _generationWarnings.clear();
     return [
       for (final op in operations)
         switch (op) {
@@ -71,8 +83,13 @@ abstract class DdlGenerator {
             renameColumn(tableName, oldName, newName),
           DropColumn(:final tableName, :final columnName) =>
             dropColumn(tableName, columnName),
-          AlterColumn(:final tableName, :final oldColumn, :final newColumn) =>
-            alterColumn(tableName, oldColumn, newColumn),
+          AlterColumn(
+            :final tableName,
+            :final oldColumn,
+            :final newColumn,
+            :final tableColumns,
+          ) =>
+            alterColumn(tableName, oldColumn, newColumn, tableColumns),
           CreateIndex(:final index) => createIndex(index),
           DropIndex(:final indexName) => dropIndex(indexName),
         },
@@ -98,8 +115,15 @@ abstract class DdlGenerator {
   String dropColumn(String tableName, String columnName);
 
   /// Generates an ALTER COLUMN statement (or equivalent).
+  ///
+  /// [tableColumns] is the full column list after applying this single change,
+  /// in pre-migration column order (PostgreSQL generators may ignore it).
   String alterColumn(
-      String tableName, ColumnInfo oldColumn, ColumnInfo newColumn);
+    String tableName,
+    ColumnInfo oldColumn,
+    ColumnInfo newColumn,
+    List<ColumnInfo> tableColumns,
+  );
 
   /// Generates a CREATE INDEX statement.
   String createIndex(IndexInfo index);

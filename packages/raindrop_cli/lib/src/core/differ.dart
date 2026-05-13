@@ -116,6 +116,12 @@ class SchemaDiffer {
             tableName,
             _toColumnInfo(oldColumn),
             _toColumnInfo(newColumn),
+            [
+              for (final col in oldTable.columns.values)
+                _toColumnInfo(
+                  col.name == oldName ? newColumns[oldName]! : col,
+                ),
+            ],
           ));
         }
       }

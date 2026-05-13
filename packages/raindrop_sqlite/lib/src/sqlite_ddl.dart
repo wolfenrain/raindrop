@@ -30,7 +30,8 @@ class SQLiteDdlGenerator extends DdlGenerator {
 
   @override
   String addColumn(String tableName, ColumnInfo column) {
-    return 'ALTER TABLE ${escapeName(tableName)} ADD COLUMN ${_columnDefinition(column)};';
+    final effective = _sqliteEffectiveColumnForAdd(tableName, column);
+    return 'ALTER TABLE ${escapeName(tableName)} ADD COLUMN ${_columnDefinition(effective)};';
   }
 
   @override
@@ -48,45 +49,22 @@ class SQLiteDdlGenerator extends DdlGenerator {
     String tableName,
     ColumnInfo oldColumn,
     ColumnInfo newColumn,
+    List<ColumnInfo> tableColumns,
   ) {
-    final statements = <String>[];
+    assert(
+      oldColumn.name == newColumn.name,
+      'SQLite rebuild expects in-place column alterations',
+    );
+    assert(tableColumns.isNotEmpty);
+
+    // SQLite has no ALTER COLUMN for type / nullability / default; rebuild.
     final table = escapeName(tableName);
-    final column = escapeName(newColumn.name);
-
-    // Type change
-    if (oldColumn.type != newColumn.type) {
-      statements.add(
-        'ALTER TABLE $table ALTER COLUMN $column TYPE ${getColumnType(newColumn)};',
-      );
-    }
-
-    // Nullability change
-    if (oldColumn.isNullable != newColumn.isNullable) {
-      if (newColumn.isNullable) {
-        statements.add(
-          'ALTER TABLE $table ALTER COLUMN $column DROP NOT NULL;',
-        );
-      } else {
-        statements.add(
-          'ALTER TABLE $table ALTER COLUMN $column SET NOT NULL;',
-        );
-      }
-    }
-
-    // Default value change
-    if (oldColumn.defaultValue != newColumn.defaultValue) {
-      if (newColumn.defaultValue == null) {
-        statements.add(
-          'ALTER TABLE $table ALTER COLUMN $column DROP DEFAULT;',
-        );
-      } else {
-        statements.add(
-          'ALTER TABLE $table ALTER COLUMN $column SET DEFAULT ${newColumn.defaultValue};',
-        );
-      }
-    }
-
-    return statements.join('\n');
+    final temp = escapeName('${tableName}_raindrop_rebuild');
+    final defs = tableColumns.map(_columnDefinition).join(',\n  ');
+    return 'CREATE TABLE $temp (\n  $defs\n);\n'
+        'INSERT INTO $temp SELECT * FROM $table;\n'
+        'DROP TABLE $table;\n'
+        'ALTER TABLE $temp RENAME TO $table;';
   }
 
   @override
@@ -136,4 +114,101 @@ class SQLiteDdlGenerator extends DdlGenerator {
 
     return parts.join(' ');
   }
+
+  /// Applies SQLite ADD COLUMN rules: NOT NULL requires a non-NULL DEFAULT when
+  /// rows may exist. Infers a constant DEFAULT from [ColumnInfo.type] when absent.
+  ColumnInfo _sqliteEffectiveColumnForAdd(String tableName, ColumnInfo column) {
+    if (column.isNullable ||
+        _sqliteDefaultExpressionIsNonNull(column.defaultValue)) {
+      return column;
+    }
+
+    final inferredExpr = _inferSqliteNotNullDefaultExpression(column);
+    if (inferredExpr == null) {
+      throw StateError(
+        'SQLite cannot ALTER TABLE ADD COLUMN "${column.name}" on "$tableName" '
+        'as NOT NULL without a non-NULL DEFAULT. No DEFAULT was given and the '
+        'type "${column.type}" is not supported for automatic inference; add an '
+        'explicit SQL default in your schema.',
+      );
+    }
+
+    warn(
+      'SQLite ADD COLUMN "${column.name}" on "$tableName": NOT NULL with no '
+      'DEFAULT; inferred constant DEFAULT $inferredExpr from SQL '
+      'type "${column.type}". ${_sqliteAddColumnConstantDefaultNote()} Prefer '
+      'setting an explicit literal DEFAULT or using a table-rebuild migration '
+      'if you need a non-constant default.',
+    );
+
+    return ColumnInfo(
+      name: column.name,
+      type: column.type,
+      isNullable: column.isNullable,
+      primaryKey: column.primaryKey,
+      autoIncrement: column.autoIncrement,
+      defaultValue: inferredExpr,
+      foreignKey: column.foreignKey,
+    );
+  }
+
+  String _sqliteAddColumnConstantDefaultNote() =>
+      'SQLite only accepts constant DEFAULT values on ADD COLUMN.';
+
+  /// Whether [defaultExpression] is present and not trivially SQL NULL.
+  bool _sqliteDefaultExpressionIsNonNull(String? defaultExpression) {
+    if (defaultExpression == null) return false;
+    var expr = defaultExpression.trim();
+    if (expr.isEmpty) return false;
+    while (expr.startsWith('(') && expr.endsWith(')')) {
+      expr = expr.substring(1, expr.length - 1).trim();
+    }
+    return expr.toUpperCase() != 'NULL';
+  }
+}
+
+/// SQL DEFAULT expression (without `DEFAULT` keyword), or null if unknown.
+String? _inferSqliteNotNullDefaultExpression(ColumnInfo column) {
+  final sqlType = column.type.trim().toUpperCase();
+
+  if (_sqliteBlobAffinity(sqlType)) {
+    return null;
+  }
+
+  if (_sqliteIntegerAffinity(sqlType)) {
+    return '0';
+  }
+
+  if (_sqliteRealAffinity(sqlType)) {
+    return '0.0';
+  }
+
+  if (_sqliteTextAffinity(sqlType)) {
+    return "''";
+  }
+
+  if (sqlType == 'NUMERIC' || sqlType == 'BOOLEAN' || sqlType == 'BOOL') {
+    return '0';
+  }
+
+  return null;
+}
+
+bool _sqliteBlobAffinity(String sqlType) {
+  final u = sqlType.toUpperCase();
+  return u == 'BLOB' || u.contains('BINARY');
+}
+
+/// INTEGER affinity (SQLite rules): type name contains "INT".
+bool _sqliteIntegerAffinity(String sqlType) =>
+    sqlType.toUpperCase().contains('INT');
+
+bool _sqliteRealAffinity(String sqlType) {
+  final u = sqlType.toUpperCase();
+  return u == 'REAL' || u.contains('FLOA') || u.contains('DOUB');
+}
+
+bool _sqliteTextAffinity(String sqlType) {
+  final u = sqlType.toUpperCase();
+  return u.contains('CHAR') || u == 'TEXT' || u == 'CLOB' || u == 'STRING';
 }
