@@ -134,8 +134,8 @@ void main() {
 /// Minimal column defs (same pattern as raindrop_sqlite) — exercises core
 /// `column` / `custom` in column_types.dart without a package dev_dependency.
 ///
-/// `_column` sets [Column.isNullable] from `null is W` where [W] matches the
-/// [Field] type’s nullability (e.g. [int] vs [int?]).
+/// `_column` sets [Column.isNullable] from `null is W` ([W] from [field]).
+/// Non-null PKs in initializer lists use explicit `integer<_IntColumn, int>`.
 
 extension type _IntColumn(Column<dynamic, int> _) implements ColumnType<int> {}
 
@@ -148,13 +148,16 @@ extension type _BoolColumn(Column<dynamic, bool> _)
 extension _TestInt<R> on SchemaBuilder<R> {
   T integer<T extends _IntColumn?, W extends Object?>(
     String name,
-    Field<R, W> field,
-  ) {
+    Field<R, W> field, {
+    String? sqlType,
+    String? defaultValue,
+  }) {
     return column<_IntColumn, int, W>(
       _IntColumn.new,
       name,
       field,
-      sqlType: 'INTEGER',
+      sqlType: sqlType ?? 'INTEGER',
+      defaultValue: defaultValue,
     ) as T;
   }
 }
@@ -162,13 +165,16 @@ extension _TestInt<R> on SchemaBuilder<R> {
 extension _TestText<R> on SchemaBuilder<R> {
   T text<T extends _TextColumn?, W extends Object?>(
     String name,
-    Field<R, W> field,
-  ) {
+    Field<R, W> field, {
+    String? sqlType,
+    String? defaultValue,
+  }) {
     return column<_TextColumn, String, W>(
       _TextColumn.new,
       name,
       field,
-      sqlType: 'TEXT',
+      sqlType: sqlType ?? 'TEXT',
+      defaultValue: defaultValue,
     ) as T;
   }
 }
@@ -186,14 +192,17 @@ class _BoolTf extends ColumnTransformer<bool, int> {
 extension _TestBool<R> on SchemaBuilder<R> {
   T boolean<T extends _BoolColumn?, W extends Object?>(
     String name,
-    Field<R, W> field,
-  ) {
+    Field<R, W> field, {
+    String? sqlType,
+    String? defaultValue,
+  }) {
     return custom<_BoolColumn, bool, int, W>(
       _BoolColumn.new,
       name,
       field,
       transformer: const _BoolTf(),
-      sqlType: 'INTEGER',
+      sqlType: sqlType ?? 'INTEGER',
+      defaultValue: defaultValue,
     ) as T;
   }
 }
@@ -214,9 +223,9 @@ final class _PersonReadRow {
 
 final class _PersonReadSchema extends Schema<_PersonReadRow> {
   _PersonReadSchema(super.$)
-      : id = $.integer('id', (s) => s.id).primaryKey(
-              autoIncrement: true,
-            ),
+      : id = $.integer<_IntColumn, int>('id', (s) => s.id).primaryKey(
+            autoIncrement: true,
+          ),
         name = $.text('name', (s) => s.name),
         active = $.boolean('active', (s) => s.active),
         score = $.integer('score', (s) => s.score);
@@ -251,9 +260,9 @@ final class _PersonPkRow {
 
 final class _PersonPkSchema extends Schema<_PersonPkRow> {
   _PersonPkSchema(super.$)
-      : id = $.integer('id', (s) => s.id).primaryKey(
-              autoIncrement: true,
-            ),
+      : id = $.integer<_IntColumn, int>('id', (s) => s.id).primaryKey(
+            autoIncrement: true,
+          ),
         name = $.text('name', (s) => s.name),
         active = $.boolean('active', (s) => s.active),
         score = $.integer('score', (s) => s.score);
@@ -280,9 +289,9 @@ final class _UserRow {
 
 final class _UserSchema extends Schema<_UserRow> {
   _UserSchema(super.$)
-      : uid = $.integer('uid', (s) => s.uid).primaryKey(
-              autoIncrement: false,
-            );
+      : uid = $.integer<_IntColumn, int>('uid', (s) => s.uid).primaryKey(
+            autoIncrement: false,
+          );
 
   final _IntColumn uid;
 
@@ -312,7 +321,9 @@ final class _ChildRow {
 
 final class _ChildSchema extends Schema<_ChildRow> {
   _ChildSchema(super.$, _UserSchema userSchema)
-      : ownerKey = $.integer('owner_key', (s) => s.ownerKey).references(
+      : ownerKey = $
+            .integer<_IntColumn, int>('owner_key', (s) => s.ownerKey)
+            .references(
               () => userSchema.uid,
               onDelete: ReferentialAction.cascade,
               onUpdate: ReferentialAction.restrict,
@@ -320,7 +331,7 @@ final class _ChildSchema extends Schema<_ChildRow> {
         orphanScore = $.integer('orphan_score', (s) => s.orphanScore),
         flag = $.boolean('flag', (s) => s.flag),
         label = $.text('label', (s) => s.label),
-        value = $.integer('value', (s) => s.value),
+        value = $.integer<_IntColumn, int>('value', (s) => s.value),
         desc = $.text('desc', (s) => s.desc),
         muted = $.boolean('muted', (s) => s.muted);
 
