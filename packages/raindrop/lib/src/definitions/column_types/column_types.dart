@@ -55,6 +55,11 @@ extension ColumnBuilderProvider<R> on SchemaBuilder<R> {
     required ColumnTransformer<I, O> transformer,
     String? sqlType,
     String? defaultValue,
+
+    /// Dummy value passed to [typeBuilder] to produce the [ColumnType] handle
+    /// used during registration. If omitted, Raindrop picks a value for a
+    /// small set of built-in [V] types; other types must pass an explicit seed.
+    I? synthetic,
   }) {
     return _column(
       this,
@@ -64,6 +69,7 @@ extension ColumnBuilderProvider<R> on SchemaBuilder<R> {
       transformer: transformer,
       sqlType: sqlType,
       defaultValue: defaultValue,
+      synthetic: synthetic,
     );
   }
 }
@@ -76,6 +82,7 @@ V _column<R, T extends ColumnType<V?>, V extends Object>(
   ColumnTransformer<V, Object?>? transformer,
   String? sqlType,
   String? defaultValue,
+  V? synthetic,
 }) {
   final column = $.table.addColumn<V>(
     name,
@@ -86,7 +93,7 @@ V _column<R, T extends ColumnType<V?>, V extends Object>(
     defaultValue: defaultValue,
   );
 
-  final seed = _synthesize<V>(name);
+  final seed = synthetic ?? _synthesize<V>(name);
   ColumnType._typeToColumn[typeBuilder(seed)] = column;
   return seed;
 }
