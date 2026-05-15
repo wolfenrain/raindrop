@@ -6,7 +6,7 @@ export 'insert_values_builder.dart';
 /// {@template insert}
 /// Defines an insert statement.
 /// {@endtemplate}
-class Insert<S extends Schema<S>, V> extends Query<S, V> {
+class Insert<S extends Schema<R>, R, V> extends Query<S, V> {
   /// {@macro insert}
   const Insert({
     required this.into,
@@ -14,8 +14,8 @@ class Insert<S extends Schema<S>, V> extends Query<S, V> {
   });
 
   /// The table to insert into.
-  final Table<S> into;
+  final Table<S, R> into;
 
-  /// The values to insert.
-  final List<V> values;
+  /// The row values to insert.
+  final List<R> values;
 }

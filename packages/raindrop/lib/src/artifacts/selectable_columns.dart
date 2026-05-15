@@ -2,12 +2,12 @@
 import 'package:raindrop/raindrop.dart';
 
 /// Extension that provides insert, select, update and delete methods.
-/// 
+///
 /// This file is fully generated to allow for resolution logic of types.
 extension ISUDRaindropExecutor on RaindropExecutor<RaindropDelegate> {
   /// Create an insert builder for inserting entities [into] the database.
-  InsertValuesBuilder<S, void> insert<S extends Schema<S>>({required S into}) {
-    return delegate.insert(this, Table.get(into)! as Table<S>);
+  InsertValuesBuilder<Schema<R>, R, void> insert<R>({required Schema<R> into}) {
+    return delegate.insert<R>(this, Table.get(into)! as Table<dynamic, R>);
   }
 
   /// Create a select builder that can filter down on columns if needed.
@@ -16,13 +16,13 @@ extension ISUDRaindropExecutor on RaindropExecutor<RaindropDelegate> {
   }
 
   /// Create an update builder that can update a [table].
-  UpdateSettingBuilder<S, void> update<S extends Schema<S>>(S table) {
-    return delegate.update(this, Table.get(table)! as Table<S>);
+  UpdateSettingBuilder<Schema<R>, R, void> update<R>(Schema<R> table) {
+    return delegate.update<R>(this, Table.get(table)! as Table<dynamic, R>);
   }
 
   /// Create a delete builder that can delete data [from] the database.
-  DeleteAllBuilder<S, void> delete<S extends Schema<S>>({required S from}) {
-    return delegate.delete(this, Table.get(from)! as Table<S>);
+  DeleteAllBuilder<Schema<R>, R, void> delete<R>({required Schema<R> from}) {
+    return delegate.delete<R>(this, Table.get(from)! as Table<dynamic, R>);
   }
 }
 
@@ -57,7 +57,7 @@ class _Selecting<S0 extends Selectable<Object?>?, S1 extends Selectable<Object?>
 
 extension SelectableColumns on SelectBuilder<(_Unused, _Unused, _Unused, _Unused, _Unused, _Unused, _Unused, _Unused, _Unused, _Unused, _Unused, _Unused, _Unused, _Unused, _Unused, _Unused, _Unused, _Unused, _Unused, _Unused)?> {
   /// Create a from builder where the whole table gets selected.
-  SelectFromBuilder<S, S> from<S extends Schema<S>>(S from) {
+  SelectFromBuilder<Schema<R>, R, R> from<R>(Schema<R> from) {
     final table = Table.get(from);
     return SelectFromBuilder(
       executor,
@@ -69,7 +69,7 @@ extension SelectableColumns on SelectBuilder<(_Unused, _Unused, _Unused, _Unused
 extension SelectableColumns0<V0 extends Object>
     on SelectBuilder<(Selectable<V0>, _Unused, _Unused, _Unused, _Unused, _Unused, _Unused, _Unused, _Unused, _Unused, _Unused, _Unused, _Unused, _Unused, _Unused, _Unused, _Unused, _Unused, _Unused, _Unused)?> {
   /// Create a from builder.
-  SelectFromBuilder<S, V0> from<S extends Schema<S>>(S from) {
+  SelectFromBuilder<Schema<R>, R, V0> from<R>(Schema<R> from) {
     final selecting = config[#selecting]! as _Selecting;
     return SelectFromBuilder(
       executor,
@@ -83,7 +83,7 @@ extension SelectableColumns0<V0 extends Object>
 extension SelectableColumns1<V0 extends Object, V1 extends Object>
     on SelectBuilder<(Selectable<V0>, Selectable<V1>, _Unused, _Unused, _Unused, _Unused, _Unused, _Unused, _Unused, _Unused, _Unused, _Unused, _Unused, _Unused, _Unused, _Unused, _Unused, _Unused, _Unused, _Unused)?> {
   /// Create a from builder.
-  SelectFromBuilder<S, (V0, V1)> from<S extends Schema<S>>(S from) {
+  SelectFromBuilder<Schema<R>, R, (V0, V1)> from<R>(Schema<R> from) {
     final selecting = config[#selecting]! as _Selecting;
     return SelectFromBuilder(
       executor,
@@ -97,7 +97,7 @@ extension SelectableColumns1<V0 extends Object, V1 extends Object>
 extension SelectableColumns2<V0 extends Object, V1 extends Object, V2 extends Object>
     on SelectBuilder<(Selectable<V0>, Selectable<V1>, Selectable<V2>, _Unused, _Unused, _Unused, _Unused, _Unused, _Unused, _Unused, _Unused, _Unused, _Unused, _Unused, _Unused, _Unused, _Unused, _Unused, _Unused, _Unused)?> {
   /// Create a from builder.
-  SelectFromBuilder<S, (V0, V1, V2)> from<S extends Schema<S>>(S from) {
+  SelectFromBuilder<Schema<R>, R, (V0, V1, V2)> from<R>(Schema<R> from) {
     final selecting = config[#selecting]! as _Selecting;
     return SelectFromBuilder(
       executor,
@@ -111,7 +111,7 @@ extension SelectableColumns2<V0 extends Object, V1 extends Object, V2 extends Ob
 extension SelectableColumns3<V0 extends Object, V1 extends Object, V2 extends Object, V3 extends Object>
     on SelectBuilder<(Selectable<V0>, Selectable<V1>, Selectable<V2>, Selectable<V3>, _Unused, _Unused, _Unused, _Unused, _Unused, _Unused, _Unused, _Unused, _Unused, _Unused, _Unused, _Unused, _Unused, _Unused, _Unused, _Unused)?> {
   /// Create a from builder.
-  SelectFromBuilder<S, (V0, V1, V2, V3)> from<S extends Schema<S>>(S from) {
+  SelectFromBuilder<Schema<R>, R, (V0, V1, V2, V3)> from<R>(Schema<R> from) {
     final selecting = config[#selecting]! as _Selecting;
     return SelectFromBuilder(
       executor,
@@ -125,7 +125,7 @@ extension SelectableColumns3<V0 extends Object, V1 extends Object, V2 extends Ob
 extension SelectableColumns4<V0 extends Object, V1 extends Object, V2 extends Object, V3 extends Object, V4 extends Object>
     on SelectBuilder<(Selectable<V0>, Selectable<V1>, Selectable<V2>, Selectable<V3>, Selectable<V4>, _Unused, _Unused, _Unused, _Unused, _Unused, _Unused, _Unused, _Unused, _Unused, _Unused, _Unused, _Unused, _Unused, _Unused, _Unused)?> {
   /// Create a from builder.
-  SelectFromBuilder<S, (V0, V1, V2, V3, V4)> from<S extends Schema<S>>(S from) {
+  SelectFromBuilder<Schema<R>, R, (V0, V1, V2, V3, V4)> from<R>(Schema<R> from) {
     final selecting = config[#selecting]! as _Selecting;
     return SelectFromBuilder(
       executor,
@@ -139,7 +139,7 @@ extension SelectableColumns4<V0 extends Object, V1 extends Object, V2 extends Ob
 extension SelectableColumns5<V0 extends Object, V1 extends Object, V2 extends Object, V3 extends Object, V4 extends Object, V5 extends Object>
     on SelectBuilder<(Selectable<V0>, Selectable<V1>, Selectable<V2>, Selectable<V3>, Selectable<V4>, Selectable<V5>, _Unused, _Unused, _Unused, _Unused, _Unused, _Unused, _Unused, _Unused, _Unused, _Unused, _Unused, _Unused, _Unused, _Unused)?> {
   /// Create a from builder.
-  SelectFromBuilder<S, (V0, V1, V2, V3, V4, V5)> from<S extends Schema<S>>(S from) {
+  SelectFromBuilder<Schema<R>, R, (V0, V1, V2, V3, V4, V5)> from<R>(Schema<R> from) {
     final selecting = config[#selecting]! as _Selecting;
     return SelectFromBuilder(
       executor,
@@ -153,7 +153,7 @@ extension SelectableColumns5<V0 extends Object, V1 extends Object, V2 extends Ob
 extension SelectableColumns6<V0 extends Object, V1 extends Object, V2 extends Object, V3 extends Object, V4 extends Object, V5 extends Object, V6 extends Object>
     on SelectBuilder<(Selectable<V0>, Selectable<V1>, Selectable<V2>, Selectable<V3>, Selectable<V4>, Selectable<V5>, Selectable<V6>, _Unused, _Unused, _Unused, _Unused, _Unused, _Unused, _Unused, _Unused, _Unused, _Unused, _Unused, _Unused, _Unused)?> {
   /// Create a from builder.
-  SelectFromBuilder<S, (V0, V1, V2, V3, V4, V5, V6)> from<S extends Schema<S>>(S from) {
+  SelectFromBuilder<Schema<R>, R, (V0, V1, V2, V3, V4, V5, V6)> from<R>(Schema<R> from) {
     final selecting = config[#selecting]! as _Selecting;
     return SelectFromBuilder(
       executor,
@@ -167,7 +167,7 @@ extension SelectableColumns6<V0 extends Object, V1 extends Object, V2 extends Ob
 extension SelectableColumns7<V0 extends Object, V1 extends Object, V2 extends Object, V3 extends Object, V4 extends Object, V5 extends Object, V6 extends Object, V7 extends Object>
     on SelectBuilder<(Selectable<V0>, Selectable<V1>, Selectable<V2>, Selectable<V3>, Selectable<V4>, Selectable<V5>, Selectable<V6>, Selectable<V7>, _Unused, _Unused, _Unused, _Unused, _Unused, _Unused, _Unused, _Unused, _Unused, _Unused, _Unused, _Unused)?> {
   /// Create a from builder.
-  SelectFromBuilder<S, (V0, V1, V2, V3, V4, V5, V6, V7)> from<S extends Schema<S>>(S from) {
+  SelectFromBuilder<Schema<R>, R, (V0, V1, V2, V3, V4, V5, V6, V7)> from<R>(Schema<R> from) {
     final selecting = config[#selecting]! as _Selecting;
     return SelectFromBuilder(
       executor,
@@ -181,7 +181,7 @@ extension SelectableColumns7<V0 extends Object, V1 extends Object, V2 extends Ob
 extension SelectableColumns8<V0 extends Object, V1 extends Object, V2 extends Object, V3 extends Object, V4 extends Object, V5 extends Object, V6 extends Object, V7 extends Object, V8 extends Object>
     on SelectBuilder<(Selectable<V0>, Selectable<V1>, Selectable<V2>, Selectable<V3>, Selectable<V4>, Selectable<V5>, Selectable<V6>, Selectable<V7>, Selectable<V8>, _Unused, _Unused, _Unused, _Unused, _Unused, _Unused, _Unused, _Unused, _Unused, _Unused, _Unused)?> {
   /// Create a from builder.
-  SelectFromBuilder<S, (V0, V1, V2, V3, V4, V5, V6, V7, V8)> from<S extends Schema<S>>(S from) {
+  SelectFromBuilder<Schema<R>, R, (V0, V1, V2, V3, V4, V5, V6, V7, V8)> from<R>(Schema<R> from) {
     final selecting = config[#selecting]! as _Selecting;
     return SelectFromBuilder(
       executor,
@@ -195,7 +195,7 @@ extension SelectableColumns8<V0 extends Object, V1 extends Object, V2 extends Ob
 extension SelectableColumns9<V0 extends Object, V1 extends Object, V2 extends Object, V3 extends Object, V4 extends Object, V5 extends Object, V6 extends Object, V7 extends Object, V8 extends Object, V9 extends Object>
     on SelectBuilder<(Selectable<V0>, Selectable<V1>, Selectable<V2>, Selectable<V3>, Selectable<V4>, Selectable<V5>, Selectable<V6>, Selectable<V7>, Selectable<V8>, Selectable<V9>, _Unused, _Unused, _Unused, _Unused, _Unused, _Unused, _Unused, _Unused, _Unused, _Unused)?> {
   /// Create a from builder.
-  SelectFromBuilder<S, (V0, V1, V2, V3, V4, V5, V6, V7, V8, V9)> from<S extends Schema<S>>(S from) {
+  SelectFromBuilder<Schema<R>, R, (V0, V1, V2, V3, V4, V5, V6, V7, V8, V9)> from<R>(Schema<R> from) {
     final selecting = config[#selecting]! as _Selecting;
     return SelectFromBuilder(
       executor,
@@ -209,7 +209,7 @@ extension SelectableColumns9<V0 extends Object, V1 extends Object, V2 extends Ob
 extension SelectableColumns10<V0 extends Object, V1 extends Object, V2 extends Object, V3 extends Object, V4 extends Object, V5 extends Object, V6 extends Object, V7 extends Object, V8 extends Object, V9 extends Object, V10 extends Object>
     on SelectBuilder<(Selectable<V0>, Selectable<V1>, Selectable<V2>, Selectable<V3>, Selectable<V4>, Selectable<V5>, Selectable<V6>, Selectable<V7>, Selectable<V8>, Selectable<V9>, Selectable<V10>, _Unused, _Unused, _Unused, _Unused, _Unused, _Unused, _Unused, _Unused, _Unused)?> {
   /// Create a from builder.
-  SelectFromBuilder<S, (V0, V1, V2, V3, V4, V5, V6, V7, V8, V9, V10)> from<S extends Schema<S>>(S from) {
+  SelectFromBuilder<Schema<R>, R, (V0, V1, V2, V3, V4, V5, V6, V7, V8, V9, V10)> from<R>(Schema<R> from) {
     final selecting = config[#selecting]! as _Selecting;
     return SelectFromBuilder(
       executor,
@@ -223,7 +223,7 @@ extension SelectableColumns10<V0 extends Object, V1 extends Object, V2 extends O
 extension SelectableColumns11<V0 extends Object, V1 extends Object, V2 extends Object, V3 extends Object, V4 extends Object, V5 extends Object, V6 extends Object, V7 extends Object, V8 extends Object, V9 extends Object, V10 extends Object, V11 extends Object>
     on SelectBuilder<(Selectable<V0>, Selectable<V1>, Selectable<V2>, Selectable<V3>, Selectable<V4>, Selectable<V5>, Selectable<V6>, Selectable<V7>, Selectable<V8>, Selectable<V9>, Selectable<V10>, Selectable<V11>, _Unused, _Unused, _Unused, _Unused, _Unused, _Unused, _Unused, _Unused)?> {
   /// Create a from builder.
-  SelectFromBuilder<S, (V0, V1, V2, V3, V4, V5, V6, V7, V8, V9, V10, V11)> from<S extends Schema<S>>(S from) {
+  SelectFromBuilder<Schema<R>, R, (V0, V1, V2, V3, V4, V5, V6, V7, V8, V9, V10, V11)> from<R>(Schema<R> from) {
     final selecting = config[#selecting]! as _Selecting;
     return SelectFromBuilder(
       executor,
@@ -237,7 +237,7 @@ extension SelectableColumns11<V0 extends Object, V1 extends Object, V2 extends O
 extension SelectableColumns12<V0 extends Object, V1 extends Object, V2 extends Object, V3 extends Object, V4 extends Object, V5 extends Object, V6 extends Object, V7 extends Object, V8 extends Object, V9 extends Object, V10 extends Object, V11 extends Object, V12 extends Object>
     on SelectBuilder<(Selectable<V0>, Selectable<V1>, Selectable<V2>, Selectable<V3>, Selectable<V4>, Selectable<V5>, Selectable<V6>, Selectable<V7>, Selectable<V8>, Selectable<V9>, Selectable<V10>, Selectable<V11>, Selectable<V12>, _Unused, _Unused, _Unused, _Unused, _Unused, _Unused, _Unused)?> {
   /// Create a from builder.
-  SelectFromBuilder<S, (V0, V1, V2, V3, V4, V5, V6, V7, V8, V9, V10, V11, V12)> from<S extends Schema<S>>(S from) {
+  SelectFromBuilder<Schema<R>, R, (V0, V1, V2, V3, V4, V5, V6, V7, V8, V9, V10, V11, V12)> from<R>(Schema<R> from) {
     final selecting = config[#selecting]! as _Selecting;
     return SelectFromBuilder(
       executor,
@@ -251,7 +251,7 @@ extension SelectableColumns12<V0 extends Object, V1 extends Object, V2 extends O
 extension SelectableColumns13<V0 extends Object, V1 extends Object, V2 extends Object, V3 extends Object, V4 extends Object, V5 extends Object, V6 extends Object, V7 extends Object, V8 extends Object, V9 extends Object, V10 extends Object, V11 extends Object, V12 extends Object, V13 extends Object>
     on SelectBuilder<(Selectable<V0>, Selectable<V1>, Selectable<V2>, Selectable<V3>, Selectable<V4>, Selectable<V5>, Selectable<V6>, Selectable<V7>, Selectable<V8>, Selectable<V9>, Selectable<V10>, Selectable<V11>, Selectable<V12>, Selectable<V13>, _Unused, _Unused, _Unused, _Unused, _Unused, _Unused)?> {
   /// Create a from builder.
-  SelectFromBuilder<S, (V0, V1, V2, V3, V4, V5, V6, V7, V8, V9, V10, V11, V12, V13)> from<S extends Schema<S>>(S from) {
+  SelectFromBuilder<Schema<R>, R, (V0, V1, V2, V3, V4, V5, V6, V7, V8, V9, V10, V11, V12, V13)> from<R>(Schema<R> from) {
     final selecting = config[#selecting]! as _Selecting;
     return SelectFromBuilder(
       executor,
@@ -265,7 +265,7 @@ extension SelectableColumns13<V0 extends Object, V1 extends Object, V2 extends O
 extension SelectableColumns14<V0 extends Object, V1 extends Object, V2 extends Object, V3 extends Object, V4 extends Object, V5 extends Object, V6 extends Object, V7 extends Object, V8 extends Object, V9 extends Object, V10 extends Object, V11 extends Object, V12 extends Object, V13 extends Object, V14 extends Object>
     on SelectBuilder<(Selectable<V0>, Selectable<V1>, Selectable<V2>, Selectable<V3>, Selectable<V4>, Selectable<V5>, Selectable<V6>, Selectable<V7>, Selectable<V8>, Selectable<V9>, Selectable<V10>, Selectable<V11>, Selectable<V12>, Selectable<V13>, Selectable<V14>, _Unused, _Unused, _Unused, _Unused, _Unused)?> {
   /// Create a from builder.
-  SelectFromBuilder<S, (V0, V1, V2, V3, V4, V5, V6, V7, V8, V9, V10, V11, V12, V13, V14)> from<S extends Schema<S>>(S from) {
+  SelectFromBuilder<Schema<R>, R, (V0, V1, V2, V3, V4, V5, V6, V7, V8, V9, V10, V11, V12, V13, V14)> from<R>(Schema<R> from) {
     final selecting = config[#selecting]! as _Selecting;
     return SelectFromBuilder(
       executor,
@@ -279,7 +279,7 @@ extension SelectableColumns14<V0 extends Object, V1 extends Object, V2 extends O
 extension SelectableColumns15<V0 extends Object, V1 extends Object, V2 extends Object, V3 extends Object, V4 extends Object, V5 extends Object, V6 extends Object, V7 extends Object, V8 extends Object, V9 extends Object, V10 extends Object, V11 extends Object, V12 extends Object, V13 extends Object, V14 extends Object, V15 extends Object>
     on SelectBuilder<(Selectable<V0>, Selectable<V1>, Selectable<V2>, Selectable<V3>, Selectable<V4>, Selectable<V5>, Selectable<V6>, Selectable<V7>, Selectable<V8>, Selectable<V9>, Selectable<V10>, Selectable<V11>, Selectable<V12>, Selectable<V13>, Selectable<V14>, Selectable<V15>, _Unused, _Unused, _Unused, _Unused)?> {
   /// Create a from builder.
-  SelectFromBuilder<S, (V0, V1, V2, V3, V4, V5, V6, V7, V8, V9, V10, V11, V12, V13, V14, V15)> from<S extends Schema<S>>(S from) {
+  SelectFromBuilder<Schema<R>, R, (V0, V1, V2, V3, V4, V5, V6, V7, V8, V9, V10, V11, V12, V13, V14, V15)> from<R>(Schema<R> from) {
     final selecting = config[#selecting]! as _Selecting;
     return SelectFromBuilder(
       executor,
@@ -293,7 +293,7 @@ extension SelectableColumns15<V0 extends Object, V1 extends Object, V2 extends O
 extension SelectableColumns16<V0 extends Object, V1 extends Object, V2 extends Object, V3 extends Object, V4 extends Object, V5 extends Object, V6 extends Object, V7 extends Object, V8 extends Object, V9 extends Object, V10 extends Object, V11 extends Object, V12 extends Object, V13 extends Object, V14 extends Object, V15 extends Object, V16 extends Object>
     on SelectBuilder<(Selectable<V0>, Selectable<V1>, Selectable<V2>, Selectable<V3>, Selectable<V4>, Selectable<V5>, Selectable<V6>, Selectable<V7>, Selectable<V8>, Selectable<V9>, Selectable<V10>, Selectable<V11>, Selectable<V12>, Selectable<V13>, Selectable<V14>, Selectable<V15>, Selectable<V16>, _Unused, _Unused, _Unused)?> {
   /// Create a from builder.
-  SelectFromBuilder<S, (V0, V1, V2, V3, V4, V5, V6, V7, V8, V9, V10, V11, V12, V13, V14, V15, V16)> from<S extends Schema<S>>(S from) {
+  SelectFromBuilder<Schema<R>, R, (V0, V1, V2, V3, V4, V5, V6, V7, V8, V9, V10, V11, V12, V13, V14, V15, V16)> from<R>(Schema<R> from) {
     final selecting = config[#selecting]! as _Selecting;
     return SelectFromBuilder(
       executor,
@@ -307,7 +307,7 @@ extension SelectableColumns16<V0 extends Object, V1 extends Object, V2 extends O
 extension SelectableColumns17<V0 extends Object, V1 extends Object, V2 extends Object, V3 extends Object, V4 extends Object, V5 extends Object, V6 extends Object, V7 extends Object, V8 extends Object, V9 extends Object, V10 extends Object, V11 extends Object, V12 extends Object, V13 extends Object, V14 extends Object, V15 extends Object, V16 extends Object, V17 extends Object>
     on SelectBuilder<(Selectable<V0>, Selectable<V1>, Selectable<V2>, Selectable<V3>, Selectable<V4>, Selectable<V5>, Selectable<V6>, Selectable<V7>, Selectable<V8>, Selectable<V9>, Selectable<V10>, Selectable<V11>, Selectable<V12>, Selectable<V13>, Selectable<V14>, Selectable<V15>, Selectable<V16>, Selectable<V17>, _Unused, _Unused)?> {
   /// Create a from builder.
-  SelectFromBuilder<S, (V0, V1, V2, V3, V4, V5, V6, V7, V8, V9, V10, V11, V12, V13, V14, V15, V16, V17)> from<S extends Schema<S>>(S from) {
+  SelectFromBuilder<Schema<R>, R, (V0, V1, V2, V3, V4, V5, V6, V7, V8, V9, V10, V11, V12, V13, V14, V15, V16, V17)> from<R>(Schema<R> from) {
     final selecting = config[#selecting]! as _Selecting;
     return SelectFromBuilder(
       executor,
@@ -321,7 +321,7 @@ extension SelectableColumns17<V0 extends Object, V1 extends Object, V2 extends O
 extension SelectableColumns18<V0 extends Object, V1 extends Object, V2 extends Object, V3 extends Object, V4 extends Object, V5 extends Object, V6 extends Object, V7 extends Object, V8 extends Object, V9 extends Object, V10 extends Object, V11 extends Object, V12 extends Object, V13 extends Object, V14 extends Object, V15 extends Object, V16 extends Object, V17 extends Object, V18 extends Object>
     on SelectBuilder<(Selectable<V0>, Selectable<V1>, Selectable<V2>, Selectable<V3>, Selectable<V4>, Selectable<V5>, Selectable<V6>, Selectable<V7>, Selectable<V8>, Selectable<V9>, Selectable<V10>, Selectable<V11>, Selectable<V12>, Selectable<V13>, Selectable<V14>, Selectable<V15>, Selectable<V16>, Selectable<V17>, Selectable<V18>, _Unused)?> {
   /// Create a from builder.
-  SelectFromBuilder<S, (V0, V1, V2, V3, V4, V5, V6, V7, V8, V9, V10, V11, V12, V13, V14, V15, V16, V17, V18)> from<S extends Schema<S>>(S from) {
+  SelectFromBuilder<Schema<R>, R, (V0, V1, V2, V3, V4, V5, V6, V7, V8, V9, V10, V11, V12, V13, V14, V15, V16, V17, V18)> from<R>(Schema<R> from) {
     final selecting = config[#selecting]! as _Selecting;
     return SelectFromBuilder(
       executor,
@@ -335,7 +335,7 @@ extension SelectableColumns18<V0 extends Object, V1 extends Object, V2 extends O
 extension SelectableColumns19<V0 extends Object, V1 extends Object, V2 extends Object, V3 extends Object, V4 extends Object, V5 extends Object, V6 extends Object, V7 extends Object, V8 extends Object, V9 extends Object, V10 extends Object, V11 extends Object, V12 extends Object, V13 extends Object, V14 extends Object, V15 extends Object, V16 extends Object, V17 extends Object, V18 extends Object, V19 extends Object>
     on SelectBuilder<(Selectable<V0>, Selectable<V1>, Selectable<V2>, Selectable<V3>, Selectable<V4>, Selectable<V5>, Selectable<V6>, Selectable<V7>, Selectable<V8>, Selectable<V9>, Selectable<V10>, Selectable<V11>, Selectable<V12>, Selectable<V13>, Selectable<V14>, Selectable<V15>, Selectable<V16>, Selectable<V17>, Selectable<V18>, Selectable<V19>)?> {
   /// Create a from builder.
-  SelectFromBuilder<S, (V0, V1, V2, V3, V4, V5, V6, V7, V8, V9, V10, V11, V12, V13, V14, V15, V16, V17, V18, V19)> from<S extends Schema<S>>(S from) {
+  SelectFromBuilder<Schema<R>, R, (V0, V1, V2, V3, V4, V5, V6, V7, V8, V9, V10, V11, V12, V13, V14, V15, V16, V17, V18, V19)> from<R>(Schema<R> from) {
     final selecting = config[#selecting]! as _Selecting;
     return SelectFromBuilder(
       executor,

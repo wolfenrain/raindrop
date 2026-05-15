@@ -1,5 +1,3 @@
-import 'dart:async';
-
 import 'package:raindrop/raindrop.dart';
 
 /// Creating an index on one or more columns.
@@ -7,11 +5,7 @@ import 'package:raindrop/raindrop.dart';
 /// ```dart
 /// final pets = sqliteTable(
 ///   'pets',
-///   () => Pet(
-///     id: fakes.primaryKey(),
-///     userId: fakes.integer(),
-///     name: fakes.text(),
-///   ),
+///   PetSchema.new,
 ///   (table) {
 ///     // Single column index
 ///     index('pets_owner').on(table.ownerId);
@@ -28,11 +22,7 @@ IndexBuilder index(String name) => IndexBuilder(name, isUnique: false);
 /// ```dart
 /// final pets = sqliteTable(
 ///   'pets',
-///   () => Pet(
-///     id: fakes.primaryKey(),
-///     userId: fakes.integer(),
-///     name: fakes.text(),
-///   ),
+///   PetSchema.new,
 ///   (table) {
 ///     // Unique index
 ///     uniqueIndex('pets_name_unique').on(table.name);
@@ -44,15 +34,7 @@ IndexBuilder uniqueIndex(String name) => IndexBuilder(name, isUnique: true);
 /// Represents a database index definition.
 class Index {
   /// Creates an [Index] with the given properties.
-  Index(
-    this.name,
-    this.columns, {
-    this.isUnique = false,
-  }) {
-    if (Zone.current[#extra] case final Table table) {
-      table.addIndex(this);
-    }
-  }
+  const Index(this.name, this.columns, {this.isUnique = false});
 
   /// The name of the index.
   final String name;

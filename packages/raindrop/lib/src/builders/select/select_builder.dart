@@ -1,7 +1,10 @@
 import 'package:raindrop/raindrop.dart';
 
-/// Schema used for when nothing has been selected yet.
-class NoSchema extends Schema<NoSchema> {}
+/// Phantom type used as the schema slot in [SelectBuilder] before a
+/// concrete schema has been selected via `.from`.
+class NoSchema {
+  const NoSchema._();
+}
 
 /// {@template select_builder}
 /// Select builder for select queries

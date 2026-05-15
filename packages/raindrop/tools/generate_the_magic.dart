@@ -42,12 +42,12 @@ void selectableColumns(String path, int amount) {
 import 'package:raindrop/raindrop.dart';
 
 /// Extension that provides insert, select, update and delete methods.
-/// 
+///
 /// This file is fully generated to allow for resolution logic of types.
 extension ISUDRaindropExecutor on RaindropExecutor<RaindropDelegate> {
   /// Create an insert builder for inserting entities [into] the database.
-  InsertValuesBuilder<S, void> insert<S extends Schema<S>>({required S into}) {
-    return delegate.insert(this, Table.get(into)! as Table<S>);
+  InsertValuesBuilder<Schema<R>, R, void> insert<R>({required Schema<R> into}) {
+    return delegate.insert<R>(this, Table.get(into)! as Table<dynamic, R>);
   }
 
   /// Create a select builder that can filter down on columns if needed.
@@ -56,13 +56,13 @@ extension ISUDRaindropExecutor on RaindropExecutor<RaindropDelegate> {
   }
 
   /// Create an update builder that can update a [table].
-  UpdateSettingBuilder<S, void> update<S extends Schema<S>>(S table) {
-    return delegate.update(this, Table.get(table)! as Table<S>);
+  UpdateSettingBuilder<Schema<R>, R, void> update<R>(Schema<R> table) {
+    return delegate.update<R>(this, Table.get(table)! as Table<dynamic, R>);
   }
 
   /// Create a delete builder that can delete data [from] the database.
-  DeleteAllBuilder<S, void> delete<S extends Schema<S>>({required S from}) {
-    return delegate.delete(this, Table.get(from)! as Table<S>);
+  DeleteAllBuilder<Schema<R>, R, void> delete<R>({required Schema<R> from}) {
+    return delegate.delete<R>(this, Table.get(from)! as Table<dynamic, R>);
   }
 }
 
@@ -78,7 +78,7 @@ ${indices.map((i) => '  final S$i? s$i;').join('\n')}
 
 extension SelectableColumns on SelectBuilder<(${List.filled(amount, '_Unused').join(', ')})?> {
   /// Create a from builder where the whole table gets selected.
-  SelectFromBuilder<S, S> from<S extends Schema<S>>(S from) {
+  SelectFromBuilder<Schema<R>, R, R> from<R>(Schema<R> from) {
     final table = Table.get(from);
     return SelectFromBuilder(
       executor,
@@ -91,7 +91,7 @@ extension SelectableColumns on SelectBuilder<(${List.filled(amount, '_Unused').j
   // Generate SelectableFrom extensions for each arity
   for (var i = 0; i < amount; i++) {
     final activeIndices = List.generate(i + 1, (j) => j);
-    final _UnusedCount = amount - i - 1;
+    final unusedCount = amount - i - 1;
 
     // Type parameters for the extension
     final typeParams =
@@ -100,7 +100,7 @@ extension SelectableColumns on SelectBuilder<(${List.filled(amount, '_Unused').j
     // The "on" type - active selectables + _Unused for the rest
     final onTypeInner = [
       ...activeIndices.map((j) => 'Selectable<V$j>'),
-      ...List.filled(_UnusedCount, '_Unused'),
+      ...List.filled(unusedCount, '_Unused'),
     ].join(', ');
 
     // Result type for from
@@ -111,7 +111,7 @@ extension SelectableColumns on SelectBuilder<(${List.filled(amount, '_Unused').j
 extension SelectableColumns$i<$typeParams>
     on SelectBuilder<($onTypeInner)?> {
   /// Create a from builder.
-  SelectFromBuilder<S, $resultType> from<S extends Schema<S>>(S from) {
+  SelectFromBuilder<Schema<R>, R, $resultType> from<R>(Schema<R> from) {
     final selecting = config[#selecting]! as _Selecting;
     return SelectFromBuilder(
       executor,
@@ -142,7 +142,11 @@ extension IndexBuilderOn on IndexBuilder {
   /// ```
   Index on(ColumnType<dynamic> c0, [${columns.map((v) => 'ColumnType<dynamic>? c$v').join(', ')}]) {
     final cols = [c0.\$, ${columns.map((v) => 'c$v?.\$').join(', ')}];
-    return Index(name, [...cols.whereType()], isUnique: isUnique);
+    final resolved = [...cols.whereType<Column<dynamic, dynamic>>()];
+
+    final index = Index(name, resolved, isUnique: isUnique);
+    resolved.first.table.addIndex(index);
+    return index;
   }
 }''');
 
@@ -155,14 +159,9 @@ void updatableColumns(String path, int amount) {
 // ignore_for_file: public_member_api_docs, lines_longer_than_80_chars
 import 'package:raindrop/raindrop.dart';
 
-extension UpdatableColumnsOn<S extends Schema<S>, R> on UpdateSettingBuilder<S, R> {
+extension UpdatableColumnsOn<S extends Schema<RR>, RR, R> on UpdateSettingBuilder<S, RR, R> {
   /// Set columns to update.
-  ///
-  /// ```dart
-  /// db.update(users).set(users.name.to('new'), users.age.to(25));
-  /// db.update(users).set(users.to(User(name: 'new', age; 25)));
-  /// ```
-  UpdateSetWhereBuilder<S, ${indices.map((i) => 'V$i').join(', ')}, R> set<${indices.map((i) => 'V$i extends dynamic').join(', ')}>(Updateable<V0> u0, [${indices.skip(1).map((i) => 'Updateable<V$i>? u$i').join(', ')}]) {
+  UpdateSetWhereBuilder<S, RR, ${indices.map((i) => 'V$i').join(', ')}, R> set<${indices.map((i) => 'V$i extends dynamic').join(', ')}>(Updateable<V0> u0, [${indices.skip(1).map((i) => 'Updateable<V$i>? u$i').join(', ')}]) {
     return UpdateWhereBuilder(
       executor,
       config: config.copyWith({#set: _Set(${indices.map((i) => 'u$i').join(', ')})}),
@@ -170,7 +169,7 @@ extension UpdatableColumnsOn<S extends Schema<S>, R> on UpdateSettingBuilder<S, 
   }
 }
 
-typedef UpdateSetWhereBuilder<S extends Schema<S>, ${indices.map((i) => 'V$i extends dynamic').join(', ')}, R> = UpdateWhereBuilder<S, (${indices.map((i) => 'Updateable<V$i>').join(', ')})?, R>;
+typedef UpdateSetWhereBuilder<S extends Schema<RR>, RR, ${indices.map((i) => 'V$i extends dynamic').join(', ')}, R> = UpdateWhereBuilder<S, RR, (${indices.map((i) => 'Updateable<V$i>').join(', ')})?, R>;
 
 typedef _Unused = Updateable<dynamic>;
 
@@ -201,9 +200,9 @@ ${indices.map((i) => '  final U$i? u$i;').join('\n')}
         i == 0 ? 'V0' : '(${activeIndices.map((j) => 'V$j').join(', ')})';
 
     buffer.writeln('''
-extension UpdatableColumns$i<S extends Schema<S>, R, $typeParams> on UpdateWhereBuilder<S, ($onTypeInner)?, R> {
+extension UpdatableColumns$i<S extends Schema<RR>, RR, R, $typeParams> on UpdateWhereBuilder<S, RR, ($onTypeInner)?, R> {
   /// Filter the update query.
-  UpdateWhereBuilder<S, $resultType, R> where(Filter where) {
+  UpdateWhereBuilder<S, RR, $resultType, R> where(Filter where) {
     final set = config[#set]! as _Set;
     return UpdateWhereBuilder(
       executor,
@@ -232,40 +231,22 @@ void generateJoin(String path, String type, int amount) {
 
 import 'package:raindrop/raindrop.dart';
 
-extension SelectWith${type}Join<V extends Object?, S extends Schema<S>> on SelectFromBuilder<S, V> {
+extension SelectWith${type}Join0<S extends Schema<R>, R> on SelectFromBuilder<S, R, R> {
   /// Add a ${type.toLowerCase()} join clause of the builder.
-  SelectFromBuilder<S, V> $methodName<O extends Schema<O>>(
-    O table, {
+  SelectFromBuilder<S, R, (R${type == 'Right' ? '?' : ''}, OR${type == 'Left' ? '?' : ''})> $methodName<OR>(
+    Schema<OR> table, {
     required Filter on,
   }) {
-    return SelectFromBuilder(
-      executor,
-      config: config.copyWith({
-        #joins: <Join>[
-          ...config.get(#joins) ?? [],
-          ${type}Join<O>(Table.get(table)! as Table<O>, on: on),
-        ],
-      }),
-    );
-  }
-}
-
-extension SelectWith${type}Join0<S extends Schema<S>> on SelectFromBuilder<S, S> {
-  /// Add a ${type.toLowerCase()} join clause of the builder.
-  SelectFromBuilder<S, (S${type == 'Right' ? '?' : ''}, O${type == 'Left' ? '?' : ''})> $methodName<O extends Schema<O>>(
-    O table, {
-    required Filter on,
-  }) {
-    final s = config.get(#selecting) as Table<S>;
-    final o = Table.get(table)! as Table<O>;
+    final s = config.get(#selecting) as Table<S, R>;
+    final o = Table.get(table)! as Table<dynamic, OR>;
 
     return SelectFromBuilder(
       executor,
       config: config.copyWith({
-        #selecting: SelectableResult<(S, O)>([s, o]),
+        #selecting: SelectableResult<(R, OR)>([s, o]),
         #joins: <Join>[
           ...config.get(#joins) ?? [],
-          ${type}Join<O>(o, on: on),
+          ${type}Join<Schema<OR>, OR>(o as Table<Schema<OR>, OR>, on: on),
         ],
       }),
     );
@@ -274,26 +255,26 @@ extension SelectWith${type}Join0<S extends Schema<S>> on SelectFromBuilder<S, S>
 
   for (var i = 1; i < amount; i++) {
     final types =
-        List.generate(i + 1, (j) => 'S$j${type == 'Right' ? '?' : ''}');
+        List.generate(i + 1, (j) => 'R$j${type == 'Right' ? '?' : ''}');
 
     buffer.write('''
 
-extension SelectWith${type}Join$i<S extends Schema<S>, ${List.generate(i + 1, (s) => 'S$s extends Schema<S$s>?').join(', ')}> on SelectFromBuilder<S, (${types.join(', ').replaceAll('?', '')})> {
+extension SelectWith${type}Join$i<S extends Schema<R>, R, ${List.generate(i + 1, (s) => 'R$s').join(', ')}> on SelectFromBuilder<S, R, (${types.join(', ').replaceAll('?', '')})> {
   /// Add a ${type.toLowerCase()} join clause of the builder.
-  SelectFromBuilder<S, (${types.join(', ')}, O${type == 'Left' ? '?' : ''})> $methodName<O extends Schema<O>>(
-    O table, {
+  SelectFromBuilder<S, R, (${types.join(', ')}, OR${type == 'Left' ? '?' : ''})> $methodName<OR>(
+    Schema<OR> table, {
     required Filter on,
   }) {
     final result = config.get(#selecting) as SelectableResult;
-    final o = Table.get(table)! as Table<O>;
+    final o = Table.get(table)! as Table<dynamic, OR>;
 
     return SelectFromBuilder(
       executor,
       config: config.copyWith({
-        #selecting: SelectableResult<(${types.join(', ')}, O)>([...result.selected, o]),
+        #selecting: SelectableResult<(${types.join(', ')}, OR)>([...result.selected, o]),
         #joins: <Join>[
           ...config.get(#joins) ?? [],
-          ${type}Join<O>(o, on: on),
+          ${type}Join<Schema<OR>, OR>(o as Table<Schema<OR>, OR>, on: on),
         ],
       }),
     );

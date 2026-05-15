@@ -6,7 +6,7 @@ export 'sqlite_insert_values_builder.dart';
 /// {@template sqlite_insert}
 /// SQL insert statement tailored for SQLite.
 /// {@endtemplate}
-class SQLiteInsert<S extends Schema<S>, V> extends Insert<S, V>
+class SQLiteInsert<S extends Schema<R>, R, V> extends Insert<S, R, V>
     with ReturningQuery {
   /// {@macro sqlite_insert}
   SQLiteInsert({

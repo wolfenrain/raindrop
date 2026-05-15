@@ -5,7 +5,7 @@ export 'postgres_delete_returning_builder.dart';
 /// {@template postgres_delete}
 /// SQL delete statement tailored for Postgres.
 /// {@endtemplate}
-class PostgresDelete<S extends Schema<S>, V> extends Delete<S, V>
+class PostgresDelete<S extends Schema<R>, R, V> extends Delete<S, R, V>
     with ReturningQuery {
   /// {@macro postgres_delete}
   PostgresDelete({

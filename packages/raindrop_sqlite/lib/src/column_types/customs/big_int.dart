@@ -2,17 +2,15 @@ import 'dart:typed_data';
 
 import 'package:raindrop/raindrop.dart';
 
-extension BigIntColumnDefinition<S extends Schema<S>> on SchemaBuilder<S> {
+extension BigIntColumnDefinition<R> on SchemaBuilder<R> {
   T bigInt<T extends BigIntColumn?>(
     String name,
-    Field<S, BigInt> field,
-    BigInt? value,
+    Field<R, BigInt> field,
   ) {
     return custom<BigInt, Uint8List>(
       BigIntColumn.new,
       name,
       field,
-      value,
       transformer: const BigIntTransfomer(),
       sqlType: 'BLOB',
     ) as T;

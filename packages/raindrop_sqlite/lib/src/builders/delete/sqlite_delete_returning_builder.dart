@@ -1,15 +1,15 @@
 import 'package:raindrop/raindrop.dart';
 import 'package:raindrop_sqlite/raindrop_sqlite.dart';
 
-class SQLiteDeleteReturningBuilder<S extends Schema<S>, V>
-    extends DeleteWhereBuilder<S, V> {
+class SQLiteDeleteReturningBuilder<S extends Schema<R>, R, V>
+    extends DeleteWhereBuilder<S, R, V> {
   SQLiteDeleteReturningBuilder(
     super.executor, {
     required super.config,
   });
 
   @override
-  Delete<S, V> toQuery() {
+  Delete<S, R, V> toQuery() {
     return SQLiteDelete(
       from: config.get(#from)!,
       where: config.get(#where),
@@ -19,9 +19,9 @@ class SQLiteDeleteReturningBuilder<S extends Schema<S>, V>
   }
 }
 
-extension SQLiteDeleteLimitExtension<S extends Schema<S>, V>
-    on DeleteWhereBuilder<S, V> {
-  SQLiteDeleteReturningBuilder<S, V> limit(int limit) {
+extension SQLiteDeleteLimitExtension<S extends Schema<R>, R, V>
+    on DeleteWhereBuilder<S, R, V> {
+  SQLiteDeleteReturningBuilder<S, R, V> limit(int limit) {
     return SQLiteDeleteReturningBuilder(
       executor,
       config: config.copyWith({#limit: limit}),
@@ -29,10 +29,10 @@ extension SQLiteDeleteLimitExtension<S extends Schema<S>, V>
   }
 }
 
-extension SQLiteDeleteReturningExtension<S extends Schema<S>>
-    on DeleteWhereBuilder<S, void> {
-  SQLiteDeleteReturningBuilder<S, S> returning() {
-    return SQLiteDeleteReturningBuilder<S, S>(
+extension SQLiteDeleteReturningExtension<S extends Schema<R>, R>
+    on DeleteWhereBuilder<S, R, void> {
+  SQLiteDeleteReturningBuilder<S, R, R> returning() {
+    return SQLiteDeleteReturningBuilder<S, R, R>(
       executor,
       config: config.copyWith({
         #withReturning: true,

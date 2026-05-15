@@ -2,40 +2,25 @@ import 'package:raindrop/raindrop.dart';
 
 /// Creates a SQLite table with the given [name] and [builder].
 ///
-/// This function is used to define tables that are specific to SQLite.
-///
-/// Optionally, you can provide an [indexes] callback to define indexes on the
-/// table. The callback receives the schema instance and can use the [index]
-/// function to define indexes.
-///
 /// Example:
 /// ```dart
-/// final users = sqliteTable('users', () => User(...));
+/// final users = sqliteTable('users', UserSchema.new);
 ///
 /// // With indexes:
 /// final pets = sqliteTable(
 ///   'pets',
-///   () => Pet(
-///     id: fakes.primaryKey(),
-///     userId: fakes.integer(),
-///     name: fakes.text(),
-///   ),
+///   PetSchema.new,
 ///   (table) {
-///     // Single column index
-///     index('pets_user_id').on(table.userId);
-///
-///     // Unique index
+///     index('pets_owner').on(table.ownerId);
 ///     uniqueIndex('pets_name_unique').on(table.name);
-///
-///     // Composite index using record syntax
-///     index('pets_composite').on(pet.userId, table.name);
+///     index('pets_composite').on(table.ownerId, table.name);
 ///   },
 /// );
 /// ```
-S sqliteTable<S extends Schema<S>>(
+S sqliteTable<S extends Schema<R>, R>(
   String name,
-  S Function() builder, [
+  S Function(SchemaBuilder<R>) builder, [
   void Function(S table)? extra,
 ]) {
-  return table(name, builder, dialect: 'sqlite', extra: extra);
+  return table<S, R>(name, builder, dialect: 'sqlite', extra: extra);
 }

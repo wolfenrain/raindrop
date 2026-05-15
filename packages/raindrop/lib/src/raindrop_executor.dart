@@ -64,7 +64,7 @@ This bypasses the current transaction context and could lead to inconsistent beh
 
   /// Execute the [queryOrBuilder] on the database and return the mapped
   /// entities.
-  Future<List<V>> query<S extends Schema<S>, V>(Query<S, V> queryOrBuilder) {
+  Future<List<V>> query<S, V>(Query<S, V> queryOrBuilder) {
     final query = switch (queryOrBuilder) {
       ToQuery() => queryOrBuilder.toQuery(),
       _ => queryOrBuilder,
@@ -76,10 +76,11 @@ This bypasses the current transaction context and could lead to inconsistent beh
       final result = await execute(sql, values);
 
       final records = switch (query) {
-        Insert() => result.rows.map((e) => _read(query.into, [...e])),
-        Select() => result.rows.map((e) => _read(query.selecting, [...e])),
-        Update() => result.rows.map((e) => _read(query.set.toReadable, [...e])),
-        Delete() => result.rows.map((e) => _read(query.from, [...e])),
+        final Insert q => result.rows.map((e) => _read(q.into, [...e])),
+        final Select q => result.rows.map((e) => _read(q.selecting, [...e])),
+        final Update q =>
+          result.rows.map((e) => _read(q.set.toReadable, [...e])),
+        final Delete q => result.rows.map((e) => _read(q.from, [...e])),
         _ => throw UnimplementedError('${query.runtimeType}'),
       };
 
@@ -91,7 +92,7 @@ This bypasses the current transaction context and could lead to inconsistent beh
   ///
   /// Note: if the query returns multiple rows they will be read and then
   /// discarded, keep that in mind when writing your query.
-  Future<V?> queryOne<S extends Schema<S>, V>(Query<S, V> query) async {
+  Future<V?> queryOne<S, V>(Query<S, V> query) async {
     return (await this.query(query)).firstOrNull;
   }
 }

@@ -7,7 +7,7 @@ export 'select_from_builder.dart';
 /// {@template select}
 /// Describes a select query.
 /// {@endtemplate}
-class Select<S extends Schema<S>, V> extends Query<S, V> {
+class Select<S extends Schema<R>, R, V> extends Query<S, V> {
   /// {@macro select}
   const Select({
     required this.selecting,
@@ -23,7 +23,7 @@ class Select<S extends Schema<S>, V> extends Query<S, V> {
   final Selectable<V> selecting;
 
   /// Where it is selecting from.
-  final Table<S> from;
+  final Table<S, R> from;
 
   /// Any joins added to the select.
   final List<Join> joins;

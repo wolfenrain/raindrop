@@ -1,25 +1,17 @@
 import 'package:raindrop/raindrop.dart';
 import 'package:raindrop_sqlite/raindrop_sqlite.dart';
 
-class SQLiteUpdateSettingBuilder<S extends Schema<S>, R>
-    extends UpdateSettingBuilder<S, R> {
+class SQLiteUpdateSettingBuilder<S extends Schema<R>, R, V>
+    extends UpdateSettingBuilder<S, R, V> {
   SQLiteUpdateSettingBuilder(super.executor, {required super.config});
-
-  @override
-  UpdateWhereBuilder<S, V, R> set<V>(Updateable<V> set) {
-    return SQLiteUpdateWhereBuilder(
-      executor,
-      config: config.copyWith({#set: set}),
-    );
-  }
 }
 
-class SQLiteUpdateWhereBuilder<S extends Schema<S>, V, R>
-    extends UpdateWhereBuilder<S, V, R> {
+class SQLiteUpdateWhereBuilder<S extends Schema<R>, R, ST, V>
+    extends UpdateWhereBuilder<S, R, ST, V> {
   SQLiteUpdateWhereBuilder(super.executor, {required super.config});
 
   @override
-  Update<S, R> toQuery() {
+  Update<S, R, V> toQuery() {
     return SQLiteUpdate(
       table: config.get(#table)!,
       set: config.get(#set)!,
@@ -30,11 +22,10 @@ class SQLiteUpdateWhereBuilder<S extends Schema<S>, V, R>
   }
 }
 
-// TODO(wolfen): better return type
-extension SQLiteUpdateReturningExtension<S extends Schema<S>, V>
-    on UpdateWhereBuilder<S, V, void> {
-  SQLiteUpdateReturningBuilder<S, V, V> returning() {
-    return SQLiteUpdateReturningBuilder<S, V, V>(
+extension SQLiteUpdateReturningExtension<S extends Schema<R>, R, ST>
+    on UpdateWhereBuilder<S, R, ST, void> {
+  SQLiteUpdateReturningBuilder<S, R, ST, R> returning() {
+    return SQLiteUpdateReturningBuilder<S, R, ST, R>(
       executor,
       config: config.copyWith({#withReturning: true}),
     );

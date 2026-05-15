@@ -2,458 +2,440 @@
 
 import 'package:raindrop/raindrop.dart';
 
-extension SelectWithInnerJoin<V extends Object?, S extends Schema<S>> on SelectFromBuilder<S, V> {
+extension SelectWithInnerJoin0<S extends Schema<R>, R> on SelectFromBuilder<S, R, R> {
   /// Add a inner join clause of the builder.
-  SelectFromBuilder<S, V> join<O extends Schema<O>>(
-    O table, {
+  SelectFromBuilder<S, R, (R, OR)> join<OR>(
+    Schema<OR> table, {
     required Filter on,
   }) {
+    final s = config.get(#selecting) as Table<S, R>;
+    final o = Table.get(table)! as Table<dynamic, OR>;
+
     return SelectFromBuilder(
       executor,
       config: config.copyWith({
+        #selecting: SelectableResult<(R, OR)>([s, o]),
         #joins: <Join>[
           ...config.get(#joins) ?? [],
-          InnerJoin<O>(Table.get(table)! as Table<O>, on: on),
+          InnerJoin<Schema<OR>, OR>(o as Table<Schema<OR>, OR>, on: on),
         ],
       }),
     );
   }
 }
 
-extension SelectWithInnerJoin0<S extends Schema<S>> on SelectFromBuilder<S, S> {
+extension SelectWithInnerJoin1<S extends Schema<R>, R, R0, R1> on SelectFromBuilder<S, R, (R0, R1)> {
   /// Add a inner join clause of the builder.
-  SelectFromBuilder<S, (S, O)> join<O extends Schema<O>>(
-    O table, {
-    required Filter on,
-  }) {
-    final s = config.get(#selecting) as Table<S>;
-    final o = Table.get(table)! as Table<O>;
-
-    return SelectFromBuilder(
-      executor,
-      config: config.copyWith({
-        #selecting: SelectableResult<(S, O)>([s, o]),
-        #joins: <Join>[
-          ...config.get(#joins) ?? [],
-          InnerJoin<O>(o, on: on),
-        ],
-      }),
-    );
-  }
-}
-
-extension SelectWithInnerJoin1<S extends Schema<S>, S0 extends Schema<S0>?, S1 extends Schema<S1>?> on SelectFromBuilder<S, (S0, S1)> {
-  /// Add a inner join clause of the builder.
-  SelectFromBuilder<S, (S0, S1, O)> join<O extends Schema<O>>(
-    O table, {
+  SelectFromBuilder<S, R, (R0, R1, OR)> join<OR>(
+    Schema<OR> table, {
     required Filter on,
   }) {
     final result = config.get(#selecting) as SelectableResult;
-    final o = Table.get(table)! as Table<O>;
+    final o = Table.get(table)! as Table<dynamic, OR>;
 
     return SelectFromBuilder(
       executor,
       config: config.copyWith({
-        #selecting: SelectableResult<(S0, S1, O)>([...result.selected, o]),
+        #selecting: SelectableResult<(R0, R1, OR)>([...result.selected, o]),
         #joins: <Join>[
           ...config.get(#joins) ?? [],
-          InnerJoin<O>(o, on: on),
+          InnerJoin<Schema<OR>, OR>(o as Table<Schema<OR>, OR>, on: on),
         ],
       }),
     );
   }
 }
 
-extension SelectWithInnerJoin2<S extends Schema<S>, S0 extends Schema<S0>?, S1 extends Schema<S1>?, S2 extends Schema<S2>?> on SelectFromBuilder<S, (S0, S1, S2)> {
+extension SelectWithInnerJoin2<S extends Schema<R>, R, R0, R1, R2> on SelectFromBuilder<S, R, (R0, R1, R2)> {
   /// Add a inner join clause of the builder.
-  SelectFromBuilder<S, (S0, S1, S2, O)> join<O extends Schema<O>>(
-    O table, {
+  SelectFromBuilder<S, R, (R0, R1, R2, OR)> join<OR>(
+    Schema<OR> table, {
     required Filter on,
   }) {
     final result = config.get(#selecting) as SelectableResult;
-    final o = Table.get(table)! as Table<O>;
+    final o = Table.get(table)! as Table<dynamic, OR>;
 
     return SelectFromBuilder(
       executor,
       config: config.copyWith({
-        #selecting: SelectableResult<(S0, S1, S2, O)>([...result.selected, o]),
+        #selecting: SelectableResult<(R0, R1, R2, OR)>([...result.selected, o]),
         #joins: <Join>[
           ...config.get(#joins) ?? [],
-          InnerJoin<O>(o, on: on),
+          InnerJoin<Schema<OR>, OR>(o as Table<Schema<OR>, OR>, on: on),
         ],
       }),
     );
   }
 }
 
-extension SelectWithInnerJoin3<S extends Schema<S>, S0 extends Schema<S0>?, S1 extends Schema<S1>?, S2 extends Schema<S2>?, S3 extends Schema<S3>?> on SelectFromBuilder<S, (S0, S1, S2, S3)> {
+extension SelectWithInnerJoin3<S extends Schema<R>, R, R0, R1, R2, R3> on SelectFromBuilder<S, R, (R0, R1, R2, R3)> {
   /// Add a inner join clause of the builder.
-  SelectFromBuilder<S, (S0, S1, S2, S3, O)> join<O extends Schema<O>>(
-    O table, {
+  SelectFromBuilder<S, R, (R0, R1, R2, R3, OR)> join<OR>(
+    Schema<OR> table, {
     required Filter on,
   }) {
     final result = config.get(#selecting) as SelectableResult;
-    final o = Table.get(table)! as Table<O>;
+    final o = Table.get(table)! as Table<dynamic, OR>;
 
     return SelectFromBuilder(
       executor,
       config: config.copyWith({
-        #selecting: SelectableResult<(S0, S1, S2, S3, O)>([...result.selected, o]),
+        #selecting: SelectableResult<(R0, R1, R2, R3, OR)>([...result.selected, o]),
         #joins: <Join>[
           ...config.get(#joins) ?? [],
-          InnerJoin<O>(o, on: on),
+          InnerJoin<Schema<OR>, OR>(o as Table<Schema<OR>, OR>, on: on),
         ],
       }),
     );
   }
 }
 
-extension SelectWithInnerJoin4<S extends Schema<S>, S0 extends Schema<S0>?, S1 extends Schema<S1>?, S2 extends Schema<S2>?, S3 extends Schema<S3>?, S4 extends Schema<S4>?> on SelectFromBuilder<S, (S0, S1, S2, S3, S4)> {
+extension SelectWithInnerJoin4<S extends Schema<R>, R, R0, R1, R2, R3, R4> on SelectFromBuilder<S, R, (R0, R1, R2, R3, R4)> {
   /// Add a inner join clause of the builder.
-  SelectFromBuilder<S, (S0, S1, S2, S3, S4, O)> join<O extends Schema<O>>(
-    O table, {
+  SelectFromBuilder<S, R, (R0, R1, R2, R3, R4, OR)> join<OR>(
+    Schema<OR> table, {
     required Filter on,
   }) {
     final result = config.get(#selecting) as SelectableResult;
-    final o = Table.get(table)! as Table<O>;
+    final o = Table.get(table)! as Table<dynamic, OR>;
 
     return SelectFromBuilder(
       executor,
       config: config.copyWith({
-        #selecting: SelectableResult<(S0, S1, S2, S3, S4, O)>([...result.selected, o]),
+        #selecting: SelectableResult<(R0, R1, R2, R3, R4, OR)>([...result.selected, o]),
         #joins: <Join>[
           ...config.get(#joins) ?? [],
-          InnerJoin<O>(o, on: on),
+          InnerJoin<Schema<OR>, OR>(o as Table<Schema<OR>, OR>, on: on),
         ],
       }),
     );
   }
 }
 
-extension SelectWithInnerJoin5<S extends Schema<S>, S0 extends Schema<S0>?, S1 extends Schema<S1>?, S2 extends Schema<S2>?, S3 extends Schema<S3>?, S4 extends Schema<S4>?, S5 extends Schema<S5>?> on SelectFromBuilder<S, (S0, S1, S2, S3, S4, S5)> {
+extension SelectWithInnerJoin5<S extends Schema<R>, R, R0, R1, R2, R3, R4, R5> on SelectFromBuilder<S, R, (R0, R1, R2, R3, R4, R5)> {
   /// Add a inner join clause of the builder.
-  SelectFromBuilder<S, (S0, S1, S2, S3, S4, S5, O)> join<O extends Schema<O>>(
-    O table, {
+  SelectFromBuilder<S, R, (R0, R1, R2, R3, R4, R5, OR)> join<OR>(
+    Schema<OR> table, {
     required Filter on,
   }) {
     final result = config.get(#selecting) as SelectableResult;
-    final o = Table.get(table)! as Table<O>;
+    final o = Table.get(table)! as Table<dynamic, OR>;
 
     return SelectFromBuilder(
       executor,
       config: config.copyWith({
-        #selecting: SelectableResult<(S0, S1, S2, S3, S4, S5, O)>([...result.selected, o]),
+        #selecting: SelectableResult<(R0, R1, R2, R3, R4, R5, OR)>([...result.selected, o]),
         #joins: <Join>[
           ...config.get(#joins) ?? [],
-          InnerJoin<O>(o, on: on),
+          InnerJoin<Schema<OR>, OR>(o as Table<Schema<OR>, OR>, on: on),
         ],
       }),
     );
   }
 }
 
-extension SelectWithInnerJoin6<S extends Schema<S>, S0 extends Schema<S0>?, S1 extends Schema<S1>?, S2 extends Schema<S2>?, S3 extends Schema<S3>?, S4 extends Schema<S4>?, S5 extends Schema<S5>?, S6 extends Schema<S6>?> on SelectFromBuilder<S, (S0, S1, S2, S3, S4, S5, S6)> {
+extension SelectWithInnerJoin6<S extends Schema<R>, R, R0, R1, R2, R3, R4, R5, R6> on SelectFromBuilder<S, R, (R0, R1, R2, R3, R4, R5, R6)> {
   /// Add a inner join clause of the builder.
-  SelectFromBuilder<S, (S0, S1, S2, S3, S4, S5, S6, O)> join<O extends Schema<O>>(
-    O table, {
+  SelectFromBuilder<S, R, (R0, R1, R2, R3, R4, R5, R6, OR)> join<OR>(
+    Schema<OR> table, {
     required Filter on,
   }) {
     final result = config.get(#selecting) as SelectableResult;
-    final o = Table.get(table)! as Table<O>;
+    final o = Table.get(table)! as Table<dynamic, OR>;
 
     return SelectFromBuilder(
       executor,
       config: config.copyWith({
-        #selecting: SelectableResult<(S0, S1, S2, S3, S4, S5, S6, O)>([...result.selected, o]),
+        #selecting: SelectableResult<(R0, R1, R2, R3, R4, R5, R6, OR)>([...result.selected, o]),
         #joins: <Join>[
           ...config.get(#joins) ?? [],
-          InnerJoin<O>(o, on: on),
+          InnerJoin<Schema<OR>, OR>(o as Table<Schema<OR>, OR>, on: on),
         ],
       }),
     );
   }
 }
 
-extension SelectWithInnerJoin7<S extends Schema<S>, S0 extends Schema<S0>?, S1 extends Schema<S1>?, S2 extends Schema<S2>?, S3 extends Schema<S3>?, S4 extends Schema<S4>?, S5 extends Schema<S5>?, S6 extends Schema<S6>?, S7 extends Schema<S7>?> on SelectFromBuilder<S, (S0, S1, S2, S3, S4, S5, S6, S7)> {
+extension SelectWithInnerJoin7<S extends Schema<R>, R, R0, R1, R2, R3, R4, R5, R6, R7> on SelectFromBuilder<S, R, (R0, R1, R2, R3, R4, R5, R6, R7)> {
   /// Add a inner join clause of the builder.
-  SelectFromBuilder<S, (S0, S1, S2, S3, S4, S5, S6, S7, O)> join<O extends Schema<O>>(
-    O table, {
+  SelectFromBuilder<S, R, (R0, R1, R2, R3, R4, R5, R6, R7, OR)> join<OR>(
+    Schema<OR> table, {
     required Filter on,
   }) {
     final result = config.get(#selecting) as SelectableResult;
-    final o = Table.get(table)! as Table<O>;
+    final o = Table.get(table)! as Table<dynamic, OR>;
 
     return SelectFromBuilder(
       executor,
       config: config.copyWith({
-        #selecting: SelectableResult<(S0, S1, S2, S3, S4, S5, S6, S7, O)>([...result.selected, o]),
+        #selecting: SelectableResult<(R0, R1, R2, R3, R4, R5, R6, R7, OR)>([...result.selected, o]),
         #joins: <Join>[
           ...config.get(#joins) ?? [],
-          InnerJoin<O>(o, on: on),
+          InnerJoin<Schema<OR>, OR>(o as Table<Schema<OR>, OR>, on: on),
         ],
       }),
     );
   }
 }
 
-extension SelectWithInnerJoin8<S extends Schema<S>, S0 extends Schema<S0>?, S1 extends Schema<S1>?, S2 extends Schema<S2>?, S3 extends Schema<S3>?, S4 extends Schema<S4>?, S5 extends Schema<S5>?, S6 extends Schema<S6>?, S7 extends Schema<S7>?, S8 extends Schema<S8>?> on SelectFromBuilder<S, (S0, S1, S2, S3, S4, S5, S6, S7, S8)> {
+extension SelectWithInnerJoin8<S extends Schema<R>, R, R0, R1, R2, R3, R4, R5, R6, R7, R8> on SelectFromBuilder<S, R, (R0, R1, R2, R3, R4, R5, R6, R7, R8)> {
   /// Add a inner join clause of the builder.
-  SelectFromBuilder<S, (S0, S1, S2, S3, S4, S5, S6, S7, S8, O)> join<O extends Schema<O>>(
-    O table, {
+  SelectFromBuilder<S, R, (R0, R1, R2, R3, R4, R5, R6, R7, R8, OR)> join<OR>(
+    Schema<OR> table, {
     required Filter on,
   }) {
     final result = config.get(#selecting) as SelectableResult;
-    final o = Table.get(table)! as Table<O>;
+    final o = Table.get(table)! as Table<dynamic, OR>;
 
     return SelectFromBuilder(
       executor,
       config: config.copyWith({
-        #selecting: SelectableResult<(S0, S1, S2, S3, S4, S5, S6, S7, S8, O)>([...result.selected, o]),
+        #selecting: SelectableResult<(R0, R1, R2, R3, R4, R5, R6, R7, R8, OR)>([...result.selected, o]),
         #joins: <Join>[
           ...config.get(#joins) ?? [],
-          InnerJoin<O>(o, on: on),
+          InnerJoin<Schema<OR>, OR>(o as Table<Schema<OR>, OR>, on: on),
         ],
       }),
     );
   }
 }
 
-extension SelectWithInnerJoin9<S extends Schema<S>, S0 extends Schema<S0>?, S1 extends Schema<S1>?, S2 extends Schema<S2>?, S3 extends Schema<S3>?, S4 extends Schema<S4>?, S5 extends Schema<S5>?, S6 extends Schema<S6>?, S7 extends Schema<S7>?, S8 extends Schema<S8>?, S9 extends Schema<S9>?> on SelectFromBuilder<S, (S0, S1, S2, S3, S4, S5, S6, S7, S8, S9)> {
+extension SelectWithInnerJoin9<S extends Schema<R>, R, R0, R1, R2, R3, R4, R5, R6, R7, R8, R9> on SelectFromBuilder<S, R, (R0, R1, R2, R3, R4, R5, R6, R7, R8, R9)> {
   /// Add a inner join clause of the builder.
-  SelectFromBuilder<S, (S0, S1, S2, S3, S4, S5, S6, S7, S8, S9, O)> join<O extends Schema<O>>(
-    O table, {
+  SelectFromBuilder<S, R, (R0, R1, R2, R3, R4, R5, R6, R7, R8, R9, OR)> join<OR>(
+    Schema<OR> table, {
     required Filter on,
   }) {
     final result = config.get(#selecting) as SelectableResult;
-    final o = Table.get(table)! as Table<O>;
+    final o = Table.get(table)! as Table<dynamic, OR>;
 
     return SelectFromBuilder(
       executor,
       config: config.copyWith({
-        #selecting: SelectableResult<(S0, S1, S2, S3, S4, S5, S6, S7, S8, S9, O)>([...result.selected, o]),
+        #selecting: SelectableResult<(R0, R1, R2, R3, R4, R5, R6, R7, R8, R9, OR)>([...result.selected, o]),
         #joins: <Join>[
           ...config.get(#joins) ?? [],
-          InnerJoin<O>(o, on: on),
+          InnerJoin<Schema<OR>, OR>(o as Table<Schema<OR>, OR>, on: on),
         ],
       }),
     );
   }
 }
 
-extension SelectWithInnerJoin10<S extends Schema<S>, S0 extends Schema<S0>?, S1 extends Schema<S1>?, S2 extends Schema<S2>?, S3 extends Schema<S3>?, S4 extends Schema<S4>?, S5 extends Schema<S5>?, S6 extends Schema<S6>?, S7 extends Schema<S7>?, S8 extends Schema<S8>?, S9 extends Schema<S9>?, S10 extends Schema<S10>?> on SelectFromBuilder<S, (S0, S1, S2, S3, S4, S5, S6, S7, S8, S9, S10)> {
+extension SelectWithInnerJoin10<S extends Schema<R>, R, R0, R1, R2, R3, R4, R5, R6, R7, R8, R9, R10> on SelectFromBuilder<S, R, (R0, R1, R2, R3, R4, R5, R6, R7, R8, R9, R10)> {
   /// Add a inner join clause of the builder.
-  SelectFromBuilder<S, (S0, S1, S2, S3, S4, S5, S6, S7, S8, S9, S10, O)> join<O extends Schema<O>>(
-    O table, {
+  SelectFromBuilder<S, R, (R0, R1, R2, R3, R4, R5, R6, R7, R8, R9, R10, OR)> join<OR>(
+    Schema<OR> table, {
     required Filter on,
   }) {
     final result = config.get(#selecting) as SelectableResult;
-    final o = Table.get(table)! as Table<O>;
+    final o = Table.get(table)! as Table<dynamic, OR>;
 
     return SelectFromBuilder(
       executor,
       config: config.copyWith({
-        #selecting: SelectableResult<(S0, S1, S2, S3, S4, S5, S6, S7, S8, S9, S10, O)>([...result.selected, o]),
+        #selecting: SelectableResult<(R0, R1, R2, R3, R4, R5, R6, R7, R8, R9, R10, OR)>([...result.selected, o]),
         #joins: <Join>[
           ...config.get(#joins) ?? [],
-          InnerJoin<O>(o, on: on),
+          InnerJoin<Schema<OR>, OR>(o as Table<Schema<OR>, OR>, on: on),
         ],
       }),
     );
   }
 }
 
-extension SelectWithInnerJoin11<S extends Schema<S>, S0 extends Schema<S0>?, S1 extends Schema<S1>?, S2 extends Schema<S2>?, S3 extends Schema<S3>?, S4 extends Schema<S4>?, S5 extends Schema<S5>?, S6 extends Schema<S6>?, S7 extends Schema<S7>?, S8 extends Schema<S8>?, S9 extends Schema<S9>?, S10 extends Schema<S10>?, S11 extends Schema<S11>?> on SelectFromBuilder<S, (S0, S1, S2, S3, S4, S5, S6, S7, S8, S9, S10, S11)> {
+extension SelectWithInnerJoin11<S extends Schema<R>, R, R0, R1, R2, R3, R4, R5, R6, R7, R8, R9, R10, R11> on SelectFromBuilder<S, R, (R0, R1, R2, R3, R4, R5, R6, R7, R8, R9, R10, R11)> {
   /// Add a inner join clause of the builder.
-  SelectFromBuilder<S, (S0, S1, S2, S3, S4, S5, S6, S7, S8, S9, S10, S11, O)> join<O extends Schema<O>>(
-    O table, {
+  SelectFromBuilder<S, R, (R0, R1, R2, R3, R4, R5, R6, R7, R8, R9, R10, R11, OR)> join<OR>(
+    Schema<OR> table, {
     required Filter on,
   }) {
     final result = config.get(#selecting) as SelectableResult;
-    final o = Table.get(table)! as Table<O>;
+    final o = Table.get(table)! as Table<dynamic, OR>;
 
     return SelectFromBuilder(
       executor,
       config: config.copyWith({
-        #selecting: SelectableResult<(S0, S1, S2, S3, S4, S5, S6, S7, S8, S9, S10, S11, O)>([...result.selected, o]),
+        #selecting: SelectableResult<(R0, R1, R2, R3, R4, R5, R6, R7, R8, R9, R10, R11, OR)>([...result.selected, o]),
         #joins: <Join>[
           ...config.get(#joins) ?? [],
-          InnerJoin<O>(o, on: on),
+          InnerJoin<Schema<OR>, OR>(o as Table<Schema<OR>, OR>, on: on),
         ],
       }),
     );
   }
 }
 
-extension SelectWithInnerJoin12<S extends Schema<S>, S0 extends Schema<S0>?, S1 extends Schema<S1>?, S2 extends Schema<S2>?, S3 extends Schema<S3>?, S4 extends Schema<S4>?, S5 extends Schema<S5>?, S6 extends Schema<S6>?, S7 extends Schema<S7>?, S8 extends Schema<S8>?, S9 extends Schema<S9>?, S10 extends Schema<S10>?, S11 extends Schema<S11>?, S12 extends Schema<S12>?> on SelectFromBuilder<S, (S0, S1, S2, S3, S4, S5, S6, S7, S8, S9, S10, S11, S12)> {
+extension SelectWithInnerJoin12<S extends Schema<R>, R, R0, R1, R2, R3, R4, R5, R6, R7, R8, R9, R10, R11, R12> on SelectFromBuilder<S, R, (R0, R1, R2, R3, R4, R5, R6, R7, R8, R9, R10, R11, R12)> {
   /// Add a inner join clause of the builder.
-  SelectFromBuilder<S, (S0, S1, S2, S3, S4, S5, S6, S7, S8, S9, S10, S11, S12, O)> join<O extends Schema<O>>(
-    O table, {
+  SelectFromBuilder<S, R, (R0, R1, R2, R3, R4, R5, R6, R7, R8, R9, R10, R11, R12, OR)> join<OR>(
+    Schema<OR> table, {
     required Filter on,
   }) {
     final result = config.get(#selecting) as SelectableResult;
-    final o = Table.get(table)! as Table<O>;
+    final o = Table.get(table)! as Table<dynamic, OR>;
 
     return SelectFromBuilder(
       executor,
       config: config.copyWith({
-        #selecting: SelectableResult<(S0, S1, S2, S3, S4, S5, S6, S7, S8, S9, S10, S11, S12, O)>([...result.selected, o]),
+        #selecting: SelectableResult<(R0, R1, R2, R3, R4, R5, R6, R7, R8, R9, R10, R11, R12, OR)>([...result.selected, o]),
         #joins: <Join>[
           ...config.get(#joins) ?? [],
-          InnerJoin<O>(o, on: on),
+          InnerJoin<Schema<OR>, OR>(o as Table<Schema<OR>, OR>, on: on),
         ],
       }),
     );
   }
 }
 
-extension SelectWithInnerJoin13<S extends Schema<S>, S0 extends Schema<S0>?, S1 extends Schema<S1>?, S2 extends Schema<S2>?, S3 extends Schema<S3>?, S4 extends Schema<S4>?, S5 extends Schema<S5>?, S6 extends Schema<S6>?, S7 extends Schema<S7>?, S8 extends Schema<S8>?, S9 extends Schema<S9>?, S10 extends Schema<S10>?, S11 extends Schema<S11>?, S12 extends Schema<S12>?, S13 extends Schema<S13>?> on SelectFromBuilder<S, (S0, S1, S2, S3, S4, S5, S6, S7, S8, S9, S10, S11, S12, S13)> {
+extension SelectWithInnerJoin13<S extends Schema<R>, R, R0, R1, R2, R3, R4, R5, R6, R7, R8, R9, R10, R11, R12, R13> on SelectFromBuilder<S, R, (R0, R1, R2, R3, R4, R5, R6, R7, R8, R9, R10, R11, R12, R13)> {
   /// Add a inner join clause of the builder.
-  SelectFromBuilder<S, (S0, S1, S2, S3, S4, S5, S6, S7, S8, S9, S10, S11, S12, S13, O)> join<O extends Schema<O>>(
-    O table, {
+  SelectFromBuilder<S, R, (R0, R1, R2, R3, R4, R5, R6, R7, R8, R9, R10, R11, R12, R13, OR)> join<OR>(
+    Schema<OR> table, {
     required Filter on,
   }) {
     final result = config.get(#selecting) as SelectableResult;
-    final o = Table.get(table)! as Table<O>;
+    final o = Table.get(table)! as Table<dynamic, OR>;
 
     return SelectFromBuilder(
       executor,
       config: config.copyWith({
-        #selecting: SelectableResult<(S0, S1, S2, S3, S4, S5, S6, S7, S8, S9, S10, S11, S12, S13, O)>([...result.selected, o]),
+        #selecting: SelectableResult<(R0, R1, R2, R3, R4, R5, R6, R7, R8, R9, R10, R11, R12, R13, OR)>([...result.selected, o]),
         #joins: <Join>[
           ...config.get(#joins) ?? [],
-          InnerJoin<O>(o, on: on),
+          InnerJoin<Schema<OR>, OR>(o as Table<Schema<OR>, OR>, on: on),
         ],
       }),
     );
   }
 }
 
-extension SelectWithInnerJoin14<S extends Schema<S>, S0 extends Schema<S0>?, S1 extends Schema<S1>?, S2 extends Schema<S2>?, S3 extends Schema<S3>?, S4 extends Schema<S4>?, S5 extends Schema<S5>?, S6 extends Schema<S6>?, S7 extends Schema<S7>?, S8 extends Schema<S8>?, S9 extends Schema<S9>?, S10 extends Schema<S10>?, S11 extends Schema<S11>?, S12 extends Schema<S12>?, S13 extends Schema<S13>?, S14 extends Schema<S14>?> on SelectFromBuilder<S, (S0, S1, S2, S3, S4, S5, S6, S7, S8, S9, S10, S11, S12, S13, S14)> {
+extension SelectWithInnerJoin14<S extends Schema<R>, R, R0, R1, R2, R3, R4, R5, R6, R7, R8, R9, R10, R11, R12, R13, R14> on SelectFromBuilder<S, R, (R0, R1, R2, R3, R4, R5, R6, R7, R8, R9, R10, R11, R12, R13, R14)> {
   /// Add a inner join clause of the builder.
-  SelectFromBuilder<S, (S0, S1, S2, S3, S4, S5, S6, S7, S8, S9, S10, S11, S12, S13, S14, O)> join<O extends Schema<O>>(
-    O table, {
+  SelectFromBuilder<S, R, (R0, R1, R2, R3, R4, R5, R6, R7, R8, R9, R10, R11, R12, R13, R14, OR)> join<OR>(
+    Schema<OR> table, {
     required Filter on,
   }) {
     final result = config.get(#selecting) as SelectableResult;
-    final o = Table.get(table)! as Table<O>;
+    final o = Table.get(table)! as Table<dynamic, OR>;
 
     return SelectFromBuilder(
       executor,
       config: config.copyWith({
-        #selecting: SelectableResult<(S0, S1, S2, S3, S4, S5, S6, S7, S8, S9, S10, S11, S12, S13, S14, O)>([...result.selected, o]),
+        #selecting: SelectableResult<(R0, R1, R2, R3, R4, R5, R6, R7, R8, R9, R10, R11, R12, R13, R14, OR)>([...result.selected, o]),
         #joins: <Join>[
           ...config.get(#joins) ?? [],
-          InnerJoin<O>(o, on: on),
+          InnerJoin<Schema<OR>, OR>(o as Table<Schema<OR>, OR>, on: on),
         ],
       }),
     );
   }
 }
 
-extension SelectWithInnerJoin15<S extends Schema<S>, S0 extends Schema<S0>?, S1 extends Schema<S1>?, S2 extends Schema<S2>?, S3 extends Schema<S3>?, S4 extends Schema<S4>?, S5 extends Schema<S5>?, S6 extends Schema<S6>?, S7 extends Schema<S7>?, S8 extends Schema<S8>?, S9 extends Schema<S9>?, S10 extends Schema<S10>?, S11 extends Schema<S11>?, S12 extends Schema<S12>?, S13 extends Schema<S13>?, S14 extends Schema<S14>?, S15 extends Schema<S15>?> on SelectFromBuilder<S, (S0, S1, S2, S3, S4, S5, S6, S7, S8, S9, S10, S11, S12, S13, S14, S15)> {
+extension SelectWithInnerJoin15<S extends Schema<R>, R, R0, R1, R2, R3, R4, R5, R6, R7, R8, R9, R10, R11, R12, R13, R14, R15> on SelectFromBuilder<S, R, (R0, R1, R2, R3, R4, R5, R6, R7, R8, R9, R10, R11, R12, R13, R14, R15)> {
   /// Add a inner join clause of the builder.
-  SelectFromBuilder<S, (S0, S1, S2, S3, S4, S5, S6, S7, S8, S9, S10, S11, S12, S13, S14, S15, O)> join<O extends Schema<O>>(
-    O table, {
+  SelectFromBuilder<S, R, (R0, R1, R2, R3, R4, R5, R6, R7, R8, R9, R10, R11, R12, R13, R14, R15, OR)> join<OR>(
+    Schema<OR> table, {
     required Filter on,
   }) {
     final result = config.get(#selecting) as SelectableResult;
-    final o = Table.get(table)! as Table<O>;
+    final o = Table.get(table)! as Table<dynamic, OR>;
 
     return SelectFromBuilder(
       executor,
       config: config.copyWith({
-        #selecting: SelectableResult<(S0, S1, S2, S3, S4, S5, S6, S7, S8, S9, S10, S11, S12, S13, S14, S15, O)>([...result.selected, o]),
+        #selecting: SelectableResult<(R0, R1, R2, R3, R4, R5, R6, R7, R8, R9, R10, R11, R12, R13, R14, R15, OR)>([...result.selected, o]),
         #joins: <Join>[
           ...config.get(#joins) ?? [],
-          InnerJoin<O>(o, on: on),
+          InnerJoin<Schema<OR>, OR>(o as Table<Schema<OR>, OR>, on: on),
         ],
       }),
     );
   }
 }
 
-extension SelectWithInnerJoin16<S extends Schema<S>, S0 extends Schema<S0>?, S1 extends Schema<S1>?, S2 extends Schema<S2>?, S3 extends Schema<S3>?, S4 extends Schema<S4>?, S5 extends Schema<S5>?, S6 extends Schema<S6>?, S7 extends Schema<S7>?, S8 extends Schema<S8>?, S9 extends Schema<S9>?, S10 extends Schema<S10>?, S11 extends Schema<S11>?, S12 extends Schema<S12>?, S13 extends Schema<S13>?, S14 extends Schema<S14>?, S15 extends Schema<S15>?, S16 extends Schema<S16>?> on SelectFromBuilder<S, (S0, S1, S2, S3, S4, S5, S6, S7, S8, S9, S10, S11, S12, S13, S14, S15, S16)> {
+extension SelectWithInnerJoin16<S extends Schema<R>, R, R0, R1, R2, R3, R4, R5, R6, R7, R8, R9, R10, R11, R12, R13, R14, R15, R16> on SelectFromBuilder<S, R, (R0, R1, R2, R3, R4, R5, R6, R7, R8, R9, R10, R11, R12, R13, R14, R15, R16)> {
   /// Add a inner join clause of the builder.
-  SelectFromBuilder<S, (S0, S1, S2, S3, S4, S5, S6, S7, S8, S9, S10, S11, S12, S13, S14, S15, S16, O)> join<O extends Schema<O>>(
-    O table, {
+  SelectFromBuilder<S, R, (R0, R1, R2, R3, R4, R5, R6, R7, R8, R9, R10, R11, R12, R13, R14, R15, R16, OR)> join<OR>(
+    Schema<OR> table, {
     required Filter on,
   }) {
     final result = config.get(#selecting) as SelectableResult;
-    final o = Table.get(table)! as Table<O>;
+    final o = Table.get(table)! as Table<dynamic, OR>;
 
     return SelectFromBuilder(
       executor,
       config: config.copyWith({
-        #selecting: SelectableResult<(S0, S1, S2, S3, S4, S5, S6, S7, S8, S9, S10, S11, S12, S13, S14, S15, S16, O)>([...result.selected, o]),
+        #selecting: SelectableResult<(R0, R1, R2, R3, R4, R5, R6, R7, R8, R9, R10, R11, R12, R13, R14, R15, R16, OR)>([...result.selected, o]),
         #joins: <Join>[
           ...config.get(#joins) ?? [],
-          InnerJoin<O>(o, on: on),
+          InnerJoin<Schema<OR>, OR>(o as Table<Schema<OR>, OR>, on: on),
         ],
       }),
     );
   }
 }
 
-extension SelectWithInnerJoin17<S extends Schema<S>, S0 extends Schema<S0>?, S1 extends Schema<S1>?, S2 extends Schema<S2>?, S3 extends Schema<S3>?, S4 extends Schema<S4>?, S5 extends Schema<S5>?, S6 extends Schema<S6>?, S7 extends Schema<S7>?, S8 extends Schema<S8>?, S9 extends Schema<S9>?, S10 extends Schema<S10>?, S11 extends Schema<S11>?, S12 extends Schema<S12>?, S13 extends Schema<S13>?, S14 extends Schema<S14>?, S15 extends Schema<S15>?, S16 extends Schema<S16>?, S17 extends Schema<S17>?> on SelectFromBuilder<S, (S0, S1, S2, S3, S4, S5, S6, S7, S8, S9, S10, S11, S12, S13, S14, S15, S16, S17)> {
+extension SelectWithInnerJoin17<S extends Schema<R>, R, R0, R1, R2, R3, R4, R5, R6, R7, R8, R9, R10, R11, R12, R13, R14, R15, R16, R17> on SelectFromBuilder<S, R, (R0, R1, R2, R3, R4, R5, R6, R7, R8, R9, R10, R11, R12, R13, R14, R15, R16, R17)> {
   /// Add a inner join clause of the builder.
-  SelectFromBuilder<S, (S0, S1, S2, S3, S4, S5, S6, S7, S8, S9, S10, S11, S12, S13, S14, S15, S16, S17, O)> join<O extends Schema<O>>(
-    O table, {
+  SelectFromBuilder<S, R, (R0, R1, R2, R3, R4, R5, R6, R7, R8, R9, R10, R11, R12, R13, R14, R15, R16, R17, OR)> join<OR>(
+    Schema<OR> table, {
     required Filter on,
   }) {
     final result = config.get(#selecting) as SelectableResult;
-    final o = Table.get(table)! as Table<O>;
+    final o = Table.get(table)! as Table<dynamic, OR>;
 
     return SelectFromBuilder(
       executor,
       config: config.copyWith({
-        #selecting: SelectableResult<(S0, S1, S2, S3, S4, S5, S6, S7, S8, S9, S10, S11, S12, S13, S14, S15, S16, S17, O)>([...result.selected, o]),
+        #selecting: SelectableResult<(R0, R1, R2, R3, R4, R5, R6, R7, R8, R9, R10, R11, R12, R13, R14, R15, R16, R17, OR)>([...result.selected, o]),
         #joins: <Join>[
           ...config.get(#joins) ?? [],
-          InnerJoin<O>(o, on: on),
+          InnerJoin<Schema<OR>, OR>(o as Table<Schema<OR>, OR>, on: on),
         ],
       }),
     );
   }
 }
 
-extension SelectWithInnerJoin18<S extends Schema<S>, S0 extends Schema<S0>?, S1 extends Schema<S1>?, S2 extends Schema<S2>?, S3 extends Schema<S3>?, S4 extends Schema<S4>?, S5 extends Schema<S5>?, S6 extends Schema<S6>?, S7 extends Schema<S7>?, S8 extends Schema<S8>?, S9 extends Schema<S9>?, S10 extends Schema<S10>?, S11 extends Schema<S11>?, S12 extends Schema<S12>?, S13 extends Schema<S13>?, S14 extends Schema<S14>?, S15 extends Schema<S15>?, S16 extends Schema<S16>?, S17 extends Schema<S17>?, S18 extends Schema<S18>?> on SelectFromBuilder<S, (S0, S1, S2, S3, S4, S5, S6, S7, S8, S9, S10, S11, S12, S13, S14, S15, S16, S17, S18)> {
+extension SelectWithInnerJoin18<S extends Schema<R>, R, R0, R1, R2, R3, R4, R5, R6, R7, R8, R9, R10, R11, R12, R13, R14, R15, R16, R17, R18> on SelectFromBuilder<S, R, (R0, R1, R2, R3, R4, R5, R6, R7, R8, R9, R10, R11, R12, R13, R14, R15, R16, R17, R18)> {
   /// Add a inner join clause of the builder.
-  SelectFromBuilder<S, (S0, S1, S2, S3, S4, S5, S6, S7, S8, S9, S10, S11, S12, S13, S14, S15, S16, S17, S18, O)> join<O extends Schema<O>>(
-    O table, {
+  SelectFromBuilder<S, R, (R0, R1, R2, R3, R4, R5, R6, R7, R8, R9, R10, R11, R12, R13, R14, R15, R16, R17, R18, OR)> join<OR>(
+    Schema<OR> table, {
     required Filter on,
   }) {
     final result = config.get(#selecting) as SelectableResult;
-    final o = Table.get(table)! as Table<O>;
+    final o = Table.get(table)! as Table<dynamic, OR>;
 
     return SelectFromBuilder(
       executor,
       config: config.copyWith({
-        #selecting: SelectableResult<(S0, S1, S2, S3, S4, S5, S6, S7, S8, S9, S10, S11, S12, S13, S14, S15, S16, S17, S18, O)>([...result.selected, o]),
+        #selecting: SelectableResult<(R0, R1, R2, R3, R4, R5, R6, R7, R8, R9, R10, R11, R12, R13, R14, R15, R16, R17, R18, OR)>([...result.selected, o]),
         #joins: <Join>[
           ...config.get(#joins) ?? [],
-          InnerJoin<O>(o, on: on),
+          InnerJoin<Schema<OR>, OR>(o as Table<Schema<OR>, OR>, on: on),
         ],
       }),
     );
   }
 }
 
-extension SelectWithInnerJoin19<S extends Schema<S>, S0 extends Schema<S0>?, S1 extends Schema<S1>?, S2 extends Schema<S2>?, S3 extends Schema<S3>?, S4 extends Schema<S4>?, S5 extends Schema<S5>?, S6 extends Schema<S6>?, S7 extends Schema<S7>?, S8 extends Schema<S8>?, S9 extends Schema<S9>?, S10 extends Schema<S10>?, S11 extends Schema<S11>?, S12 extends Schema<S12>?, S13 extends Schema<S13>?, S14 extends Schema<S14>?, S15 extends Schema<S15>?, S16 extends Schema<S16>?, S17 extends Schema<S17>?, S18 extends Schema<S18>?, S19 extends Schema<S19>?> on SelectFromBuilder<S, (S0, S1, S2, S3, S4, S5, S6, S7, S8, S9, S10, S11, S12, S13, S14, S15, S16, S17, S18, S19)> {
+extension SelectWithInnerJoin19<S extends Schema<R>, R, R0, R1, R2, R3, R4, R5, R6, R7, R8, R9, R10, R11, R12, R13, R14, R15, R16, R17, R18, R19> on SelectFromBuilder<S, R, (R0, R1, R2, R3, R4, R5, R6, R7, R8, R9, R10, R11, R12, R13, R14, R15, R16, R17, R18, R19)> {
   /// Add a inner join clause of the builder.
-  SelectFromBuilder<S, (S0, S1, S2, S3, S4, S5, S6, S7, S8, S9, S10, S11, S12, S13, S14, S15, S16, S17, S18, S19, O)> join<O extends Schema<O>>(
-    O table, {
+  SelectFromBuilder<S, R, (R0, R1, R2, R3, R4, R5, R6, R7, R8, R9, R10, R11, R12, R13, R14, R15, R16, R17, R18, R19, OR)> join<OR>(
+    Schema<OR> table, {
     required Filter on,
   }) {
     final result = config.get(#selecting) as SelectableResult;
-    final o = Table.get(table)! as Table<O>;
+    final o = Table.get(table)! as Table<dynamic, OR>;
 
     return SelectFromBuilder(
       executor,
       config: config.copyWith({
-        #selecting: SelectableResult<(S0, S1, S2, S3, S4, S5, S6, S7, S8, S9, S10, S11, S12, S13, S14, S15, S16, S17, S18, S19, O)>([...result.selected, o]),
+        #selecting: SelectableResult<(R0, R1, R2, R3, R4, R5, R6, R7, R8, R9, R10, R11, R12, R13, R14, R15, R16, R17, R18, R19, OR)>([...result.selected, o]),
         #joins: <Join>[
           ...config.get(#joins) ?? [],
-          InnerJoin<O>(o, on: on),
+          InnerJoin<Schema<OR>, OR>(o as Table<Schema<OR>, OR>, on: on),
         ],
       }),
     );

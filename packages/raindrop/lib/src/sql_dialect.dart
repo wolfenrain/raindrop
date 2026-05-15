@@ -8,14 +8,14 @@ abstract class SqlDialect {
   const SqlDialect();
 
   /// Translate [query] into a query statement with values.
-  (String, List<Object?>) translate<S extends Schema<S>, V>(Query<S, V> query) {
+  (String, List<Object?>) translate<S, V>(Query<S, V> query) {
     return Raindrop.tracer.trace('$runtimeType.translate', (span) {
       final values = <Object?>[];
       final sql = switch (query) {
-        Insert<S, V>() => translateInsert(query, values),
-        Select<S, V>() => translateSelect(query, values),
-        Update<S, V>() => translateUpdate(query, values),
-        Delete<S, V>() => translateDelete(query, values),
+        final Insert q => translateInsert(q, values),
+        final Select q => translateSelect(q, values),
+        final Update q => translateUpdate(q, values),
+        final Delete q => translateDelete(q, values),
         _ => throw UnsupportedError('${query.runtimeType}'),
       };
 
@@ -32,28 +32,16 @@ abstract class SqlDialect {
   String escapeParam(int number);
 
   /// Translate an [insert].
-  String translateInsert<S extends Schema<S>, V>(
-    Insert<S, V> insert,
-    List<Object?> values,
-  );
+  String translateInsert(Insert insert, List<Object?> values);
 
   /// Translate a [select].
-  String translateSelect<S extends Schema<S>, V>(
-    Select<S, V> select,
-    List<Object?> values,
-  );
+  String translateSelect(Select select, List<Object?> values);
 
   /// Translate an [update].
-  String translateUpdate<S extends Schema<S>, V>(
-    Update<S, V> update,
-    List<Object?> values,
-  );
+  String translateUpdate(Update update, List<Object?> values);
 
   /// Translate a [delete].
-  String translateDelete<S extends Schema<S>, V>(
-    Delete<S, V> delete,
-    List<Object?> values,
-  );
+  String translateDelete(Delete delete, List<Object?> values);
 
   /// Translate a [filter].
   String translateFilter(
@@ -83,8 +71,9 @@ abstract class SqlDialect {
   /// Called after a migration has been successfully executed within
   /// a transaction. Use [execute] to persist the record.
   Future<void> recordMigration(
-    Future<DatabaseResult> Function(String sql, [List<Object?> values]) execute,
-    {required String tag,
-    required String checksum,}
-  );
+    Future<DatabaseResult> Function(String sql, [List<Object?> values])
+        execute, {
+    required String tag,
+    required String checksum,
+  });
 }

@@ -6,7 +6,7 @@ export 'update_setting_builder.dart';
 /// {@template update}
 /// Describes an update query.
 /// {@endtemplate}
-class Update<S extends Schema<S>, V> extends Query<S, V> {
+class Update<S extends Schema<R>, R, V> extends Query<S, V> {
   /// {@macro update}
   const Update({
     required this.set,
@@ -18,7 +18,7 @@ class Update<S extends Schema<S>, V> extends Query<S, V> {
   final Updateable<Object> set;
 
   /// The table to update.
-  final Table<S> table;
+  final Table<S, R> table;
 
   /// Any filter applied to the update query.
   final Filter? where;

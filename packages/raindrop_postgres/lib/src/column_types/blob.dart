@@ -2,13 +2,12 @@ import 'dart:typed_data';
 
 import 'package:raindrop/raindrop.dart';
 
-extension BlobColumnDefinition<S extends Schema<S>> on SchemaBuilder<S> {
+extension BlobColumnDefinition<R> on SchemaBuilder<R> {
   T blob<T extends BlobColumn?>(
     String name,
-    Field<S, Uint8List> field,
-    Uint8List? value,
+    Field<R, Uint8List> field,
   ) {
-    return column(BlobColumn.new, name, field, value, sqlType: 'BYTEA') as T;
+    return column(BlobColumn.new, name, field, sqlType: 'BYTEA') as T;
   }
 }
 

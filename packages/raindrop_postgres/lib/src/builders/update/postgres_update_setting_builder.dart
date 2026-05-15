@@ -1,39 +1,30 @@
 import 'package:raindrop/raindrop.dart';
 import 'package:raindrop_postgres/raindrop_postgres.dart';
 
-class PostgresUpdateSettingBuilder<S extends Schema<S>, R>
-    extends UpdateSettingBuilder<S, R> {
+class PostgresUpdateSettingBuilder<S extends Schema<R>, R, V>
+    extends UpdateSettingBuilder<S, R, V> {
   PostgresUpdateSettingBuilder(super.executor, {required super.config});
-
-  @override
-  UpdateWhereBuilder<S, V, R> set<V>(Updateable<V> set) {
-    return PostgresUpdateWhereBuilder(
-      executor,
-      config: config.copyWith({#set: set}),
-    );
-  }
 }
 
-class PostgresUpdateWhereBuilder<S extends Schema<S>, V, R>
-    extends UpdateWhereBuilder<S, V, R> {
+class PostgresUpdateWhereBuilder<S extends Schema<R>, R, ST, V>
+    extends UpdateWhereBuilder<S, R, ST, V> {
   PostgresUpdateWhereBuilder(super.executor, {required super.config});
 
   @override
-  Update<S, R> toQuery() {
+  Update<S, R, V> toQuery() {
     return PostgresUpdate(
       table: config.get(#table)!,
       set: config.get(#set)!,
       where: config.get(#where),
-      withReturning: config.get(#withReturning)!,
+      withReturning: config.get(#withReturning) ?? false,
     );
   }
 }
 
-// TODO(wolfen): better return type
-extension PostgresUpdateReturningExtension<S extends Schema<S>, V>
-    on UpdateWhereBuilder<S, V, void> {
-  PostgresUpdateReturningBuilder<S, V, V> returning() {
-    return PostgresUpdateReturningBuilder<S, V, V>(
+extension PostgresUpdateReturningExtension<S extends Schema<R>, R, ST>
+    on UpdateWhereBuilder<S, R, ST, void> {
+  PostgresUpdateReturningBuilder<S, R, ST, R> returning() {
+    return PostgresUpdateReturningBuilder<S, R, ST, R>(
       executor,
       config: config.copyWith({#withReturning: true}),
     );

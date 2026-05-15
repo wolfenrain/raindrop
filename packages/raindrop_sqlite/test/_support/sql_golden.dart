@@ -17,7 +17,7 @@ import 'package:test_api/src/backend/invoker.dart';
 ///
 /// Set `UPDATE_GOLDENS=1` to (re)write fixtures.
 @isTest
-void goldenTest<S extends Schema<S>, V>(
+void goldenTest<S, V>(
   String description,
   QueryBuilder<S, V> Function(Raindrop db) build,
 ) {

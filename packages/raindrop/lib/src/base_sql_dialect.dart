@@ -8,10 +8,7 @@ abstract class BaseSqlDialect extends SqlDialect {
   const BaseSqlDialect();
 
   @override
-  String translateInsert<S extends Schema<S>, V>(
-    Insert<S, V> insert,
-    List<Object?> values,
-  ) {
+  String translateInsert(Insert insert, List<Object?> values) {
     final table = insert.into;
     final insertValues = insert.values.map(table.values).toList();
 
@@ -57,10 +54,7 @@ abstract class BaseSqlDialect extends SqlDialect {
   }
 
   @override
-  String translateSelect<S extends Schema<S>, V>(
-    Select<S, V> select,
-    List<Object?> values,
-  ) {
+  String translateSelect(Select select, List<Object?> values) {
     final singleTable = select.joins.isEmpty;
 
     final selectionSQL = translateSelection(
@@ -110,10 +104,7 @@ abstract class BaseSqlDialect extends SqlDialect {
   }
 
   @override
-  String translateUpdate<S extends Schema<S>, V>(
-    Update<S, V> update,
-    List<Object?> values,
-  ) {
+  String translateUpdate(Update update, List<Object?> values) {
     final tableSQL = translateTable(update.table);
     final setSQL = translateUpdateSet(update.set, values);
     final whereSQL = switch (update.where) {
@@ -139,10 +130,7 @@ abstract class BaseSqlDialect extends SqlDialect {
   }
 
   @override
-  String translateDelete<S extends Schema<S>, V>(
-    Delete<S, V> delete,
-    List<Object?> values,
-  ) {
+  String translateDelete(Delete delete, List<Object?> values) {
     final tableSQL = translateTable(delete.from);
     final whereSQL = switch (delete.where) {
       final Filter filter =>

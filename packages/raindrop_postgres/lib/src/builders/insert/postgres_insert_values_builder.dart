@@ -1,13 +1,13 @@
 import 'package:raindrop/raindrop.dart';
 import 'package:raindrop_postgres/raindrop_postgres.dart';
 
-class PostgresInsertValuesBuilder<S extends Schema<S>, V>
-    extends InsertValuesBuilder<S, V> {
+class PostgresInsertValuesBuilder<S extends Schema<R>, R, V>
+    extends InsertValuesBuilder<S, R, V> {
   PostgresInsertValuesBuilder(super.executor, {required super.config});
 
   // TODO: only on non inserted builder!
   @override
-  InsertWithValuesBuilder<S, V> values(List<S> values) {
+  InsertWithValuesBuilder<S, R, V> values(List<R> values) {
     return PostgresInsertWithValuesBuilder(
       executor,
       config: config.copyWith({
@@ -17,15 +17,15 @@ class PostgresInsertValuesBuilder<S extends Schema<S>, V>
   }
 }
 
-class PostgresInsertWithValuesBuilder<S extends Schema<S>, V>
-    extends InsertWithValuesBuilder<S, V> {
+class PostgresInsertWithValuesBuilder<S extends Schema<R>, R, V>
+    extends InsertWithValuesBuilder<S, R, V> {
   PostgresInsertWithValuesBuilder(
     super.executor, {
     required super.config,
   });
 
   @override
-  Insert<S, V> toQuery() {
+  Insert<S, R, V> toQuery() {
     return PostgresInsert(
       into: config.get(#into)!,
       values: config.get(#values)!,
@@ -34,10 +34,10 @@ class PostgresInsertWithValuesBuilder<S extends Schema<S>, V>
   }
 }
 
-extension PostgresInsertReturningExtension<S extends Schema<S>>
-    on InsertWithValuesBuilder<S, void> {
-  PostgresInsertReturningBuilder<S, S> returning() {
-    return PostgresInsertReturningBuilder<S, S>(
+extension PostgresInsertReturningExtension<S extends Schema<R>, R>
+    on InsertWithValuesBuilder<S, R, void> {
+  PostgresInsertReturningBuilder<S, R, R> returning() {
+    return PostgresInsertReturningBuilder<S, R, R>(
       executor,
       config: config.copyWith({
         #withReturning: true,

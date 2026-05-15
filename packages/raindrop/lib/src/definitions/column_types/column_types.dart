@@ -1,4 +1,4 @@
-import 'dart:async';
+import 'dart:typed_data';
 
 import 'package:raindrop/raindrop.dart';
 
@@ -6,39 +6,61 @@ export 'double.dart';
 export 'integer.dart';
 export 'text.dart';
 
-extension ColumnBuilderProvider<S extends Schema<S>> on SchemaBuilder<S> {
-  V? column<T extends ColumnType<V?>, V extends Object>(
+int _synthCounter = 0;
+
+/// Generates a unique seed value of type [V] used to identify a column during
+/// schema registration. The seed lives only inside the schema reference and
+/// is the map key into [ColumnType._typeToColumn].
+V _synthesize<V>(String column) {
+  final n = ++_synthCounter;
+  if (V == int) return -n as V;
+  if (V == String) return '__synth_$n' as V;
+  if (V == double) return (-n.toDouble()) as V;
+  if (V == bool) return n.isOdd as V;
+  if (V == DateTime) return DateTime.fromMicrosecondsSinceEpoch(n) as V;
+  if (V == BigInt) return BigInt.from(-n) as V;
+  if (V == Uint8List) return Uint8List(0) as V;
+  throw StateError(
+    'Cannot synthesize a registration seed of type $V for column "$column". '
+    'Provide an explicit value via the column builder.',
+  );
+}
+
+extension ColumnBuilderProvider<R> on SchemaBuilder<R> {
+  /// Register a plain column with [typeBuilder] producing the column-type
+  /// wrapper.
+  V column<T extends ColumnType<V?>, V extends Object>(
     T Function(V) typeBuilder,
     String name,
-    Field<S, V> field,
-    V? value, {
+    Field<R, V> field, {
     String? sqlType,
     String? defaultValue,
   }) {
-    return _column<S, T, V>(
+    return _column<R, T, V>(
+      this,
       typeBuilder,
       name,
       field,
-      value,
       sqlType: sqlType,
       defaultValue: defaultValue,
     );
   }
 
-  I? custom<I extends Object, O extends Object>(
+  /// Register a column with a custom [transformer] between the in-memory
+  /// type [I] and the SQL storage type [O].
+  I custom<I extends Object, O extends Object>(
     ColumnType<I?> Function(I) typeBuilder,
     String name,
-    Field<S, I> field,
-    I? value, {
+    Field<R, I> field, {
     required ColumnTransformer<I, O> transformer,
     String? sqlType,
     String? defaultValue,
   }) {
     return _column(
+      this,
       typeBuilder,
       name,
       field,
-      value,
       transformer: transformer,
       sqlType: sqlType,
       defaultValue: defaultValue,
@@ -46,43 +68,27 @@ extension ColumnBuilderProvider<S extends Schema<S>> on SchemaBuilder<S> {
   }
 }
 
-V? _column<S extends Schema<S>, T extends ColumnType<V?>, V extends Object>(
+V _column<R, T extends ColumnType<V?>, V extends Object>(
+  SchemaBuilder<R> $,
   T Function(V) typeBuilder,
   String name,
-  Field<S, V> field,
-  V? value, {
+  Field<R, V> field, {
   ColumnTransformer<V, Object?>? transformer,
   String? sqlType,
   String? defaultValue,
 }) {
-  // If the zone has a table, start building up the registry.
-  if (Zone.current[#table] case final Table<S> table) {
-    if (value == null) {
-      throw StateError('Provide a fake value for $S.$name');
-    }
-    ColumnType._typeToColumn[typeBuilder(value)] = table.addColumn<V>(
-      name,
-      field,
-      isNullable: null is V,
-      transformer: transformer,
-      sqlType: sqlType,
-      defaultValue: defaultValue,
-    );
-  }
+  final column = $.table.addColumn<V>(
+    name,
+    field,
+    isNullable: null is V,
+    transformer: transformer,
+    sqlType: sqlType,
+    defaultValue: defaultValue,
+  );
 
-  // If the zone has read data, read the value from there.
-  if (Zone.current[#read] case final Map<String, dynamic> read) {
-    return switch (read[name]) {
-      null => null,
-      final V value => value,
-      final v => switch (transformer?.decode(v)) {
-          null => null,
-          final V value => value,
-        },
-    };
-  }
-
-  return value;
+  final seed = _synthesize<V>(name);
+  ColumnType._typeToColumn[typeBuilder(seed)] = column;
+  return seed;
 }
 
 abstract class ColumnTransformer<I, O> {
@@ -97,6 +103,10 @@ typedef ColumnOf<V extends Object?> = ColumnType<V>?;
 
 extension type ColumnType<V extends Object?>._(V _) {
   static final Map<ColumnType, Column> _typeToColumn = {};
+
+  /// Look up the registered [Column] for a column-type reference.
+  /// Returns `null` if [column] does not correspond to any registered column.
+  static Column? lookup(ColumnType? column) => _typeToColumn[column];
 }
 
 extension ColumnTypeX<V extends Object?> on ColumnType<V>? {
@@ -108,12 +118,11 @@ extension ColumnTypeX<V extends Object?> on ColumnType<V>? {
 extension PrimaryColumn<T extends ColumnType<V>, V extends Object?> on T? {
   /// Marks this column as the primary key (no auto-increment).
   T? primaryKey() {
-    if (Zone.current[#table] case final Table table) {
-      table.columns.last
+    if (ColumnType.lookup(this) case final Column<dynamic, dynamic> column) {
+      column
         ..isPrimaryKey = true
         ..autoIncrement = false;
     }
-
     return this;
   }
 }
@@ -125,42 +134,47 @@ extension PrimaryColumnNonNull<T extends ColumnType<V>, V extends Object?>
 }
 
 extension PrimaryColumnInteger<T extends ColumnType<int>> on T? {
-  /// Marks this integer column as the primary key, optionally with auto-increment.
+  /// Marks this integer column as the primary key, optionally with
+  /// auto-increment.
   T? primaryKey({required bool autoIncrement}) {
-    if (Zone.current[#table] case final Table table) {
-      table.columns.last
+    if (ColumnType.lookup(this) case final Column<dynamic, dynamic> column) {
+      column
         ..isPrimaryKey = true
         ..autoIncrement = autoIncrement;
     }
-
     return this;
   }
 }
 
 extension PrimaryColumnIntegerNonNull<T extends ColumnType<int>> on T {
-  /// Marks this integer column as the primary key, optionally with auto-increment.
+  /// Marks this integer column as the primary key, optionally with
+  /// auto-increment.
   T primaryKey({required bool autoIncrement}) =>
       PrimaryColumnInteger(this).primaryKey(autoIncrement: autoIncrement)!;
 }
 
 extension ColumnOperators<V extends Object?> on ColumnOf<V> {
   /// Make an alias of the column.
-  ColumnAlias<Schema<Object?>, V> as(String alias) => $.as(alias);
+  ColumnAlias<dynamic, V> as(String alias) => $.as(alias);
 
-  /// The column of this specific type.
-  Column<Schema<Object?>, V> get $ {
+  /// The column reference for this column-type seed.
+  Column<dynamic, V> get $ {
     final column = ColumnType._typeToColumn[this];
     if (column == null) {
-      throw StateError('Using an instance value instead of a schema!');
+      throw StateError(
+        'Tried to dereference a column-type value that does not correspond '
+        'to any registered column. This typically means `.\$` was called '
+        'on a row-instance field rather than on a schema reference.',
+      );
     }
-    return column as Column<Schema<Object?>, V>;
+    return column as Column<dynamic, V>;
   }
 
   /// Row value for column is in the list of [values].
   SQL inList(List<V> values) => SQL([$, const RawSQL('IN'), values]);
 
   /// Returns the count of what is being selected.
-  ColumnTransform<Schema<Object?>, int> count() => $.transform(
+  ColumnTransform<dynamic, int> count() => $.transform(
         SQL.function('COUNT', [$]),
       );
 
@@ -171,19 +185,13 @@ extension ColumnOperators<V extends Object?> on ColumnOf<V> {
 /// Extension to add foreign key references to columns.
 extension ReferencesColumn<T extends ColumnType<V>, V extends Object?> on T? {
   /// Adds a foreign key reference to another column.
-  ///
-  /// Example:
-  /// ```dart
-  /// $.integer('owner_id', (s) => s.ownerId, userId)
-  ///     .references(() => users.id, onDelete: ReferentialAction.cascade)
-  /// ```
   T references(
     ColumnOf Function() columnGetter, {
     ReferentialAction? onDelete,
     ReferentialAction? onUpdate,
   }) {
-    if (Zone.current[#table] case final Table table) {
-      table.columns.last.foreignKeyReference = ForeignKeyReference(
+    if (ColumnType.lookup(this) case final Column<dynamic, dynamic> column) {
+      column.foreignKeyReference = ForeignKeyReference(
         referencedColumnGetter: () => columnGetter().$,
         onDelete: onDelete,
         onUpdate: onUpdate,
