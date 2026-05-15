@@ -1,5 +1,4 @@
 import 'package:raindrop/raindrop.dart';
-import 'package:raindrop/src/definitions/column_types/boolean.dart';
 import 'package:test/test.dart';
 
 void main() {
@@ -134,8 +133,8 @@ void main() {
 /// Minimal column defs (same pattern as raindrop_sqlite) — exercises core
 /// `column` / `custom` in column_types.dart without a package dev_dependency.
 ///
-/// `_column` sets [Column.isNullable] from `null is W` ([W] from [field]).
-/// Non-null PKs in initializer lists use explicit `integer<_IntColumn, int>`.
+/// `_column` sets [Column.isNullable] from `null is W` where [W] matches the
+/// [Field] type's nullability (e.g. [int] vs [int?]).
 
 extension type _IntColumn(Column<dynamic, int> _) implements ColumnType<int> {}
 

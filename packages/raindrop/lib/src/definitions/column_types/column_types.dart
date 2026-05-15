@@ -1,5 +1,6 @@
 import 'package:raindrop/raindrop.dart';
 
+export 'boolean.dart';
 export 'double.dart';
 export 'integer.dart';
 export 'text.dart';
