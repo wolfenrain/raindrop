@@ -5,7 +5,7 @@ export 'sqlite_delete_returning_builder.dart';
 /// {@template sqlite_delete}
 /// SQL delete statement tailored for SQLite.
 /// {@endtemplate}
-class SQLiteDelete<S extends Schema<S>, V> extends Delete<S, V>
+class SQLiteDelete<S extends Schema<R>, R, V> extends Delete<S, R, V>
     with ReturningQuery, LimitedModifyQuery {
   /// {@macro sqlite_delete}
   SQLiteDelete({

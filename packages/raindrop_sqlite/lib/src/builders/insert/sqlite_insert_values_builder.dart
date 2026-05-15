@@ -1,13 +1,13 @@
 import 'package:raindrop/raindrop.dart';
 import 'package:raindrop_sqlite/raindrop_sqlite.dart';
 
-class SQLiteInsertValuesBuilder<S extends Schema<S>, V>
-    extends InsertValuesBuilder<S, V> {
+class SQLiteInsertValuesBuilder<S extends Schema<R>, R, V>
+    extends InsertValuesBuilder<S, R, V> {
   SQLiteInsertValuesBuilder(super.executor, {required super.config});
 
   // TODO: only on non inserted builder!
   @override
-  InsertWithValuesBuilder<S, V> values(List<S> values) {
+  InsertWithValuesBuilder<S, R, V> values(List<R> values) {
     return SQLiteInsertWithValuesBuilder(
       executor,
       config: config.copyWith({
@@ -17,15 +17,15 @@ class SQLiteInsertValuesBuilder<S extends Schema<S>, V>
   }
 }
 
-class SQLiteInsertWithValuesBuilder<S extends Schema<S>, V>
-    extends InsertWithValuesBuilder<S, V> {
+class SQLiteInsertWithValuesBuilder<S extends Schema<R>, R, V>
+    extends InsertWithValuesBuilder<S, R, V> {
   SQLiteInsertWithValuesBuilder(
     super.executor, {
     required super.config,
   });
 
   @override
-  Insert<S, V> toQuery() {
+  Insert<S, R, V> toQuery() {
     return SQLiteInsert(
       into: config.get(#into)!,
       values: config.get(#values)!,
@@ -34,10 +34,10 @@ class SQLiteInsertWithValuesBuilder<S extends Schema<S>, V>
   }
 }
 
-extension SQLiteInsertReturningExtension<S extends Schema<S>>
-    on InsertWithValuesBuilder<S, void> {
-  SQLiteInsertReturningBuilder<S, S> returning() {
-    return SQLiteInsertReturningBuilder<S, S>(
+extension SQLiteInsertReturningExtension<S extends Schema<R>, R>
+    on InsertWithValuesBuilder<S, R, void> {
+  SQLiteInsertReturningBuilder<S, R, R> returning() {
+    return SQLiteInsertReturningBuilder<S, R, R>(
       executor,
       config: config.copyWith({
         #withReturning: true,

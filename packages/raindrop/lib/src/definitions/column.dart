@@ -1,12 +1,12 @@
 import 'package:raindrop/raindrop.dart';
 
-typedef Field<S extends Schema<S>?, V extends Object> = V? Function(S);
+typedef Field<R, V extends Object> = V? Function(R);
 
-class Column<S extends Schema<S>?, V extends Object?> implements Selectable<V> {
+class Column<R, V extends Object?> implements Selectable<V> {
   Column(
     this.table,
     this.name, {
-    this.valueOf,
+    Function? valueOf,
     this.isNullable = false,
     this.isPrimaryKey = false,
     this.transformer,
@@ -14,7 +14,7 @@ class Column<S extends Schema<S>?, V extends Object?> implements Selectable<V> {
     this.autoIncrement = false,
     this.defaultValue,
     this.foreignKeyReference,
-  });
+  }) : valueOf = valueOf;
 
   /// The table of the column.
   final Table table;
@@ -22,12 +22,14 @@ class Column<S extends Schema<S>?, V extends Object?> implements Selectable<V> {
   /// The name of the column.
   final String name;
 
-  final V? Function(S)? valueOf;
+  /// `V? Function(R)`, stored as [Function] so callers can pass in
+  /// `V? Function(SpecificR)` without contravariant-cast issues.
+  final Function? valueOf;
 
-  /// Same as [valueOf] but without any of it's type data.s
+  /// Same as [valueOf] but without any of its type data.
   ///
   /// This is useful for internal use mostly.
-  dynamic readValueOf(Schema<Object?> s) => valueOf!(s as S) as dynamic;
+  dynamic readValueOf(Object? r) => valueOf!(r as R) as dynamic;
 
   Object? encode(V? input) {
     if (input == null) return null;
@@ -69,7 +71,7 @@ class Column<S extends Schema<S>?, V extends Object?> implements Selectable<V> {
 
   // TODO: should be on ColumnType
   /// Returns the nullable version of this column.
-  Column<S, V?> get nullable => Column(
+  Column<R, V?> get nullable => Column(
         table,
         name,
         isNullable: true,
@@ -81,8 +83,8 @@ class Column<S extends Schema<S>?, V extends Object?> implements Selectable<V> {
       );
 
   /// Make an alias of the column.
-  ColumnAlias<S, V> as(String alias) {
-    return ColumnAlias<S, V>._(
+  ColumnAlias<R, V> as(String alias) {
+    return ColumnAlias<R, V>._(
       table,
       name,
       isNullable: isNullable,
@@ -95,8 +97,8 @@ class Column<S extends Schema<S>?, V extends Object?> implements Selectable<V> {
     );
   }
 
-  ColumnTransform<S, O> transform<O extends Object?>(SQL sql) {
-    return ColumnTransform<S, O>(table, name, sql);
+  ColumnTransform<R, O> transform<O extends Object?>(SQL sql) {
+    return ColumnTransform<R, O>(table, name, sql);
   }
 
   @override
@@ -106,8 +108,7 @@ class Column<S extends Schema<S>?, V extends Object?> implements Selectable<V> {
 }
 
 /// Provides alias information of a column.
-class ColumnAlias<S extends Schema<S>?, V extends Object?>
-    extends Column<S, V> {
+class ColumnAlias<R, V extends Object?> extends Column<R, V> {
   ColumnAlias._(
     super.table,
     super.name, {
@@ -127,8 +128,7 @@ class ColumnAlias<S extends Schema<S>?, V extends Object?>
 /// {@template column_transform}
 /// Provides transform information of a column.
 /// {@endtemplate}
-class ColumnTransform<S extends Schema<S>?, V extends Object?>
-    extends Column<S, V> {
+class ColumnTransform<R, V extends Object?> extends Column<R, V> {
   /// {@macro column_transform}
   ColumnTransform(super.table, super.name, this.sql);
 

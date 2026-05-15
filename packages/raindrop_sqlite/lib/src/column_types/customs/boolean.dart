@@ -1,17 +1,15 @@
 import 'package:raindrop/raindrop.dart';
 
-extension BooleanColumnDefinition<S extends Schema<S>> on SchemaBuilder<S> {
+extension BooleanColumnDefinition<R> on SchemaBuilder<R> {
   T boolean<T extends BooleanColumn?>(
     String name,
-    Field<S, bool> field,
+    Field<R, bool> field,
     // ignore: avoid_positional_boolean_parameters
-    bool? value,
   ) {
     return custom<bool, int>(
       BooleanColumn.new,
       name,
       field,
-      value,
       transformer: const BooleanTransfomer(),
       sqlType: 'INTEGER',
     ) as T;

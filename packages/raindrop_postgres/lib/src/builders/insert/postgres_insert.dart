@@ -6,7 +6,7 @@ export 'postgres_insert_values_builder.dart';
 /// {@template postgres_insert}
 /// SQL insert statement tailored for Postgres.
 /// {@endtemplate}
-class PostgresInsert<S extends Schema<S>, V> extends Insert<S, V>
+class PostgresInsert<S extends Schema<R>, R, V> extends Insert<S, R, V>
     with ReturningQuery {
   /// {@macro postgres_insert}
   PostgresInsert({

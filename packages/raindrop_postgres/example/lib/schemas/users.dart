@@ -1,30 +1,40 @@
 import 'package:raindrop/raindrop.dart';
 import 'package:raindrop_postgres/raindrop_postgres.dart';
 
-class User extends Schema<User> {
-  User({
-    required String name,
-    DateTime? deletedAt,
-    int? id,
-  })  : id = $.integer('id', (s) => s.id, id).primaryKey(autoIncrement: true),
-        name = $.text('name', (s) => s.name, name),
-        deletedAt = $.dateTime('deleted_at', (s) => s.deletedAt, deletedAt);
+class User {
+  const User({required this.name, this.deletedAt, this.id});
 
-  final IntColumn? id;
+  final int? id;
 
-  final TextColumn name;
+  final String name;
 
-  // TODO: if this is not nullable it should be an error on it's definition.
-  final DateTimeColumn? deletedAt;
+  final DateTime? deletedAt;
 
-  static const $ = SchemaBuilder<User>();
+  @override
+  String toString() => 'User(id: $id, name: $name, deletedAt: $deletedAt)';
 }
 
-final users = postgresTable(
-  'users',
-  () => User(
-    id: fakes.primaryKey(),
-    name: fakes.text(),
-    deletedAt: fakes.dateTime(),
-  ),
-);
+class UserSchema extends Schema<User> implements User {
+  UserSchema(super.$)
+      : id = $.integer('id', (s) => s.id).primaryKey(autoIncrement: true),
+        name = $.text('name', (s) => s.name),
+        deletedAt = $.dateTime('deleted_at', (s) => s.deletedAt);
+
+  @override
+  User fromRow(RowReader read) => User(
+        id: read(id),
+        name: read(name),
+        deletedAt: read(deletedAt),
+      );
+
+  @override
+  final IntColumn? id;
+
+  @override
+  final TextColumn name;
+
+  @override
+  final DateTimeColumn? deletedAt;
+}
+
+final users = postgresTable('users', UserSchema.new);

@@ -4,64 +4,83 @@ import 'package:test/test.dart';
 
 import '_support/sql_golden.dart';
 
-class User extends Schema<User> {
+class User {
   User({
-    required String name,
-    required String favoriteGame,
-    required int age,
-    DateTime? deletedAt,
-    int? id,
-  })  : id = $.integer('id', (s) => s.id, id).primaryKey(autoIncrement: true),
-        name = $.text('name', (s) => s.name, name),
-        favoriteGame =
-            $.text('favoriteGame', (s) => s.favoriteGame, favoriteGame),
-        age = $.integer('age', (s) => s.age, age),
-        deletedAt = $.dateTime('deletedAt', (s) => s.deletedAt, deletedAt);
+    required this.name,
+    required this.favoriteGame,
+    required this.age,
+    this.deletedAt,
+    this.id,
+  });
 
+  final int? id;
+  final String name;
+  final String favoriteGame;
+  final int age;
+  final DateTime? deletedAt;
+}
+
+class UserSchema extends Schema<User> implements User {
+  UserSchema(super.$)
+      : id = $.integer('id', (s) => s.id).primaryKey(autoIncrement: true),
+        name = $.text('name', (s) => s.name),
+        favoriteGame = $.text('favoriteGame', (s) => s.favoriteGame),
+        age = $.integer('age', (s) => s.age),
+        deletedAt = $.dateTime('deletedAt', (s) => s.deletedAt);
+
+  @override
+  User fromRow(RowReader read) => User(
+        id: read(id),
+        name: read(name)!,
+        favoriteGame: read(favoriteGame)!,
+        age: read(age)!,
+        deletedAt: read(deletedAt),
+      );
+
+  @override
   final IntColumn? id;
+  @override
   final TextColumn name;
+  @override
   final TextColumn favoriteGame;
+  @override
   final IntColumn age;
+  @override
   final DateTimeColumn? deletedAt;
-
-  static const $ = SchemaBuilder<User>();
 }
 
-final users = sqliteTable(
-  'users',
-  () => User(
-    id: fakes.primaryKey(),
-    name: fakes.text(),
-    favoriteGame: fakes.text(),
-    age: fakes.integer(),
-    deletedAt: fakes.dateTime(),
-  ),
-);
+final users = sqliteTable('users', UserSchema.new);
 
-class Pet extends Schema<Pet> {
-  Pet({
-    required String name,
-    required int ownerId,
-    int? id,
-  })  : id = $.integer('id', (s) => s.id, id).primaryKey(autoIncrement: true),
-        ownerId = $.integer('owner_id', (s) => s.ownerId, ownerId),
-        name = $.text('name', (s) => s.name, name);
+class Pet {
+  Pet({required this.name, required this.ownerId, this.id});
 
+  final int? id;
+  final int ownerId;
+  final String name;
+}
+
+class PetSchema extends Schema<Pet> implements Pet {
+  PetSchema(super.$)
+      : id = $.integer('id', (s) => s.id).primaryKey(autoIncrement: true),
+        ownerId = $.integer('owner_id', (s) => s.ownerId),
+        name = $.text('name', (s) => s.name);
+
+  @override
+  Pet fromRow(RowReader read) => Pet(
+        id: read(id),
+        ownerId: read(ownerId)!,
+        name: read(name)!,
+      );
+
+  @override
   final IntColumn? id;
+  @override
   final IntColumn ownerId;
+  @override
   final TextColumn name;
-
-  static const $ = SchemaBuilder<Pet>();
 }
 
-final pets = sqliteTable(
-  'pets',
-  () => Pet(
-    id: fakes.primaryKey(),
-    ownerId: fakes.integer(),
-    name: fakes.text(),
-  ),
-);
+final pets = sqliteTable('pets', PetSchema.new);
 
 void main() {
   group('Select', () {
@@ -176,10 +195,8 @@ void main() {
 
     goldenTest(
       'with returning',
-      (db) => db
-          .insert(into: users)
-          .values([User(name: 'Morgan', favoriteGame: 'zelda', age: 30)])
-          .returning(),
+      (db) => db.insert(into: users).values(
+          [User(name: 'Morgan', favoriteGame: 'zelda', age: 30)]).returning(),
     );
   });
 
@@ -249,8 +266,7 @@ void main() {
 
     goldenTest(
       'with limit',
-      (db) =>
-          db.delete(from: users).where(users.age.greaterThan(0)).limit(10),
+      (db) => db.delete(from: users).where(users.age.greaterThan(0)).limit(10),
     );
   });
 }

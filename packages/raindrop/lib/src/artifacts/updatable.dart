@@ -15,7 +15,7 @@ class UpdateableColumn<V> implements Updateable<V> {
   const UpdateableColumn(this.column, this.value);
 
   /// The column in question.
-  final Column<Schema<Object?>, V> column;
+  final Column<dynamic, V> column;
 
   /// The value to update it too.
   final V value;
@@ -24,27 +24,21 @@ class UpdateableColumn<V> implements Updateable<V> {
 /// {@template updateable_table}
 /// A table that can be updated.
 /// {@endtemplate}
-class UpdateableTable<S extends Schema<S>> implements Updateable<S> {
+class UpdateableTable<S extends Schema<R>, R> implements Updateable<R> {
   /// {@macro updateable_table}
   const UpdateableTable(this.table, this.value);
 
   /// The table in question.
-  final Table<S> table;
+  final Table<S, R> table;
 
-  /// The entity to update it with.
-  final S value;
+  /// The row to update it with.
+  final R value;
 }
 
 /// Provide a set method to a column to update a column.
 extension UpdateColumn<V> on ColumnOf<V> {
   /// Set the column for a given row to [value].
   UpdateableColumn<V> to(V value) => UpdateableColumn($, value);
-}
-
-/// Provide a set method to a table to update an instance.
-extension UpdateTable<S extends Schema<S>> on S {
-  /// Set the whole to the given [value].
-  UpdateableTable<S> to(S value) => UpdateableTable($, value);
 }
 
 /// {@template updatable_result}

@@ -3,31 +3,42 @@ import 'package:raindrop_postgres/raindrop_postgres.dart';
 
 import 'users.dart';
 
-class Pet extends Schema<Pet> {
-  Pet({
-    required String name,
-    int? userId,
-    int? id,
-  })  : id = $.integer('id', (s) => s.id, id).primaryKey(autoIncrement: true),
-        ownerId = $
-            .integer('owner_id', (s) => s.ownerId, userId)
-            .references(() => users.id, onDelete: ReferentialAction.cascade),
-        name = $.text('name', (s) => s.name, name);
+class Pet {
+  const Pet({required this.name, required this.ownerId, this.id});
 
-  final IntColumn? id;
+  final int? id;
 
-  final IntColumn ownerId;
+  final int ownerId;
 
-  final TextColumn name;
+  final String name;
 
-  static const $ = SchemaBuilder<Pet>();
+  @override
+  String toString() => 'Pet(id: $id, ownerId: $ownerId, name: $name)';
 }
 
-final pets = postgresTable(
-  'pets',
-  () => Pet(
-    id: fakes.primaryKey(),
-    userId: fakes.integer(),
-    name: fakes.text(),
-  ),
-);
+class PetSchema extends Schema<Pet> implements Pet {
+  PetSchema(super.$)
+      : id = $.integer('id', (s) => s.id).primaryKey(autoIncrement: true),
+        ownerId = $
+            .integer('owner_id', (s) => s.ownerId)
+            .references(() => users.id, onDelete: ReferentialAction.cascade),
+        name = $.text('name', (s) => s.name);
+
+  @override
+  Pet fromRow(RowReader read) => Pet(
+        id: read(id),
+        ownerId: read(ownerId),
+        name: read(name),
+      );
+
+  @override
+  final IntColumn? id;
+
+  @override
+  final IntColumn ownerId;
+
+  @override
+  final TextColumn name;
+}
+
+final pets = postgresTable('pets', PetSchema.new);

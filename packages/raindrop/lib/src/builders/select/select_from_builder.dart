@@ -3,13 +3,13 @@ import 'package:raindrop/raindrop.dart';
 /// {@template select_from_builder}
 /// Select builder that knows from where it is selecting ([S]).
 /// {@endtemplate}
-class SelectFromBuilder<S extends Schema<S>, V> extends QueryBuilder<S, V>
+class SelectFromBuilder<S extends Schema<R>, R, V> extends QueryBuilder<S, V>
     with ToQuery<S, V> {
   /// {@macro select_from_builder}
   SelectFromBuilder(super.executor, {required super.config});
 
   /// Set the [where] clause of the builder.
-  SelectFromBuilder<S, V> where(Filter where) {
+  SelectFromBuilder<S, R, V> where(Filter where) {
     return SelectFromBuilder(
       executor,
       config: config.copyWith({#where: where}),
@@ -17,7 +17,7 @@ class SelectFromBuilder<S extends Schema<S>, V> extends QueryBuilder<S, V>
   }
 
   /// Set the [limit] clause of the builder.
-  SelectFromBuilder<S, V> limit(int limit) {
+  SelectFromBuilder<S, R, V> limit(int limit) {
     return SelectFromBuilder(
       executor,
       config: config.copyWith({#limit: limit}),
@@ -25,7 +25,7 @@ class SelectFromBuilder<S extends Schema<S>, V> extends QueryBuilder<S, V>
   }
 
   /// Set the [offset] clause of the builder.
-  SelectFromBuilder<S, V> offset(int offset) {
+  SelectFromBuilder<S, R, V> offset(int offset) {
     return SelectFromBuilder(
       executor,
       config: config.copyWith({#offset: offset}),
@@ -33,7 +33,7 @@ class SelectFromBuilder<S extends Schema<S>, V> extends QueryBuilder<S, V>
   }
 
   /// Set the [groupBy] clause of the builder.
-  SelectFromBuilder<S, V> groupBy(Selectable<dynamic> groupBy) {
+  SelectFromBuilder<S, R, V> groupBy(Selectable<dynamic> groupBy) {
     return SelectFromBuilder(
       executor,
       config: config.copyWith({#groupBy: groupBy}),
@@ -41,7 +41,7 @@ class SelectFromBuilder<S extends Schema<S>, V> extends QueryBuilder<S, V>
   }
 
   @override
-  Select<S, V> toQuery() {
+  Select<S, R, V> toQuery() {
     return Select(
       selecting: config.get(#selecting)!,
       from: config.get(#from)!,
@@ -55,9 +55,9 @@ class SelectFromBuilder<S extends Schema<S>, V> extends QueryBuilder<S, V>
 }
 
 // TODO: come up with a way for select from with join with a custom select.
-// extension SelectWithInnerJoin1<S extends Schema<S>> on SelectFromBuilder<S, S> {
+// extension SelectWithInnerJoin1<S> on SelectFromBuilder<S, S> {
 //   /// Set a join clause of the builder.
-//   SelectFromBuilder<S, (S, O)> join<O extends Schema<O>>(
+//   SelectFromBuilder<S, (S, O)> join<O extends Schema<O, dynamic>>(
 //     O table, {
 //     required Filter on,
 //   }) {
@@ -82,7 +82,7 @@ class SelectFromBuilder<S extends Schema<S>, V> extends QueryBuilder<S, V>
 //     S1 extends Schema<S1>? //
 //     > on SelectFromBuilder<S, (S, S1)> {
 //   /// Set a join clause of the builder.
-//   SelectFromBuilder<S, (S, S1, O)> join<O extends Schema<O>>(
+//   SelectFromBuilder<S, (S, S1, O)> join<O extends Schema<O, dynamic>>(
 //     O table, {
 //     required Filter on,
 //   }) {
@@ -102,9 +102,9 @@ class SelectFromBuilder<S extends Schema<S>, V> extends QueryBuilder<S, V>
 //   }
 // }
 
-// extension SelectWithLeftJoin1<S extends Schema<S>> on SelectFromBuilder<S, S> {
+// extension SelectWithLeftJoin1<S> on SelectFromBuilder<S, S> {
 //   /// Set a left join clause of the builder.
-//   SelectFromBuilder<S, (S, O?)> leftJoin<O extends Schema<O>>(
+//   SelectFromBuilder<S, (S, O?)> leftJoin<O extends Schema<O, dynamic>>(
 //     O table, {
 //     required Filter on,
 //   }) {
@@ -129,7 +129,7 @@ class SelectFromBuilder<S extends Schema<S>, V> extends QueryBuilder<S, V>
 //     S1 extends Schema<S1>? //
 //     > on SelectFromBuilder<S, (S, S1)> {
 //   /// Set a left join clause of the builder.
-//   SelectFromBuilder<S, (S, S1, O?)> leftJoin<O extends Schema<O>>(
+//   SelectFromBuilder<S, (S, S1, O?)> leftJoin<O extends Schema<O, dynamic>>(
 //     O table, {
 //     required Filter on,
 //   }) {

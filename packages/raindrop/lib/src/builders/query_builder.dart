@@ -19,7 +19,7 @@ extension CloneConfig on QueryConfig {
 /// {@template query_builder}
 /// Abstract class for all query builders.
 /// {@endtemplate}
-abstract class QueryBuilder<S extends Schema<S>, V> implements Query<S, V> {
+abstract class QueryBuilder<S, V> implements Query<S, V> {
   /// {@macro query_builder}
   QueryBuilder(this.executor, {required this.config});
 
@@ -40,8 +40,7 @@ abstract class QueryBuilder<S extends Schema<S>, V> implements Query<S, V> {
 }
 
 /// Provide the [toQuery] method to a query builder.
-mixin ToQuery<S extends Schema<S>, V> on QueryBuilder<S, V>
-    implements Future<List<V>> {
+mixin ToQuery<S, V> on QueryBuilder<S, V> implements Future<List<V>> {
   /// The first element.
   ///
   /// Throws a [StateError] if `this` is empty.

@@ -6,7 +6,7 @@ export 'sqlite_update_setting_builder.dart';
 /// {@template sqlite_update}
 /// SQL update statement tailored for SQLite.
 /// {@endtemplate}
-class SQLiteUpdate<S extends Schema<S>, V> extends Update<S, V>
+class SQLiteUpdate<S extends Schema<R>, R, V> extends Update<S, R, V>
     with ReturningQuery, LimitedModifyQuery {
   /// {@macro sqlite_update}
   SQLiteUpdate({

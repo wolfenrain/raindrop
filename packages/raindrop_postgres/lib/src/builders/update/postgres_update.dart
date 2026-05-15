@@ -6,7 +6,7 @@ export 'postgres_update_setting_builder.dart';
 /// {@template postgres_update}
 /// SQL update statement tailored for Postgres.
 /// {@endtemplate}
-class PostgresUpdate<S extends Schema<S>, V> extends Update<S, V>
+class PostgresUpdate<S extends Schema<R>, R, V> extends Update<S, R, V>
     with ReturningQuery {
   /// {@macro postgres_update}
   PostgresUpdate({

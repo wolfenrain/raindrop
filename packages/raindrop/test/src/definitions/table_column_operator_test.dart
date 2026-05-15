@@ -2,27 +2,30 @@ import 'package:raindrop/raindrop.dart';
 import 'package:raindrop_sqlite/raindrop_sqlite.dart';
 import 'package:test/test.dart';
 
-class _Item extends Schema<_Item> {
-  _Item({
-    int? id,
-    required String label,
-  })  : id = $.integer('id', (s) => s.id, id).primaryKey(autoIncrement: true),
-        label = $.text('label', (s) => s.label, label);
+class _Item {
+  _Item({required this.label, this.id});
 
+  final int? id;
+  final String label;
+}
+
+class _ItemSchema extends Schema<_Item> implements _Item {
+  _ItemSchema(super.$)
+      : id = $.integer('id', (s) => s.id).primaryKey(autoIncrement: true),
+        label = $.text('label', (s) => s.label);
+
+  @override
+  _Item fromRow(RowReader read) => _Item(id: read(id), label: read(label)!);
+
+  @override
   final IntColumn? id;
-  final TextColumn label;
 
-  static const $ = SchemaBuilder<_Item>();
+  @override
+  final TextColumn label;
 }
 
 void main() {
-  final items = sqliteTable(
-    'items',
-    () => _Item(
-      id: fakes.primaryKey(),
-      label: fakes.text(),
-    ),
-  );
+  final items = sqliteTable('items', _ItemSchema.new);
 
   group('Table column operator', () {
     test('returns the column with the given name', () {

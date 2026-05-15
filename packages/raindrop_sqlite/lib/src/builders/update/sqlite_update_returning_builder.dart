@@ -1,12 +1,12 @@
 import 'package:raindrop/raindrop.dart';
 import 'package:raindrop_sqlite/raindrop_sqlite.dart';
 
-class SQLiteUpdateReturningBuilder<S extends Schema<S>, V, R>
-    extends UpdateWhereBuilder<S, V, R> {
+class SQLiteUpdateReturningBuilder<S extends Schema<R>, R, ST, V>
+    extends UpdateWhereBuilder<S, R, ST, V> {
   SQLiteUpdateReturningBuilder(super.executor, {required super.config});
 
   @override
-  Update<S, R> toQuery() {
+  Update<S, R, V> toQuery() {
     return SQLiteUpdate(
       table: config.get(#table)!,
       set: config.get(#set)!,
@@ -17,9 +17,9 @@ class SQLiteUpdateReturningBuilder<S extends Schema<S>, V, R>
   }
 }
 
-extension SQLiteUpdateLimitExtension<S extends Schema<S>, V, R>
-    on UpdateWhereBuilder<S, V, R> {
-  SQLiteUpdateReturningBuilder<S, V, R> limit(int limit) {
+extension SQLiteUpdateLimitExtension<S extends Schema<R>, R, ST, V>
+    on UpdateWhereBuilder<S, R, ST, V> {
+  SQLiteUpdateReturningBuilder<S, R, ST, V> limit(int limit) {
     return SQLiteUpdateReturningBuilder(
       executor,
       config: config.copyWith({#limit: limit}),

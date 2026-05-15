@@ -21,9 +21,9 @@ abstract class Delegate {
   );
 
   /// Create an insert builder for an entity.
-  InsertValuesBuilder<S, void> insert<S extends Schema<S>>(
+  InsertValuesBuilder<Schema<R>, R, void> insert<R>(
     RaindropExecutor executor,
-    Table<S> into,
+    Table<dynamic, R> into,
   ) {
     return InsertValuesBuilder(
       executor,
@@ -43,9 +43,9 @@ abstract class Delegate {
   }
 
   /// Create an update builder for an entity.
-  UpdateSettingBuilder<S, void> update<S extends Schema<S>>(
+  UpdateSettingBuilder<Schema<R>, R, void> update<R>(
     RaindropExecutor executor,
-    Table<S> table,
+    Table<dynamic, R> table,
   ) {
     return UpdateSettingBuilder(
       executor,
@@ -54,9 +54,9 @@ abstract class Delegate {
   }
 
   /// Create a delete builder for an entity.
-  DeleteAllBuilder<S, void> delete<S extends Schema<S>>(
+  DeleteAllBuilder<Schema<R>, R, void> delete<R>(
     RaindropExecutor executor,
-    Table<S> from,
+    Table<dynamic, R> from,
   ) {
     return DeleteAllBuilder(
       executor,
