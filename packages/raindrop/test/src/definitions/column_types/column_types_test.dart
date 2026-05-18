@@ -80,7 +80,7 @@ void main() {
       expect(u.uid.lessThan(9), isA<SQL>());
       expect(u.uid.lessThanOrEqual(4), isA<SQL>());
       expect(u.uid.inList([10, 20]).toString(), contains('IN'));
-      expect(u.uid.count().sql.toString(), contains('COUNT'));
+      expect(u.uid.count().build().toString(), contains('COUNT'));
       expect(
         _childSchema.orphanScore?.isNull().toString(),
         contains('IS NULL'),
