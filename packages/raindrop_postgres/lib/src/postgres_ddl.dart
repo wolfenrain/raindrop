@@ -50,8 +50,10 @@ class PostgresDdlGenerator extends DdlGenerator {
     String tableName,
     ColumnInfo oldColumn,
     ColumnInfo newColumn,
-    List<ColumnInfo> _,
-  ) {
+    List<ColumnInfo> _, {
+    List<IndexInfo> indexes = const [],
+  }) {
+    assert(indexes.isEmpty);
     final statements = <String>[];
     final table = escapeName(tableName);
     final column = escapeName(newColumn.name);

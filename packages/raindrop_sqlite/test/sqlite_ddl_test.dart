@@ -127,7 +127,85 @@ void main() {
       );
 
       expect(sql, isNot(contains('UPDATE')));
-      expect(sql, startsWith('CREATE TABLE "items_raindrop_rebuild"'));
+      expect(sql, startsWith('PRAGMA foreign_keys=OFF;'));
+      expect(sql, contains('CREATE TABLE "items_raindrop_rebuild"'));
+      expect(sql, endsWith('PRAGMA foreign_keys=ON;'));
+    });
+
+    test('disables foreign keys during rebuild and re-enables after', () {
+      const oldColumn = ColumnInfo(
+        name: 'score',
+        type: 'INTEGER',
+        isNullable: true,
+      );
+      const newColumn = ColumnInfo(
+        name: 'score',
+        type: 'INTEGER',
+        isNullable: false,
+      );
+      const tableColumns = [newColumn];
+
+      final sql = generator.alterColumn(
+        'items',
+        oldColumn,
+        newColumn,
+        tableColumns,
+      );
+
+      expect(sql, contains('PRAGMA foreign_keys=OFF;'));
+      expect(sql, contains('DROP TABLE "items";'));
+      expect(sql, endsWith('PRAGMA foreign_keys=ON;'));
+      expect(
+        sql.indexOf('PRAGMA foreign_keys=OFF;'),
+        lessThan(sql.indexOf('DROP TABLE "items";')),
+      );
+      expect(
+        sql.indexOf('ALTER TABLE "items_raindrop_rebuild" RENAME TO "items";'),
+        lessThan(sql.indexOf('PRAGMA foreign_keys=ON;')),
+      );
+    });
+
+    test('recreates indexes dropped by table rebuild before re-enabling FKs', () {
+      const oldColumn = ColumnInfo(
+        name: 'id',
+        type: 'INTEGER',
+        isNullable: true,
+        primaryKey: true,
+      );
+      const newColumn = ColumnInfo(
+        name: 'id',
+        type: 'INTEGER',
+        isNullable: false,
+        primaryKey: true,
+      );
+      const tableColumns = [newColumn];
+      const indexes = [
+        IndexInfo(
+          name: 'users.id_unique',
+          tableName: 'users',
+          columns: ['id'],
+          isUnique: true,
+        ),
+      ];
+
+      final sql = generator.alterColumn(
+        'users',
+        oldColumn,
+        newColumn,
+        tableColumns,
+        indexes: indexes,
+      );
+
+      expect(
+        sql,
+        contains(
+          'CREATE UNIQUE INDEX "users.id_unique" ON "users" ("id");',
+        ),
+      );
+      expect(
+        sql.indexOf('CREATE UNIQUE INDEX "users.id_unique"'),
+        lessThan(sql.indexOf('PRAGMA foreign_keys=ON;')),
+      );
     });
   });
 }

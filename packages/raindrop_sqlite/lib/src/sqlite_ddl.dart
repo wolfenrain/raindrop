@@ -49,8 +49,9 @@ class SQLiteDdlGenerator extends DdlGenerator {
     String tableName,
     ColumnInfo oldColumn,
     ColumnInfo newColumn,
-    List<ColumnInfo> tableColumns,
-  ) {
+    List<ColumnInfo> tableColumns, {
+    List<IndexInfo> indexes = const [],
+  }) {
     assert(
       oldColumn.name == newColumn.name,
       'SQLite rebuild expects in-place column alterations',
@@ -74,12 +75,19 @@ class SQLiteDdlGenerator extends DdlGenerator {
       );
     }
 
+    // DROP TABLE fails when foreign keys reference this table (or vice versa)
+    // unless enforcement is disabled for the rebuild.
+    steps.add('PRAGMA foreign_keys=OFF;');
     steps.addAll([
       'CREATE TABLE $temp (\n  $defs\n);',
       'INSERT INTO $temp SELECT * FROM $table;',
       'DROP TABLE $table;',
       'ALTER TABLE $temp RENAME TO $table;',
     ]);
+    for (final index in indexes) {
+      steps.add(createIndex(index));
+    }
+    steps.add('PRAGMA foreign_keys=ON;');
     return steps.join('\n');
   }
 

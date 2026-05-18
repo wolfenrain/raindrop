@@ -174,12 +174,14 @@ class AlterColumn extends DiffOperation {
     this.tableName,
     this.oldColumn,
     this.newColumn,
-    this.tableColumns,
-  );
+    this.tableColumns, {
+    this.indexes = const [],
+  });
 
   /// Creates an [AlterColumn] from a map representation.
   factory AlterColumn.fromMap(Map<String, dynamic> map) {
     final cols = map['tableColumns'] as List<dynamic>?;
+    final indexes = map['indexes'] as List<dynamic>?;
     return AlterColumn(
       map['tableName'] as String,
       ColumnInfo.fromMap(map['oldColumn'] as Map<String, dynamic>),
@@ -190,6 +192,13 @@ class AlterColumn extends DiffOperation {
                   (c) => ColumnInfo.fromMap((c as Map).cast<String, dynamic>()))
               .toList()
           : const <ColumnInfo>[],
+      indexes: indexes != null
+          ? indexes
+              .map(
+                (i) => IndexInfo.fromMap((i as Map).cast<String, dynamic>()),
+              )
+              .toList()
+          : const <IndexInfo>[],
     );
   }
 
@@ -206,6 +215,12 @@ class AlterColumn extends DiffOperation {
   /// in [old] table column order. Used by SQLite (table rebuild).
   final List<ColumnInfo> tableColumns;
 
+  /// Indexes on [tableName] to recreate after a SQLite table rebuild.
+  ///
+  /// `DROP TABLE` removes every index on the table; the SQLite DDL generator
+  /// emits `CREATE INDEX` for these before re-enabling foreign keys.
+  final List<IndexInfo> indexes;
+
   @override
   String describe() => 'Alter column "${oldColumn.name}" in table "$tableName"';
 
@@ -217,6 +232,8 @@ class AlterColumn extends DiffOperation {
       'oldColumn': oldColumn.toMap(),
       'newColumn': newColumn.toMap(),
       'tableColumns': tableColumns.map((c) => c.toMap()).toList(),
+      if (indexes.isNotEmpty)
+        'indexes': indexes.map((i) => i.toMap()).toList(),
     };
   }
 }

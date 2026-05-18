@@ -47,7 +47,7 @@ class SchemaDiffer {
       }
     }
 
-    // Diff indexes (and recreate indexes dropped by SQLite table rebuilds).
+    // Diff indexes (skip CREATE for indexes rebuilt inside AlterColumn).
     operations.addAll(
       _diffIndexes(
         oldIndexes,
@@ -56,7 +56,42 @@ class SchemaDiffer {
       ),
     );
 
+    _attachIndexesToLastAlterColumn(operations, newIndexes);
+
     return operations;
+  }
+
+  /// SQLite table rebuilds drop every index on the table. Attach the target
+  /// schema's indexes to the last [AlterColumn] per rebuilt table so the DDL
+  /// generator can recreate them before `PRAGMA foreign_keys=ON`.
+  void _attachIndexesToLastAlterColumn(
+    List<DiffOperation> operations,
+    Map<String, IndexSnapshot> newIndexes,
+  ) {
+    final lastAlterByTable = <String, int>{};
+    for (var i = 0; i < operations.length; i++) {
+      if (operations[i] case AlterColumn(:final tableName)) {
+        lastAlterByTable[tableName] = i;
+      }
+    }
+
+    for (final tableName in lastAlterByTable.keys) {
+      final indexes = [
+        for (final entry in newIndexes.entries)
+          if (entry.value.tableName == tableName) _toIndexInfo(entry.value),
+      ];
+      if (indexes.isEmpty) continue;
+
+      final i = lastAlterByTable[tableName]!;
+      final op = operations[i] as AlterColumn;
+      operations[i] = AlterColumn(
+        op.tableName,
+        op.oldColumn,
+        op.newColumn,
+        op.tableColumns,
+        indexes: indexes,
+      );
+    }
   }
 
   /// Calculates the list of index operations needed.
@@ -70,6 +105,10 @@ class SchemaDiffer {
     // Find dropped indexes
     for (final name in oldIndexes.keys) {
       if (!newIndexes.containsKey(name)) {
+        final oldIndex = oldIndexes[name]!;
+        if (rebuiltTables.contains(oldIndex.tableName)) {
+          continue;
+        }
         operations.add(DropIndex(name));
       }
     }
@@ -80,6 +119,12 @@ class SchemaDiffer {
       final newIndex = entry.value;
       final oldIndex = oldIndexes[name];
 
+      if (rebuiltTables.contains(newIndex.tableName)) {
+        // DROP TABLE in AlterColumn already removed every index on the table;
+        // indexes are recreated on the last AlterColumn for this table.
+        continue;
+      }
+
       if (oldIndex == null) {
         // New index
         operations.add(CreateIndex(index: _toIndexInfo(newIndex)));
@@ -87,21 +132,6 @@ class SchemaDiffer {
         // Changed index - drop and recreate
         operations.add(DropIndex(name));
         operations.add(CreateIndex(index: _toIndexInfo(newIndex)));
-      }
-    }
-
-    // SQLite `ALTER COLUMN` rebuilds use DROP TABLE, which removes every index on
-    // the table. Recreate unchanged indexes that still exist in the target schema.
-    final scheduledCreates = <String>{
-      for (final operation in operations)
-        if (operation is CreateIndex) operation.index.name,
-    };
-    for (final tableName in rebuiltTables) {
-      for (final entry in newIndexes.entries) {
-        if (entry.value.tableName != tableName) continue;
-        if (scheduledCreates.contains(entry.key)) continue;
-        operations.add(CreateIndex(index: _toIndexInfo(entry.value)));
-        scheduledCreates.add(entry.key);
       }
     }
 

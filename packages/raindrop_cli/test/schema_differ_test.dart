@@ -83,9 +83,11 @@ void main() {
       final operations = SchemaDiffer().diff(from, to);
 
       expect(operations.whereType<AlterColumn>(), hasLength(1));
+      final alter = operations.whereType<AlterColumn>().single;
+      expect(alter.indexes.map((i) => i.name), contains('pets_owner'));
       expect(
         operations.whereType<CreateIndex>().map((op) => op.index.name),
-        contains('pets_owner'),
+        isNot(contains('pets_owner')),
       );
     });
   });

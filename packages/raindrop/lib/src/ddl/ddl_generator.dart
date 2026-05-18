@@ -88,8 +88,15 @@ abstract class DdlGenerator {
             :final oldColumn,
             :final newColumn,
             :final tableColumns,
+            :final indexes,
           ) =>
-            alterColumn(tableName, oldColumn, newColumn, tableColumns),
+            alterColumn(
+              tableName,
+              oldColumn,
+              newColumn,
+              tableColumns,
+              indexes: indexes,
+            ),
           CreateIndex(:final index) => createIndex(index),
           DropIndex(:final indexName) => dropIndex(indexName),
         },
@@ -122,8 +129,9 @@ abstract class DdlGenerator {
     String tableName,
     ColumnInfo oldColumn,
     ColumnInfo newColumn,
-    List<ColumnInfo> tableColumns,
-  );
+    List<ColumnInfo> tableColumns, {
+    List<IndexInfo> indexes = const [],
+  });
 
   /// Generates a CREATE INDEX statement.
   String createIndex(IndexInfo index);
