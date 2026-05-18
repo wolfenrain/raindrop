@@ -90,5 +90,74 @@ void main() {
         isNot(contains('pets_owner')),
       );
     });
+
+    test('tableColumns reflects final table state for every AlterColumn', () {
+      const from = SchemaSnapshot(
+        version: SchemaSnapshot.currentVersion,
+        dialect: 'sqlite',
+        id: 'from',
+        prevId: SchemaSnapshot.nullUuid,
+        tables: {
+          'users': TableSnapshot(
+            name: 'users',
+            columns: {
+              'name': ColumnSnapshot(
+                name: 'name',
+                type: 'TEXT',
+                isNullable: true,
+              ),
+              'age': ColumnSnapshot(
+                name: 'age',
+                type: 'INTEGER',
+                isNullable: true,
+              ),
+            },
+          ),
+        },
+      );
+
+      const to = SchemaSnapshot(
+        version: SchemaSnapshot.currentVersion,
+        dialect: 'sqlite',
+        id: 'to',
+        prevId: 'from',
+        tables: {
+          'users': TableSnapshot(
+            name: 'users',
+            columns: {
+              'name': ColumnSnapshot(
+                name: 'name',
+                type: 'TEXT',
+                isNullable: false,
+              ),
+              'age': ColumnSnapshot(
+                name: 'age',
+                type: 'INTEGER',
+                isNullable: false,
+                defaultValue: '0',
+              ),
+            },
+          ),
+        },
+      );
+
+      final alters = SchemaDiffer().diff(from, to).whereType<AlterColumn>();
+
+      expect(alters, hasLength(2));
+      for (final alter in alters) {
+        expect(
+          alter.tableColumns.singleWhere((c) => c.name == 'name').isNullable,
+          isFalse,
+        );
+        expect(
+          alter.tableColumns.singleWhere((c) => c.name == 'age').defaultValue,
+          '0',
+        );
+        expect(
+          alter.tableColumns.singleWhere((c) => c.name == 'age').isNullable,
+          isFalse,
+        );
+      }
+    });
   });
 }

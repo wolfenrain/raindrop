@@ -208,4 +208,44 @@ void main() {
       );
     });
   });
+
+  group('generate', () {
+    test('collapses multiple AlterColumns on the same table to one rebuild', () {
+      const finalColumns = [
+        ColumnInfo(name: 'name', type: 'TEXT', isNullable: false),
+        ColumnInfo(
+          name: 'age',
+          type: 'INTEGER',
+          isNullable: false,
+          defaultValue: '0',
+        ),
+      ];
+
+      final sql = generator.generate([
+        const AlterColumn(
+          'users',
+          ColumnInfo(name: 'name', type: 'TEXT', isNullable: true),
+          ColumnInfo(name: 'name', type: 'TEXT', isNullable: false),
+          finalColumns,
+        ),
+        const AlterColumn(
+          'users',
+          ColumnInfo(name: 'age', type: 'INTEGER', isNullable: true),
+          ColumnInfo(
+            name: 'age',
+            type: 'INTEGER',
+            isNullable: false,
+            defaultValue: '0',
+          ),
+          finalColumns,
+        ),
+      ]);
+
+      expect(sql.split('DROP TABLE "users";'), hasLength(2));
+      expect(sql, contains('UPDATE "users" SET "name" ='));
+      expect(sql, contains('UPDATE "users" SET "age" = 0'));
+      expect(sql, contains('"name" TEXT NOT NULL'));
+      expect(sql, contains('"age" INTEGER NOT NULL DEFAULT 0'));
+    });
+  });
 }

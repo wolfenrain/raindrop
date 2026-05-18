@@ -89,6 +89,7 @@ abstract class DdlGenerator {
             :final newColumn,
             :final tableColumns,
             :final indexes,
+            :final companionAlters,
           ) =>
             alterColumn(
               tableName,
@@ -96,6 +97,7 @@ abstract class DdlGenerator {
               newColumn,
               tableColumns,
               indexes: indexes,
+              companionAlters: companionAlters,
             ),
           CreateIndex(:final index) => createIndex(index),
           DropIndex(:final indexName) => dropIndex(indexName),
@@ -123,14 +125,15 @@ abstract class DdlGenerator {
 
   /// Generates an ALTER COLUMN statement (or equivalent).
   ///
-  /// [tableColumns] is the full column list after applying this single change,
-  /// in pre-migration column order (PostgreSQL generators may ignore it).
+  /// [tableColumns] is the full column list after all in-place alterations on
+  /// the table, in pre-migration column order (PostgreSQL generators ignore it).
   String alterColumn(
     String tableName,
     ColumnInfo oldColumn,
     ColumnInfo newColumn,
     List<ColumnInfo> tableColumns, {
     List<IndexInfo> indexes = const [],
+    List<AlterColumn> companionAlters = const [],
   });
 
   /// Generates a CREATE INDEX statement.

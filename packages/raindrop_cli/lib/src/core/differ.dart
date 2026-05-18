@@ -159,6 +159,15 @@ class SchemaDiffer {
     final oldColumns = Map<String, ColumnSnapshot>.from(oldTable.columns);
     final newColumns = Map<String, ColumnSnapshot>.from(newTable.columns);
 
+    // Target definitions for every column that survives under the same name,
+    // in pre-migration order. Shared by all AlterColumn ops on this table so
+    // a batched SQLite rebuild applies every change at once.
+    final finalTableColumns = [
+      for (final col in oldTable.columns.values)
+        if (newColumns.containsKey(col.name))
+          _toColumnInfo(newColumns[col.name]!),
+    ];
+
     // First, find columns that exist in both (possibly modified)
     final matchedOldColumns = <String>{};
     final matchedNewColumns = <String>{};
@@ -175,12 +184,7 @@ class SchemaDiffer {
             tableName,
             _toColumnInfo(oldColumn),
             _toColumnInfo(newColumn),
-            [
-              for (final col in oldTable.columns.values)
-                _toColumnInfo(
-                  col.name == oldName ? newColumns[oldName]! : col,
-                ),
-            ],
+            finalTableColumns,
           ));
         }
       }

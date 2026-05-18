@@ -45,34 +45,97 @@ class SQLiteDdlGenerator extends DdlGenerator {
   }
 
   @override
+  String generate(List<DiffOperation> operations) {
+    return super.generate(_batchAlterColumns(operations));
+  }
+
+  /// Consecutive [AlterColumn] ops on the same table become one rebuild.
+  List<DiffOperation> _batchAlterColumns(List<DiffOperation> operations) {
+    final batched = <DiffOperation>[];
+    var i = 0;
+    while (i < operations.length) {
+      final op = operations[i];
+      if (op is! AlterColumn) {
+        batched.add(op);
+        i++;
+        continue;
+      }
+
+      final tableName = op.tableName;
+      final group = <AlterColumn>[op];
+      i++;
+      while (i < operations.length) {
+        final next = operations[i];
+        if (next is! AlterColumn || next.tableName != tableName) break;
+        group.add(next);
+        i++;
+      }
+      batched.add(_mergeAlterColumnGroup(group));
+    }
+    return batched;
+  }
+
+  AlterColumn _mergeAlterColumnGroup(List<AlterColumn> group) {
+    if (group.length == 1) return group.single;
+    final head = group.first;
+    return AlterColumn(
+      head.tableName,
+      head.oldColumn,
+      head.newColumn,
+      group.last.tableColumns,
+      indexes: group.last.indexes,
+      companionAlters: group.sublist(1),
+    );
+  }
+
+  @override
   String alterColumn(
     String tableName,
     ColumnInfo oldColumn,
     ColumnInfo newColumn,
     List<ColumnInfo> tableColumns, {
     List<IndexInfo> indexes = const [],
+    List<AlterColumn> companionAlters = const [],
   }) {
-    assert(
-      oldColumn.name == newColumn.name,
-      'SQLite rebuild expects in-place column alterations',
-    );
+    return _rebuildTableFromAlters([
+      AlterColumn(
+        tableName,
+        oldColumn,
+        newColumn,
+        tableColumns,
+        indexes: indexes,
+      ),
+      ...companionAlters,
+    ]);
+  }
+
+  /// Rebuilds [tableName] once, applying every nullable→NOT NULL backfill in
+  /// [alters] before a single `DROP TABLE` cycle.
+  String _rebuildTableFromAlters(List<AlterColumn> alters) {
+    assert(alters.isNotEmpty);
+    final tableName = alters.first.tableName;
+    assert(alters.every((a) => a.tableName == tableName));
+
+    final tableColumns = alters.last.tableColumns;
     assert(tableColumns.isNotEmpty);
 
     // SQLite has no ALTER COLUMN for type / nullability / default; rebuild.
     final table = escapeName(tableName);
-    final column = escapeName(newColumn.name);
     final temp = escapeName('${tableName}_raindrop_rebuild');
     final defs = tableColumns.map(_columnDefinition).join(',\n  ');
 
     final steps = <String>[];
-    if (oldColumn.isNullable && !newColumn.isNullable) {
-      final backfillValue = _sqliteBackfillExpressionForNotNull(
-        tableName,
-        newColumn,
-      );
-      steps.add(
-        'UPDATE $table SET $column = $backfillValue WHERE $column IS NULL;',
-      );
+    for (final alter in alters) {
+      if (alter.oldColumn.isNullable && !alter.newColumn.isNullable) {
+        final column = escapeName(alter.newColumn.name);
+        final backfillValue = _sqliteBackfillExpressionForNotNull(
+          tableName,
+          alter.newColumn,
+        );
+        steps.add(
+          'UPDATE $table SET $column = $backfillValue WHERE $column IS NULL;',
+        );
+      }
     }
 
     // DROP TABLE fails when foreign keys reference this table (or vice versa)
@@ -84,7 +147,7 @@ class SQLiteDdlGenerator extends DdlGenerator {
       'DROP TABLE $table;',
       'ALTER TABLE $temp RENAME TO $table;',
     ]);
-    for (final index in indexes) {
+    for (final index in alters.last.indexes) {
       steps.add(createIndex(index));
     }
     steps.add('PRAGMA foreign_keys=ON;');
