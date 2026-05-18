@@ -14,6 +14,7 @@ class SchemaDiffer {
     final newTables = to.tables;
     final oldIndexes = from?.indexes ?? {};
     final newIndexes = to.indexes;
+    final rebuiltTables = <String>{};
 
     // Find dropped tables
     for (final tableName in oldTables.keys) {
@@ -36,12 +37,24 @@ class SchemaDiffer {
       } else {
         // Existing table - check for column changes
         final oldTable = oldTables[tableName]!;
-        operations.addAll(_diffTable(tableName, oldTable, newTable));
+        final tableOperations = _diffTable(tableName, oldTable, newTable);
+        for (final operation in tableOperations) {
+          if (operation is AlterColumn) {
+            rebuiltTables.add(tableName);
+          }
+        }
+        operations.addAll(tableOperations);
       }
     }
 
-    // Diff indexes
-    operations.addAll(_diffIndexes(oldIndexes, newIndexes));
+    // Diff indexes (and recreate indexes dropped by SQLite table rebuilds).
+    operations.addAll(
+      _diffIndexes(
+        oldIndexes,
+        newIndexes,
+        rebuiltTables: rebuiltTables,
+      ),
+    );
 
     return operations;
   }
@@ -49,8 +62,9 @@ class SchemaDiffer {
   /// Calculates the list of index operations needed.
   List<DiffOperation> _diffIndexes(
     Map<String, IndexSnapshot> oldIndexes,
-    Map<String, IndexSnapshot> newIndexes,
-  ) {
+    Map<String, IndexSnapshot> newIndexes, {
+    Set<String> rebuiltTables = const {},
+  }) {
     final operations = <DiffOperation>[];
 
     // Find dropped indexes
@@ -73,6 +87,21 @@ class SchemaDiffer {
         // Changed index - drop and recreate
         operations.add(DropIndex(name));
         operations.add(CreateIndex(index: _toIndexInfo(newIndex)));
+      }
+    }
+
+    // SQLite `ALTER COLUMN` rebuilds use DROP TABLE, which removes every index on
+    // the table. Recreate unchanged indexes that still exist in the target schema.
+    final scheduledCreates = <String>{
+      for (final operation in operations)
+        if (operation is CreateIndex) operation.index.name,
+    };
+    for (final tableName in rebuiltTables) {
+      for (final entry in newIndexes.entries) {
+        if (entry.value.tableName != tableName) continue;
+        if (scheduledCreates.contains(entry.key)) continue;
+        operations.add(CreateIndex(index: _toIndexInfo(entry.value)));
+        scheduledCreates.add(entry.key);
       }
     }
 

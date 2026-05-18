@@ -59,12 +59,28 @@ class SQLiteDdlGenerator extends DdlGenerator {
 
     // SQLite has no ALTER COLUMN for type / nullability / default; rebuild.
     final table = escapeName(tableName);
+    final column = escapeName(newColumn.name);
     final temp = escapeName('${tableName}_raindrop_rebuild');
     final defs = tableColumns.map(_columnDefinition).join(',\n  ');
-    return 'CREATE TABLE $temp (\n  $defs\n);\n'
-        'INSERT INTO $temp SELECT * FROM $table;\n'
-        'DROP TABLE $table;\n'
-        'ALTER TABLE $temp RENAME TO $table;';
+
+    final steps = <String>[];
+    if (oldColumn.isNullable && !newColumn.isNullable) {
+      final backfillValue = _sqliteBackfillExpressionForNotNull(
+        tableName,
+        newColumn,
+      );
+      steps.add(
+        'UPDATE $table SET $column = $backfillValue WHERE $column IS NULL;',
+      );
+    }
+
+    steps.addAll([
+      'CREATE TABLE $temp (\n  $defs\n);',
+      'INSERT INTO $temp SELECT * FROM $table;',
+      'DROP TABLE $table;',
+      'ALTER TABLE $temp RENAME TO $table;',
+    ]);
+    return steps.join('\n');
   }
 
   @override
@@ -154,6 +170,44 @@ class SQLiteDdlGenerator extends DdlGenerator {
 
   String _sqliteAddColumnConstantDefaultNote() =>
       'SQLite only accepts constant DEFAULT values on ADD COLUMN.';
+
+  /// SQL value expression for backfilling NULLs before NOT NULL rebuild.
+  String _sqliteBackfillExpressionForNotNull(
+    String tableName,
+    ColumnInfo column,
+  ) {
+    if (_sqliteDefaultExpressionIsNonNull(column.defaultValue)) {
+      return column.defaultValue!;
+    }
+
+    if (column.primaryKey && _sqliteTextAffinity(column.type)) {
+      warn(
+        'SQLite NOT NULL backfill for PRIMARY KEY "${column.name}" on '
+        '"$tableName": no explicit DEFAULT; using lower(hex(randomblob(8))) '
+        'per row. Set an explicit literal DEFAULT on the column if you need a '
+        'fixed sentinel instead.',
+      );
+      return 'lower(hex(randomblob(8)))';
+    }
+
+    final inferred = _inferSqliteNotNullDefaultExpression(column);
+    if (inferred == null) {
+      throw StateError(
+        'SQLite cannot set "${column.name}" on "$tableName" to NOT NULL: '
+        'existing NULL values need a backfill value but no DEFAULT is defined '
+        'and type "${column.type}" has no inferred constant. Add an explicit '
+        'SQL default on the column in your schema.',
+      );
+    }
+
+    warn(
+      'SQLite NOT NULL backfill for "${column.name}" on "$tableName": no '
+      'explicit DEFAULT; inferred constant $inferred from SQL type '
+      '"${column.type}". Prefer setting an explicit literal DEFAULT on the '
+      'column.',
+    );
+    return inferred;
+  }
 
   /// Whether [defaultExpression] is present and not trivially SQL NULL.
   bool _sqliteDefaultExpressionIsNonNull(String? defaultExpression) {
