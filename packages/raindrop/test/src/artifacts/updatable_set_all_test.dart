@@ -4,15 +4,39 @@ import 'package:raindrop/raindrop.dart';
 import 'package:raindrop_sqlite/raindrop_sqlite.dart';
 import 'package:test/test.dart';
 
+class _Row {
+  _Row({this.id, required this.name, required this.notes});
+
+  final int? id;
+  final String name;
+  final String notes;
+}
+
+class _RowSchema extends Schema<_Row> implements _Row {
+  _RowSchema(super.$)
+      : id = $.integer('id', (s) => s.id).primaryKey(autoIncrement: true),
+        name = $.text('name', (s) => s.name),
+        notes = $.text('notes', (s) => s.notes);
+
+  @override
+  _Row fromRow(RowReader read) => _Row(
+        id: read(id),
+        name: read(name),
+        notes: read(notes),
+      );
+
+  @override
+  final IntColumn? id;
+
+  @override
+  final TextColumn name;
+
+  @override
+  final TextColumn notes;
+}
+
 void main() {
-  final rows = sqliteTable(
-    'rows',
-    () => _Row(
-      id: fakes.primaryKey(),
-      name: fakes.text(),
-      notes: fakes.text(),
-    ),
-  );
+  final rows = sqliteTable('rows', _RowSchema.new);
 
   const dialect = SQLiteDialect();
 
@@ -36,12 +60,12 @@ void main() {
       final withSet = db
           .update(rows)
           .set(rows.name.to('next'))
-          .where(rows.id!.equals(1))
+          .where(rows.id.equals(1))
           .toQuery();
       final withSetAll = db
           .update(rows)
           .setAll([rows.name.to('next')])
-          .where(rows.id!.equals(1))
+          .where(rows.id.equals(1))
           .toQuery();
 
       final a = dialect.translate(withSet);
@@ -57,7 +81,7 @@ void main() {
         rows.notes.to('b'),
       ];
       final q =
-          db.update(rows).setAll(updates).where(rows.id!.equals(42)).toQuery();
+          db.update(rows).setAll(updates).where(rows.id.equals(42)).toQuery();
 
       final (sql, values) = dialect.translate(q);
       expect(sql, contains('UPDATE'));
@@ -125,20 +149,4 @@ class _FakeDelegate extends RaindropDelegate {
       zoneValues: {#delegate: _tx},
     );
   }
-}
-
-class _Row extends Schema<_Row> {
-  _Row({
-    int? id,
-    required String name,
-    required String notes,
-  })  : id = $.integer('id', (s) => s.id, id).primaryKey(autoIncrement: true),
-        name = $.text('name', (s) => s.name, name),
-        notes = $.text('notes', (s) => s.notes, notes);
-
-  final IntColumn? id;
-  final TextColumn name;
-  final TextColumn notes;
-
-  static const $ = SchemaBuilder<_Row>();
 }
