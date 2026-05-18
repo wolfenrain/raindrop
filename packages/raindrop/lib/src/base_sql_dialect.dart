@@ -242,9 +242,7 @@ abstract class BaseSqlDialect extends SqlDialect {
         }
       }
     } else if (select case final Column column) {
-      if (column is ColumnTransform) {
-        chunks.add(translateSQL(column.sql, values, singleTable: singleTable));
-      } else if (singleTable) {
+      if (singleTable) {
         chunks.add(escapeName(column.name));
       } else {
         // Use table prefix and alias to avoid column name collisions in joins
@@ -253,6 +251,8 @@ abstract class BaseSqlDialect extends SqlDialect {
         final alias = escapeName('${prefix}__${column.name}');
         chunks.add('${escapeName(prefix)}.$colName AS $alias');
       }
+    } else if (select case final Expression<dynamic> expr) {
+      chunks.add(translateSQL(expr.build(), values, singleTable: singleTable));
     } else if (select case final SelectableResult<dynamic> result) {
       for (var i = 0; i < result.selected.length; i++) {
         chunks.add(
@@ -295,16 +295,20 @@ abstract class BaseSqlDialect extends SqlDialect {
       }
     } else if (update case final UpdateableColumn<dynamic> update) {
       final column = update.column;
-      if (column case final ColumnTransform column) {
-        chunks.add(translateSQL(column.sql, values, singleTable: singleTable));
-      } else {
-        if (column.table.alias case final String alias) {
-          chunks.add('${escapeName(alias)}.');
-        } else if (!singleTable) {
-          chunks.add('${escapeName(column.table.name)}.');
-        }
-        chunks.add(escapeName(column.name));
+      if (column.table.alias case final String alias) {
+        chunks.add('${escapeName(alias)}.');
+      } else if (!singleTable) {
+        chunks.add('${escapeName(column.table.name)}.');
       }
+      chunks.add(escapeName(column.name));
+    } else if (update case final UpdateableExpression<dynamic> update) {
+      final column = update.column;
+      if (column.table.alias case final String alias) {
+        chunks.add('${escapeName(alias)}.');
+      } else if (!singleTable) {
+        chunks.add('${escapeName(column.table.name)}.');
+      }
+      chunks.add(escapeName(column.name));
     } else if (update case final UpdateableResult<dynamic> result) {
       for (var i = 0; i < result.updating.length; i++) {
         chunks.add(
@@ -370,6 +374,12 @@ abstract class BaseSqlDialect extends SqlDialect {
         chunks.add('"${column.name}" = ${escapeParam(values.length)}');
         values.add(column.encode(value));
       }
+    } else if (updateSet
+        case UpdateableExpression(:final column, :final expression)) {
+      chunks.add(
+        '${escapeName(column.name)} = '
+        '${translateSQL(expression.build(), values, singleTable: true)}',
+      );
     } else if (updateSet case UpdateableTable(:final table, :final value)) {
       final buffer = StringBuffer();
       for (var i = 0; i < table.columns.length; i++) {
@@ -484,7 +494,8 @@ abstract class BaseSqlDialect extends SqlDialect {
 
       if (i != sql.chunks.length - 1 &&
           !_endsWithOpenParen(chunk) &&
-          !_startsWithCloseParen(sql.chunks[i + 1])) {
+          !_startsWithCloseParen(sql.chunks[i + 1]) &&
+          !_isComma(sql.chunks[i + 1])) {
         buffer.write(' ');
       }
     }
@@ -497,4 +508,6 @@ abstract class BaseSqlDialect extends SqlDialect {
 
   bool _startsWithCloseParen(Object? chunk) =>
       chunk is RawSQL && chunk.sql.startsWith(')');
+
+  bool _isComma(Object? chunk) => chunk is RawSQL && chunk.sql == ',';
 }

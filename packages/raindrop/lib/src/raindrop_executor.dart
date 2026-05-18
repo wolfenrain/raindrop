@@ -114,10 +114,9 @@ R _read<R>(Selectable<R> selectable, List<Object?> rows) {
     } as R;
   } else if (selectable case final Column column) {
     final value = rows.removeAt(0);
-    if (column is ColumnTransform) {
-      return value as R;
-    }
     return column.decode(value) as R;
+  } else if (selectable is Expression) {
+    return rows.removeAt(0) as R;
   } else if (selectable case final SelectableResult result) {
     return result.readRecord(rows) as R;
   } else {
@@ -148,6 +147,8 @@ extension<R> on Updateable<R> {
       return update.table as Selectable<R>;
     } else if (this case final UpdateableColumn update) {
       return update.column as Selectable<R>;
+    } else if (this case final UpdateableExpression update) {
+      return update.expression as Selectable<R>;
     } else if (this case final UpdateableResult<dynamic> result) {
       return SelectableResult(
         result.updating.map((u) => u.toReadable).toList(),

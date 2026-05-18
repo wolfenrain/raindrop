@@ -5,6 +5,7 @@ export 'src/cached_future.dart';
 export 'src/database_result.dart';
 export 'src/definitions/definitions.dart';
 export 'src/delegates/delegates.dart';
+export 'src/expressions/expressions.dart';
 export 'src/filters/filters.dart';
 export 'src/logger.dart';
 export 'src/migration/migration.dart';

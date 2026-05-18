@@ -97,10 +97,6 @@ class Column<R, V extends Object?> implements Selectable<V> {
     );
   }
 
-  ColumnTransform<R, O> transform<O extends Object?>(SQL sql) {
-    return ColumnTransform<R, O>(table, name, sql);
-  }
-
   @override
   String toString() {
     return 'Column<$V>(name: $name)';
@@ -125,13 +121,3 @@ class ColumnAlias<R, V extends Object?> extends Column<R, V> {
   final String alias;
 }
 
-/// {@template column_transform}
-/// Provides transform information of a column.
-/// {@endtemplate}
-class ColumnTransform<R, V extends Object?> extends Column<R, V> {
-  /// {@macro column_transform}
-  ColumnTransform(super.table, super.name, this.sql);
-
-  /// The SQL to transform with.
-  final SQL sql;
-}

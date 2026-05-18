@@ -242,6 +242,29 @@ void main() {
           .where(users.age.greaterThan(18))
           .limit(5),
     );
+
+    goldenTest(
+      'set to coalesce expression',
+      (db) => db
+          .update(users)
+          .set(users.name.toExpression(Coalesce(users.name, 'anon')))
+          .where(users.id.equals(1)),
+    );
+  });
+
+  group('Expression', () {
+    goldenTest(
+      'coalesce in select',
+      (db) => db.select(Coalesce(users.name, 'anon')).from(users),
+    );
+
+    goldenTest(
+      'coalesce in select with join',
+      (db) => db
+          .select(Coalesce(users.name, 'anon'), users.id.$)
+          .from(users)
+          .join(pets, on: users.id.equals(pets.ownerId)),
+    );
   });
 
   group('Delete', () {

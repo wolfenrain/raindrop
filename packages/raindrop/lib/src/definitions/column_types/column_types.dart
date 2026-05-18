@@ -181,9 +181,7 @@ extension ColumnOperators<V extends Object?> on ColumnOf<V> {
   SQL inList(List<V> values) => SQL([$, const RawSQL('IN'), values]);
 
   /// Returns the count of what is being selected.
-  ColumnTransform<dynamic, int> count() => $.transform(
-        SQL.function('COUNT', [$]),
-      );
+  Count<V> count() => Count<V>(this);
 
   /// Row value for column is null.
   SQL isNull() => SQL([$, const RawSQL('IS NULL')]);

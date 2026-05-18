@@ -8,7 +8,14 @@ class SQL extends Filter {
   SQL(List<Object?> chunks) : chunks = [...chunks];
 
   SQL.function(String name, List<Object?> chunks)
-      : this([RawSQL('$name('), ...chunks, const RawSQL(')')]);
+      : this([
+          RawSQL('$name('),
+          for (var i = 0; i < chunks.length; i++) ...[
+            if (i > 0) const RawSQL(','),
+            chunks[i],
+          ],
+          const RawSQL(')'),
+        ]);
 
   /// The chunks of the SQL portion.
   final List<Object?> chunks;
