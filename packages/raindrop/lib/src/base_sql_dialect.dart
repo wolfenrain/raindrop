@@ -362,8 +362,14 @@ abstract class BaseSqlDialect extends SqlDialect {
   ) {
     final chunks = <String>[];
     if (updateSet case UpdateableColumn(:final column, :final value)) {
-      chunks.add('"${column.name}" = ${escapeParam(values.length)}');
-      values.add(column.encode(value));
+      if (value is SQL) {
+        chunks.add(
+          '"${column.name}" = ${translateSQL(value, values, singleTable: true)}',
+        );
+      } else {
+        chunks.add('"${column.name}" = ${escapeParam(values.length)}');
+        values.add(column.encode(value));
+      }
     } else if (updateSet case UpdateableTable(:final table, :final value)) {
       final buffer = StringBuffer();
       for (var i = 0; i < table.columns.length; i++) {
