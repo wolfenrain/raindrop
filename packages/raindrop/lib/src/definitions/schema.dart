@@ -4,7 +4,7 @@ import 'package:raindrop/raindrop.dart';
 ///
 /// Pass a column-type reference (e.g. `users.id`) and receive its decoded
 /// value. Returns `null` if the underlying column was null in the row.
-typedef RowReader = V Function<V extends Object?>(ColumnType<V>? column);
+typedef RowReader = V Function<V extends Object?>(ColumnType? column);
 
 /// {@template schema}
 /// Describes the schema (table reference) for a row of type [R].

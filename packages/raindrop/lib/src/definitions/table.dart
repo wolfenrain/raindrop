@@ -53,7 +53,7 @@ class Table<S extends Schema<R>, R> implements Selectable<R> {
 
   /// Create a new row [R] instance from a raw column map.
   R create(Map<String, dynamic> data) {
-    T read<T extends Object?>(ColumnType<T>? column) {
+    T read<T extends Object?>(ColumnType? column) {
       final col = ColumnType.lookup(column);
       if (col == null) {
         throw StateError(

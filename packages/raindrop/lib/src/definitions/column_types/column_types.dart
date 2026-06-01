@@ -94,8 +94,12 @@ V _column<R, T extends ColumnType<V?>, V extends Object>(
   );
 
   final seed = synthetic ?? _synthesize<V>(name);
-  ColumnType._typeToColumn[typeBuilder(seed)] = column;
-  return seed;
+  final ref = typeBuilder(seed);
+  ColumnType._typeToColumn[ref] = column;
+  // Return the column-type handle, not [seed]. Bool-backed wrappers that share
+  // the same representation (e.g. true) must not be stored as bare seeds or
+  // they collide in [_typeToColumn].
+  return ref as V;
 }
 
 abstract class ColumnTransformer<I, O> {

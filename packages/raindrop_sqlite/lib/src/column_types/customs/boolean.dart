@@ -6,18 +6,27 @@ extension BooleanColumnDefinition<R> on SchemaBuilder<R> {
     Field<R, bool> field,
     // ignore: avoid_positional_boolean_parameters
   ) {
-    return custom<bool, int>(
+    return custom<Object, int>(
       BooleanColumn.new,
       name,
       field,
       transformer: const BooleanTransfomer(),
       sqlType: 'INTEGER',
+      synthetic: Object(),
     ) as T;
   }
 }
 
-extension type BooleanColumn(bool _) implements ColumnType<bool>, bool {
+extension type BooleanColumn(Object _) implements ColumnType<Object>, Object {
   String get name => '';
+}
+
+extension BoolOperators on BooleanColumn? {
+  /// Row value of column is true.
+  SQL isTrue() => SQL([$, Op.equals, 1]);
+
+  /// Row value of column is false.
+  SQL isFalse() => SQL([$, Op.equals, 0]);
 }
 
 class BooleanTransfomer extends ColumnTransformer<bool, int> {
