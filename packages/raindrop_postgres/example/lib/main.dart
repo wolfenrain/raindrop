@@ -43,10 +43,10 @@ CREATE TABLE IF NOT EXISTS pets (
   print('Inserted one user: $user');
 
   final namesAndTheirOccurrences = await db
-      .select(users.name.$, users.name.count())
+      .select(users.name, users.name.count())
       .from(users)
       .where(users.deletedAt.isNull())
-      .groupBy(users.name.$);
+      .groupBy(users.name);
   print('Found the following names: $namesAndTheirOccurrences');
 
   final usersFound = await db.select().from(users).where(

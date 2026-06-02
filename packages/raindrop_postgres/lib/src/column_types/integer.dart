@@ -9,4 +9,4 @@ extension IntColumnDefinition<R> on SchemaBuilder<R> {
   }
 }
 
-extension type IntColumn(int _) implements ColumnType<int>, int {}
+extension type IntColumn(Column<dynamic, int> _) implements ColumnType<int> {}

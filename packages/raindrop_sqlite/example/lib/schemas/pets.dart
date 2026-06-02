@@ -16,7 +16,7 @@ class Pet {
   String toString() => 'Pet(id: $id, ownerId: $ownerId, name: $name)';
 }
 
-class PetSchema extends Schema<Pet> implements Pet {
+class PetSchema extends Schema<Pet> {
   PetSchema(super.$)
       : id = $.integer('id', (s) => s.id).primaryKey(autoIncrement: true),
         ownerId = $
@@ -31,13 +31,10 @@ class PetSchema extends Schema<Pet> implements Pet {
         name: read(name)!,
       );
 
-  @override
   final IntColumn? id;
 
-  @override
   final IntColumn ownerId;
 
-  @override
   final TextColumn name;
 }
 

@@ -5,7 +5,7 @@ extension DateTimeColumnDefinition<R> on SchemaBuilder<R> {
     String name,
     Field<R, DateTime> field,
   ) {
-    return custom<DateTime, int>(
+    return custom(
       DateTimeColumn.new,
       name,
       field,
@@ -15,8 +15,8 @@ extension DateTimeColumnDefinition<R> on SchemaBuilder<R> {
   }
 }
 
-extension type DateTimeColumn(DateTime _)
-    implements ColumnType<DateTime>, DateTime {}
+extension type DateTimeColumn(Column<dynamic, DateTime> _)
+    implements ColumnType<DateTime> {}
 
 class DateTimeTransfomer extends ColumnTransformer<DateTime, int> {
   const DateTimeTransfomer();

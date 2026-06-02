@@ -47,10 +47,10 @@ void main() async {
   // print(test3);
 
   final namesAndTheirOccurrences = await db
-      .select(users.name.$, users.name.count(), users.deletedAt.$)
+      .select(users.name, users.name.count(), users.deletedAt)
       .from(users)
       .where(users.deletedAt.isNull())
-      .groupBy(users.name.$);
+      .groupBy(users.name);
 
   print('Found the following names: $namesAndTheirOccurrences');
 

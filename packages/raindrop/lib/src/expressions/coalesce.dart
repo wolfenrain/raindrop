@@ -14,5 +14,5 @@ class Coalesce<V> extends Expression<V> {
   final V fallback;
 
   @override
-  SQL build() => SQL.function('COALESCE', [value.$, fallback]);
+  SQL build() => SQL.function('COALESCE', [value, fallback]);
 }

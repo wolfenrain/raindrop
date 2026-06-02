@@ -9,7 +9,7 @@ class _Item {
   final String label;
 }
 
-class _ItemSchema extends Schema<_Item> implements _Item {
+class _ItemSchema extends Schema<_Item> {
   _ItemSchema(super.$)
       : id = $.integer('id', (s) => s.id).primaryKey(autoIncrement: true),
         label = $.text('label', (s) => s.label);
@@ -17,10 +17,8 @@ class _ItemSchema extends Schema<_Item> implements _Item {
   @override
   _Item fromRow(RowReader read) => _Item(id: read(id), label: read(label)!);
 
-  @override
   final IntColumn? id;
 
-  @override
   final TextColumn label;
 }
 
