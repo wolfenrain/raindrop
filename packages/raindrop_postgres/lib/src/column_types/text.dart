@@ -17,6 +17,8 @@ extension TextColumnDefinition<R> on SchemaBuilder<R> {
   }
 }
 
-extension type TextColumn(String _) implements ColumnType<String>, String {}
-extension type TextArrayColumn(List<String> _)
-    implements ColumnType<List<String>>, List<String> {}
+extension type TextColumn(Column<dynamic, String> _)
+    implements ColumnType<String> {}
+
+extension type TextArrayColumn(Column<dynamic, List<String>> _)
+    implements ColumnType<List<String>> {}

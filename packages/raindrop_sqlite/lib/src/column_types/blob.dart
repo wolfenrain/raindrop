@@ -11,5 +11,5 @@ extension BlobColumnDefinition<R> on SchemaBuilder<R> {
   }
 }
 
-extension type BlobColumn(Uint8List _)
-    implements ColumnType<Uint8List>, Uint8List {}
+extension type BlobColumn(Column<dynamic, Uint8List> _)
+    implements ColumnType<Uint8List> {}

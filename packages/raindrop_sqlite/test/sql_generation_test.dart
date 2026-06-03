@@ -20,7 +20,7 @@ class User {
   final DateTime? deletedAt;
 }
 
-class UserSchema extends Schema<User> implements User {
+class UserSchema extends Schema<User> {
   UserSchema(super.$)
       : id = $.integer('id', (s) => s.id).primaryKey(autoIncrement: true),
         name = $.text('name', (s) => s.name),
@@ -37,15 +37,10 @@ class UserSchema extends Schema<User> implements User {
         deletedAt: read(deletedAt),
       );
 
-  @override
   final IntColumn? id;
-  @override
   final TextColumn name;
-  @override
   final TextColumn favoriteGame;
-  @override
   final IntColumn age;
-  @override
   final DateTimeColumn? deletedAt;
 }
 
@@ -59,7 +54,7 @@ class Pet {
   final String name;
 }
 
-class PetSchema extends Schema<Pet> implements Pet {
+class PetSchema extends Schema<Pet> {
   PetSchema(super.$)
       : id = $.integer('id', (s) => s.id).primaryKey(autoIncrement: true),
         ownerId = $.integer('owner_id', (s) => s.ownerId),
@@ -72,11 +67,8 @@ class PetSchema extends Schema<Pet> implements Pet {
         name: read(name)!,
       );
 
-  @override
   final IntColumn? id;
-  @override
   final IntColumn ownerId;
-  @override
   final TextColumn name;
 }
 
@@ -88,12 +80,12 @@ void main() {
 
     goldenTest(
       'single column',
-      (db) => db.select(users.name.$).from(users),
+      (db) => db.select(users.name).from(users),
     );
 
     goldenTest(
       'multiple columns',
-      (db) => db.select(users.name.$, users.age.$).from(users),
+      (db) => db.select(users.name, users.age).from(users),
     );
 
     goldenTest(
@@ -163,7 +155,7 @@ void main() {
 
     goldenTest(
       'with group by',
-      (db) => db.select(users.name.$).from(users).groupBy(users.favoriteGame.$),
+      (db) => db.select(users.name).from(users).groupBy(users.favoriteGame),
     );
 
     goldenTest(
@@ -261,7 +253,7 @@ void main() {
     goldenTest(
       'coalesce in select with join',
       (db) => db
-          .select(Coalesce(users.name, 'anon'), users.id.$)
+          .select(Coalesce(users.name, 'anon'), users.id)
           .from(users)
           .join(pets, on: users.id.equals(pets.ownerId)),
     );

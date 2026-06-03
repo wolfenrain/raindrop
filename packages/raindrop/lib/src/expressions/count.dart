@@ -11,5 +11,5 @@ class Count<V> extends Expression<int> {
   final ColumnOf<V> value;
 
   @override
-  SQL build() => SQL.function('COUNT', [value.$]);
+  SQL build() => SQL.function('COUNT', [value]);
 }

@@ -14,7 +14,7 @@ class User {
   String toString() => 'User(id: $id, name: $name, deletedAt: $deletedAt)';
 }
 
-class UserSchema extends Schema<User> implements User {
+class UserSchema extends Schema<User> {
   UserSchema(super.$)
       : id = $.integer('id', (s) => s.id).primaryKey(autoIncrement: true),
         name = $.text('name', (s) => s.name),
@@ -27,13 +27,10 @@ class UserSchema extends Schema<User> implements User {
         deletedAt: read(deletedAt),
       );
 
-  @override
   final IntColumn? id;
 
-  @override
   final TextColumn name;
 
-  @override
   final DateTimeColumn? deletedAt;
 }
 

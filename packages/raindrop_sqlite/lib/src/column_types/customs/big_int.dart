@@ -7,7 +7,7 @@ extension BigIntColumnDefinition<R> on SchemaBuilder<R> {
     String name,
     Field<R, BigInt> field,
   ) {
-    return custom<BigInt, Uint8List>(
+    return custom(
       BigIntColumn.new,
       name,
       field,
@@ -17,7 +17,8 @@ extension BigIntColumnDefinition<R> on SchemaBuilder<R> {
   }
 }
 
-extension type BigIntColumn(BigInt _) implements ColumnType<BigInt>, BigInt {}
+extension type BigIntColumn(Column<dynamic, BigInt> _)
+    implements ColumnType<BigInt> {}
 
 class BigIntTransfomer extends ColumnTransformer<BigInt, Uint8List> {
   const BigIntTransfomer();

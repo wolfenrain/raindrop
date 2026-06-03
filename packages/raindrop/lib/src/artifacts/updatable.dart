@@ -52,11 +52,11 @@ class UpdateableExpression<V> implements Updateable<V> {
 /// Provide a set method to a column to update a column.
 extension UpdateColumn<V> on ColumnOf<V> {
   /// Set the column for a given row to [value].
-  UpdateableColumn<V> to(V value) => UpdateableColumn($, value);
+  UpdateableColumn<V> to(V value) => UpdateableColumn(this!, value);
 
   /// Set the column to the result of a SQL [expression].
   UpdateableExpression<V> toExpression(Expression<V> expression) =>
-      UpdateableExpression($, expression);
+      UpdateableExpression(this!, expression);
 }
 
 /// {@template updatable_result}

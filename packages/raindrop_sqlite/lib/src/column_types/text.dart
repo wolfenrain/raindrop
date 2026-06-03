@@ -9,4 +9,5 @@ extension TextColumnDefinition<R> on SchemaBuilder<R> {
   }
 }
 
-extension type TextColumn(String _) implements ColumnType<String>, String {}
+extension type TextColumn(Column<dynamic, String> _)
+    implements ColumnType<String> {}

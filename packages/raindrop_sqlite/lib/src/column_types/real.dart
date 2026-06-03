@@ -9,4 +9,5 @@ extension RealColumnDefinition<R> on SchemaBuilder<R> {
   }
 }
 
-extension type RealColumn(double _) implements ColumnType<double>, double {}
+extension type RealColumn(Column<dynamic, double> _)
+    implements ColumnType<double> {}

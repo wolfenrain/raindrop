@@ -1,8 +1,44 @@
+import 'dart:async';
+
 import 'package:raindrop/raindrop.dart';
+
+typedef ColumnOr<V> = FutureOr<V>;
+
+/// Makes a [Column] usable as a [ColumnOr] operand by posing as a `Future<V>`.
+///
+/// This is a deliberate fiction: `ColumnOr<V>` is `FutureOr<V>` so a column
+/// must satisfy `Future<V>` to be accepted alongside a literal `V`.
+mixin ColumnOperand<V> implements Future<V> {
+  static Never _notAFuture() => throw UnsupportedError(
+        'A Column is not a real Future, it only poses as one so it can be '
+        'used as a ColumnOr operand.',
+      );
+
+  @override
+  Stream<V> asStream() => _notAFuture();
+
+  @override
+  Future<V> catchError(Function onError, {bool Function(Object error)? test}) =>
+      _notAFuture();
+
+  @override
+  Future<R> then<R>(FutureOr<R> Function(V value) onValue,
+          {Function? onError}) =>
+      _notAFuture();
+
+  @override
+  Future<V> timeout(Duration timeLimit, {FutureOr<V> Function()? onTimeout}) =>
+      _notAFuture();
+
+  @override
+  Future<V> whenComplete(FutureOr<void> Function() action) => _notAFuture();
+}
 
 typedef Field<R, V extends Object> = V? Function(R);
 
-class Column<R, V extends Object?> implements Selectable<V> {
+class Column<R, V extends Object?>
+    with ColumnOperand<V>
+    implements Selectable<V> {
   Column(
     this.table,
     this.name, {
@@ -120,4 +156,3 @@ class ColumnAlias<R, V extends Object?> extends Column<R, V> {
   /// The alias of the column.
   final String alias;
 }
-
