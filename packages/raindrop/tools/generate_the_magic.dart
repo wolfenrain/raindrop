@@ -167,6 +167,24 @@ extension UpdatableColumnsOn<S extends Schema<RR>, RR, R> on UpdateSettingBuilde
       config: config.copyWith({#set: _Set(${indices.map((i) => 'u$i').join(', ')})}),
     );
   }
+
+  /// Set columns from a list or iterable (e.g. built dynamically, or more than
+  /// [set]'s positional limit). Must be non-empty.
+  ///
+  /// ```dart
+  /// db.update(users).setAll([users.name.to('new'), users.age.to(25)]);
+  /// ```
+  UpdateWhereBuilder<S, RR, List<Object?>?, R> setAll(
+      Iterable<Updateable<dynamic>> updates) {
+    final list = List<Updateable>.from(updates);
+    if (list.isEmpty) {
+      throw ArgumentError.value(updates, 'updates', 'must not be empty');
+    }
+    return UpdateWhereBuilder(
+      executor,
+      config: config.copyWith({#set: UpdateableResult<List<Object?>>(list)}),
+    );
+  }
 }
 
 typedef UpdateSetWhereBuilder<S extends Schema<RR>, RR, ${indices.map((i) => 'V$i extends dynamic').join(', ')}, R> = UpdateWhereBuilder<S, RR, (${indices.map((i) => 'Updateable<V$i>').join(', ')})?, R>;
@@ -177,6 +195,17 @@ class _Set<${indices.map((i) => 'U$i extends Updateable<Object?>?').join(', ')}>
   const _Set(${indices.map((i) => 'this.u$i').join(', ')});
 
 ${indices.map((i) => '  final U$i? u$i;').join('\n')}
+}
+
+extension UpdatableSetAllWhere<S extends Schema<RR>, RR, R>
+    on UpdateWhereBuilder<S, RR, List<Object?>?, R> {
+  /// Filter the update query.
+  UpdateWhereBuilder<S, RR, List<Object?>, R> where(Filter where) {
+    return UpdateWhereBuilder(
+      executor,
+      config: config.copyWith({#where: where}),
+    );
+  }
 }
 ''');
 
