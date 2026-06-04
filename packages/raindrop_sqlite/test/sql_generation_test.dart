@@ -22,9 +22,7 @@ class User {
 
 class UserSchema extends Schema<User> {
   UserSchema(super.$)
-      : id = $.integer('id', (s) => s.id).primaryKey(
-            autoIncrement: true,
-          ),
+      : id = $.integer('id', (s) => s.id).primaryKey(autoIncrement: true),
         name = $.text('name', (s) => s.name),
         favoriteGame = $.text('favoriteGame', (s) => s.favoriteGame),
         age = $.integer('age', (s) => s.age),
@@ -58,9 +56,7 @@ class Pet {
 
 class PetSchema extends Schema<Pet> {
   PetSchema(super.$)
-      : id = $.integer('id', (s) => s.id).primaryKey(
-            autoIncrement: true,
-          ),
+      : id = $.integer('id', (s) => s.id).primaryKey(autoIncrement: true),
         ownerId = $.integer('owner_id', (s) => s.ownerId),
         name = $.text('name', (s) => s.name);
 

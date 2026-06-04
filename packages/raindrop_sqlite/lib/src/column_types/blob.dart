@@ -6,14 +6,13 @@ extension BlobColumnDefinition<R> on SchemaBuilder<R> {
   T blob<T extends BlobColumn?, W extends Object?>(
     String name,
     Field<R, W> field, {
-    String? sqlType,
     String? defaultValue,
   }) {
     return column<BlobColumn, Uint8List, W>(
       BlobColumn.new,
       name,
       field,
-      sqlType: sqlType ?? 'BLOB',
+      sqlType: 'BLOB',
       defaultValue: defaultValue,
     ) as T;
   }

@@ -6,7 +6,6 @@ extension BigIntColumnDefinition<R> on SchemaBuilder<R> {
   T bigInt<T extends BigIntColumn?, W extends Object?>(
     String name,
     Field<R, W> field, {
-    String? sqlType,
     String? defaultValue,
   }) {
     return custom<BigIntColumn, BigInt, Uint8List, W>(
@@ -14,7 +13,7 @@ extension BigIntColumnDefinition<R> on SchemaBuilder<R> {
       name,
       field,
       transformer: const BigIntTransfomer(),
-      sqlType: sqlType ?? 'BLOB',
+      sqlType: 'BLOB',
       defaultValue: defaultValue,
     ) as T;
   }

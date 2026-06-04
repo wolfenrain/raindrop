@@ -4,7 +4,6 @@ extension BooleanColumnDefinition<R> on SchemaBuilder<R> {
   T boolean<T extends BooleanColumn?, W extends Object?>(
     String name,
     Field<R, W> field, {
-    String? sqlType,
     String? defaultValue,
   }) {
     return custom<BooleanColumn, bool, int, W>(
@@ -12,7 +11,7 @@ extension BooleanColumnDefinition<R> on SchemaBuilder<R> {
       name,
       field,
       transformer: const BooleanTransfomer(),
-      sqlType: sqlType ?? 'INTEGER',
+      sqlType: 'INTEGER',
       defaultValue: defaultValue,
     ) as T;
   }

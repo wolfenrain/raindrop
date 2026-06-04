@@ -4,7 +4,6 @@ extension DateTimeColumnDefinition<R> on SchemaBuilder<R> {
   T dateTime<T extends DateTimeColumn?, W extends Object?>(
     String name,
     Field<R, W> field, {
-    String? sqlType,
     String? defaultValue,
   }) {
     return custom<DateTimeColumn, DateTime, int, W>(
@@ -12,7 +11,7 @@ extension DateTimeColumnDefinition<R> on SchemaBuilder<R> {
       name,
       field,
       transformer: const DateTimeTransfomer(),
-      sqlType: sqlType ?? 'TIMESTAMP',
+      sqlType: 'TIMESTAMP',
       defaultValue: defaultValue,
     ) as T;
   }

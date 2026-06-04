@@ -4,14 +4,13 @@ extension TextColumnDefinition<R> on SchemaBuilder<R> {
   T text<T extends TextColumn?, W extends Object?>(
     String name,
     Field<R, W> field, {
-    String? sqlType,
     String? defaultValue,
   }) {
     return column<TextColumn, String, W>(
       TextColumn.new,
       name,
       field,
-      sqlType: sqlType ?? 'TEXT',
+      sqlType: 'TEXT',
       defaultValue: defaultValue,
     ) as T;
   }
@@ -19,14 +18,13 @@ extension TextColumnDefinition<R> on SchemaBuilder<R> {
   T textArray<T extends TextArrayColumn?, W extends Object?>(
     String name,
     Field<R, W> field, {
-    String? sqlType,
     String? defaultValue,
   }) {
     return column<TextArrayColumn, List<String>, W>(
       TextArrayColumn.new,
       name,
       field,
-      sqlType: sqlType ?? 'TEXT[]',
+      sqlType: 'TEXT[]',
       defaultValue: defaultValue,
     ) as T;
   }

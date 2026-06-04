@@ -18,9 +18,7 @@ class Pet {
 
 class PetSchema extends Schema<Pet> {
   PetSchema(super.$)
-      : id = $.integer('id', (s) => s.id).primaryKey(
-            autoIncrement: true,
-          ),
+      : id = $.integer('id', (s) => s.id).primaryKey(autoIncrement: true),
         ownerId = $
             .integer('owner_id', (s) => s.ownerId)
             .references(() => users.id, onDelete: ReferentialAction.cascade),

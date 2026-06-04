@@ -4,14 +4,13 @@ extension IntColumnDefinition<R> on SchemaBuilder<R> {
   T integer<T extends IntColumn?, W extends Object?>(
     String name,
     Field<R, W> field, {
-    String? sqlType,
     String? defaultValue,
   }) {
     return column<IntColumn, int, W>(
       IntColumn.new,
       name,
       field,
-      sqlType: sqlType ?? 'INTEGER',
+      sqlType: 'INTEGER',
       defaultValue: defaultValue,
     ) as T;
   }
