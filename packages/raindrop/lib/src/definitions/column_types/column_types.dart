@@ -62,7 +62,7 @@ T _column<R, T extends ColumnType<V?>, V extends Object, W extends Object?>(
 }) {
   final column = $.table.addColumn<V>(
     name,
-    field as Field<R, V>,
+    field,
     isNullable: null is W,
     transformer: transformer,
     sqlType: sqlType,
