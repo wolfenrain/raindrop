@@ -10,7 +10,7 @@ extension BooleanColumnDefinition<R> on SchemaBuilder<R> {
       BooleanColumn.new,
       name,
       field,
-      transformer: const BooleanTransfomer(),
+      transformer: const BooleanTransformer(),
       sqlType: 'INTEGER',
       defaultValue: defaultValue,
     ) as T;
@@ -20,8 +20,8 @@ extension BooleanColumnDefinition<R> on SchemaBuilder<R> {
 extension type BooleanColumn(Column<dynamic, bool> _)
     implements ColumnType<bool> {}
 
-class BooleanTransfomer extends ColumnTransformer<bool, int> {
-  const BooleanTransfomer();
+class BooleanTransformer extends ColumnTransformer<bool, int> {
+  const BooleanTransformer();
 
   @override
   int encode(bool input) => input ? 1 : 0;

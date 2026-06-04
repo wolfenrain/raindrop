@@ -10,7 +10,7 @@ extension DateTimeColumnDefinition<R> on SchemaBuilder<R> {
       DateTimeColumn.new,
       name,
       field,
-      transformer: const DateTimeTransfomer(),
+      transformer: const DateTimeTransformer(),
       sqlType: 'TIMESTAMP',
       defaultValue: defaultValue,
     ) as T;
@@ -20,8 +20,8 @@ extension DateTimeColumnDefinition<R> on SchemaBuilder<R> {
 extension type DateTimeColumn(Column<dynamic, DateTime> _)
     implements ColumnType<DateTime> {}
 
-class DateTimeTransfomer extends ColumnTransformer<DateTime, int> {
-  const DateTimeTransfomer();
+class DateTimeTransformer extends ColumnTransformer<DateTime, int> {
+  const DateTimeTransformer();
 
   @override
   int encode(DateTime input) => input.millisecondsSinceEpoch;

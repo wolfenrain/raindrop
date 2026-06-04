@@ -12,7 +12,7 @@ extension BigIntColumnDefinition<R> on SchemaBuilder<R> {
       BigIntColumn.new,
       name,
       field,
-      transformer: const BigIntTransfomer(),
+      transformer: const BigIntTransformer(),
       sqlType: 'BLOB',
       defaultValue: defaultValue,
     ) as T;
@@ -22,8 +22,8 @@ extension BigIntColumnDefinition<R> on SchemaBuilder<R> {
 extension type BigIntColumn(Column<dynamic, BigInt> _)
     implements ColumnType<BigInt> {}
 
-class BigIntTransfomer extends ColumnTransformer<BigInt, Uint8List> {
-  const BigIntTransfomer();
+class BigIntTransformer extends ColumnTransformer<BigInt, Uint8List> {
+  const BigIntTransformer();
 
   @override
   Uint8List encode(BigInt input) => Uint8List.fromList(
