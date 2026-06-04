@@ -1,7 +1,7 @@
 import 'package:raindrop/raindrop.dart';
 
 extension IntColumnDefinition<R> on SchemaBuilder<R> {
-  T integer<T extends IntColumn?, W extends Object?>(
+  T integer<T extends IntColumn, W extends Object?>(
     String name,
     Field<R, W> field, {
     String? defaultValue,
