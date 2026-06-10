@@ -1,9 +1,7 @@
 import 'dart:convert';
 
 import 'package:crypto/crypto.dart';
-import 'package:raindrop/src/migration/migration.dart';
-import 'package:raindrop/src/raindrop.dart';
-import 'package:raindrop/src/sql_dialect.dart';
+import 'package:raindrop/dialect.dart';
 
 /// Executes pending [migrations] against [db].
 ///

@@ -33,18 +33,23 @@ void main() async {
   final [user] = await db.insert(into: users).values([testUser]).returning();
   print('Inserted one user: $user');
 
-  // final test0 = await db.select().from(users);
-  // print(test0);
+  await db.insert(into: pets).values([
+    const Pet(name: 'Rex', ownerId: 1),
+    const Pet(name: 'Milo', ownerId: 1),
+    const Pet(name: 'Smokey', ownerId: 2),
+  ]);
 
-  // final test1 = await db.select(users.name.$).fromX(users);
-  // print(test1);
+  final petsPerUser = await db
+      .select(users.id, users.name, count(pets.id))
+      .from(users)
+      .join(pets, on: users.id.equals(pets.ownerId))
+      .groupBy(users.id)
+      .orderBy({count(pets.id): Order.desc, users.name: Order.asc});
+  print('Pets per user: $petsPerUser');
 
-  // final test2 = await db.select(users.name.$, users.name.count()).fromX(users);
-  // print(test2);
-
-  // final test3 =
-  //     await db.select(users.id.$, users.name.$, users.id.$).fromX(users);
-  // print(test3);
+  final [(lowestId, highestId)] =
+      await db.select(min(pets.id), max(pets.id)).from(pets);
+  print('Pet id range: $lowestId..$highestId');
 
   final namesAndTheirOccurrences = await db
       .select(users.name, users.name.count(), users.deletedAt)
@@ -82,14 +87,6 @@ void main() async {
       .rightJoin(c, on: c.id.equals(1));
 
   print(result);
-
-  // final publicUser = (users.name, users.id).$;
-  // final publicItem = (items.id, items.label).$;
-  // final [((userName, userId), (itemsId, itemsLabel))] = await db
-  //     .select((publicUser, publicItem).$)
-  //     .from(users)
-  //     .join(items, on: items.userId.equals(users.id));
-  // print(userName);
 
   final softDeleted = await db
       .update(users)

@@ -1,7 +1,7 @@
 import 'dart:isolate';
 
 import 'package:raindrop/ddl.dart';
-import 'package:raindrop/raindrop.dart';
+import 'package:raindrop/dialect.dart';
 
 /// {@template ddl_generator}
 /// Abstract interface for generating DDL statements from diff operations.

@@ -1,22 +1,23 @@
 import 'package:raindrop/raindrop.dart';
 
+export 'boolean.dart';
 export 'double.dart';
 export 'integer.dart';
 export 'text.dart';
 
 extension ColumnBuilderProvider<R> on SchemaBuilder<R> {
-  /// Register a plain column, wrapping the created [Column] in the column-type
-  /// handle produced by [typeBuilder].
-  T column<T extends ColumnType<V?>, V extends Object>(
-    T Function(Column<dynamic, V>) typeBuilder,
+  /// Register a plain column.
+  ///
+  /// [V] is the SQL storage type (`int`) while [W] is the field value type
+  /// (`int` vs `int?`), inferred from the field accessor's return type.
+  ColumnType<W> column<V extends Object, W extends V?>(
     String name,
-    Field<R, V> field, {
+    Field<R, W> field, {
     String? sqlType,
     String? defaultValue,
   }) {
-    return _column<R, T, V>(
+    return _column<R, V, W>(
       this,
-      typeBuilder,
       name,
       field,
       sqlType: sqlType,
@@ -25,18 +26,17 @@ extension ColumnBuilderProvider<R> on SchemaBuilder<R> {
   }
 
   /// Register a column with a custom [transformer] between the in-memory
-  /// type [I] and the SQL storage type [O].
-  T custom<T extends ColumnType<I?>, I extends Object, O extends Object>(
-    T Function(Column<dynamic, I>) typeBuilder,
+  /// type [I] and the SQL storage type [O]. [W] is the field value type, so
+  /// nullability follows the accessor (see [column]).
+  ColumnType<W> custom<I extends Object, O extends Object, W extends I?>(
     String name,
-    Field<R, I> field, {
+    Field<R, W> field, {
     required ColumnTransformer<I, O> transformer,
     String? sqlType,
     String? defaultValue,
   }) {
-    return _column<R, T, I>(
+    return _column<R, I, W>(
       this,
-      typeBuilder,
       name,
       field,
       transformer: transformer,
@@ -46,11 +46,10 @@ extension ColumnBuilderProvider<R> on SchemaBuilder<R> {
   }
 }
 
-T _column<R, T extends ColumnType<V?>, V extends Object>(
+ColumnType<W> _column<R, V extends Object, W extends V?>(
   SchemaBuilder<R> $,
-  T Function(Column<dynamic, V>) typeBuilder,
   String name,
-  Field<R, V> field, {
+  Field<R, W> field, {
   ColumnTransformer<V, Object?>? transformer,
   String? sqlType,
   String? defaultValue,
@@ -58,13 +57,13 @@ T _column<R, T extends ColumnType<V?>, V extends Object>(
   final column = $.table.addColumn<V>(
     name,
     field,
-    isNullable: null is V,
+    isNullable: null is W,
     transformer: transformer,
     sqlType: sqlType,
     defaultValue: defaultValue,
   );
 
-  return typeBuilder(column);
+  return ColumnType<W>(column as Column<dynamic, W>);
 }
 
 abstract class ColumnTransformer<I, O> {
@@ -85,13 +84,25 @@ extension ColumnOperators<V extends Object?> on ColumnOf<V> {
   ColumnAlias<dynamic, V> as(String alias) => this!.as(alias);
 
   /// Row value for column is in the list of [values].
-  SQL inList(List<V> values) => SQL([this, const RawSQL('IN'), values]);
+  ///
+  /// An empty [values] list can never match, so it emits an always-false
+  /// predicate rather than the invalid `IN ()`.
+  SQL inList(List<V> values) => switch (values) {
+        final list when list.isEmpty => SQL([const RawSQL('1 = 0')]),
+        final values => SQL([this, const RawSQL('IN'), values]),
+      };
+
+  /// Row value for column does not equal [value].
+  SQL notEquals(ColumnOr<V> value) => SQL([this, Op.notEquals, value]);
 
   /// Returns the count of what is being selected.
   Count<V> count() => Count<V>(this);
 
   /// Row value for column is null.
   SQL isNull() => SQL([this, const RawSQL('IS NULL')]);
+
+  /// Row value for column is not null.
+  SQL isNotNull() => SQL([this, const RawSQL('IS NOT NULL')]);
 }
 
 extension PrimaryColumn<T extends ColumnType<V>, V extends Object?> on T? {
@@ -112,10 +123,10 @@ extension PrimaryColumnNonNull<T extends ColumnType<V>, V extends Object?>
   T primaryKey() => PrimaryColumn(this).primaryKey()!;
 }
 
-extension PrimaryColumnInteger<T extends ColumnType<int>> on T? {
+extension PrimaryColumnInteger<T extends ColumnType<int?>> on T {
   /// Marks this integer column as the primary key, optionally with
   /// auto-increment.
-  T? primaryKey({required bool autoIncrement}) {
+  T primaryKey({required bool autoIncrement}) {
     if (this case final column?) {
       column
         ..isPrimaryKey = true
@@ -123,13 +134,6 @@ extension PrimaryColumnInteger<T extends ColumnType<int>> on T? {
     }
     return this;
   }
-}
-
-extension PrimaryColumnIntegerNonNull<T extends ColumnType<int>> on T {
-  /// Marks this integer column as the primary key, optionally with
-  /// auto-increment.
-  T primaryKey({required bool autoIncrement}) =>
-      PrimaryColumnInteger(this).primaryKey(autoIncrement: autoIncrement)!;
 }
 
 /// Extension to add foreign key references to columns.

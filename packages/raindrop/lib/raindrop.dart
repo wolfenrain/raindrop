@@ -1,5 +1,4 @@
 export 'src/artifacts/artifacts.dart';
-export 'src/base_sql_dialect.dart';
 export 'src/builders/builders.dart';
 export 'src/cached_future.dart';
 export 'src/database_result.dart';
@@ -11,5 +10,4 @@ export 'src/logger.dart';
 export 'src/migration/migration.dart';
 export 'src/migration/migrator.dart';
 export 'src/raindrop.dart';
-export 'src/sql_dialect.dart';
 export 'src/tracer.dart';

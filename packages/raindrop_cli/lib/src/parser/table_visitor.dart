@@ -67,13 +67,8 @@ class TableDefinitionVisitor extends RecursiveAstVisitor<void> {
       return;
     }
 
-    // Second argument should be a function that returns the schema
-    final builderArg = arguments[1];
-    String? schemaType;
-
-    if (builderArg is FunctionExpression) {
-      schemaType = _extractSchemaTypeFromFunction(builderArg);
-    }
+    // Second argument is the schema builder.
+    final schemaType = _extractSchemaType(arguments[1]);
 
     // Check for index callback (third argument)
     final indexDefinitions = <IndexDefinition>[];
@@ -125,13 +120,8 @@ class TableDefinitionVisitor extends RecursiveAstVisitor<void> {
       return;
     }
 
-    // Second argument should be a function that returns the schema
-    final builderArg = arguments[1];
-    String? schemaType;
-
-    if (builderArg is FunctionExpression) {
-      schemaType = _extractSchemaTypeFromFunction(builderArg);
-    }
+    // Second argument is the schema builder.
+    final schemaType = _extractSchemaType(arguments[1]);
 
     // Check for index callback (third argument)
     final indexDefinitions = <IndexDefinition>[];
@@ -203,6 +193,7 @@ class TableDefinitionVisitor extends RecursiveAstVisitor<void> {
     var isUnique = false;
     List<String>? columnFields;
     String? indexName;
+    String? where;
 
     // Handle .on(col1, col2, ...)
     if (currentExpr is MethodInvocation &&
@@ -220,6 +211,7 @@ class TableDefinitionVisitor extends RecursiveAstVisitor<void> {
         if (args.isNotEmpty && args.first is StringLiteral) {
           indexName = (args.first as StringLiteral).stringValue;
         }
+        where = _extractWhereArg(args);
       }
     }
 
@@ -234,6 +226,7 @@ class TableDefinitionVisitor extends RecursiveAstVisitor<void> {
           if (args.isNotEmpty && args.first is StringLiteral) {
             indexName = (args.first as StringLiteral).stringValue;
           }
+          where = _extractWhereArg(args);
         }
       }
     }
@@ -243,9 +236,24 @@ class TableDefinitionVisitor extends RecursiveAstVisitor<void> {
         name: indexName,
         columnFields: columnFields,
         isUnique: isUnique,
+        where: where,
       );
     }
 
+    return null;
+  }
+
+  /// Extracts the `where:` named argument (a raw SQL string) from an
+  /// `index('name', where: '...')` / `uniqueIndex(...)` call.
+  String? _extractWhereArg(NodeList<Expression> args) {
+    for (final arg in args) {
+      if (arg is NamedExpression && arg.name.label.name == 'where') {
+        final expr = arg.expression;
+        if (expr is StringLiteral) {
+          return expr.stringValue;
+        }
+      }
+    }
     return null;
   }
 
@@ -356,6 +364,19 @@ class TableDefinitionVisitor extends RecursiveAstVisitor<void> {
       }
     } catch (_) {
       // If we can't get the declaration, return null
+    }
+    return null;
+  }
+
+  /// Extracts the schema type name from the table's second argument, which may
+  /// be a builder lambda (`(b) => UserSchema(b)`) or a constructor tear-off
+  /// (`UserSchema.new`).
+  String? _extractSchemaType(Expression builderArg) {
+    if (builderArg is FunctionExpression) {
+      return _extractSchemaTypeFromFunction(builderArg);
+    }
+    if (builderArg is ConstructorReference) {
+      return builderArg.constructorName.type.name2.lexeme;
     }
     return null;
   }

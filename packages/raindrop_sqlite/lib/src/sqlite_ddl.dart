@@ -93,8 +93,9 @@ class SQLiteDdlGenerator extends DdlGenerator {
   String createIndex(IndexInfo index) {
     final unique = index.isUnique ? 'UNIQUE ' : '';
     final cols = index.columns.map(escapeName).join(', ');
+    final where = index.where != null ? ' WHERE ${index.where}' : '';
     return 'CREATE ${unique}INDEX ${escapeName(index.name)} '
-        'ON ${escapeName(index.tableName)} ($cols);';
+        'ON ${escapeName(index.tableName)} ($cols)$where;';
   }
 
   @override

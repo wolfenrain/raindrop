@@ -78,28 +78,6 @@ class PostgresDelegate extends RaindropDelegate with _SessionDelegate {
   Future<void> onClose() async => _executor?.close();
 
   @override
-  PostgresInsertValuesBuilder<Schema<R>, R, void> insert<R>(
-    RaindropExecutor<Delegate> executor,
-    Table<dynamic, R> into,
-  ) {
-    return PostgresInsertValuesBuilder<Schema<R>, R, void>(
-      executor,
-      config: QueryConfig.from({#into: into}),
-    );
-  }
-
-  @override
-  PostgresUpdateSettingBuilder<Schema<R>, R, void> update<R>(
-    RaindropExecutor<Delegate> executor,
-    Table<dynamic, R> table,
-  ) {
-    return PostgresUpdateSettingBuilder<Schema<R>, R, void>(
-      executor,
-      config: QueryConfig.from({#table: table}),
-    );
-  }
-
-  @override
   Future<T> transaction<T>(
     Future<T> Function(TransactionDelegate delegate) transaction,
   ) async {

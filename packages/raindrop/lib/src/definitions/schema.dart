@@ -22,10 +22,10 @@ typedef RowReader = V Function<V extends Object?>(ColumnType<V>? column);
 ///       );
 ///
 ///   @override
-///   final IntColumn? id;
+///   final ColumnType<int?> id;
 ///
 ///   @override
-///   final TextColumn name;
+///   final ColumnType<String> name;
 /// }
 /// ```
 /// {@endtemplate}

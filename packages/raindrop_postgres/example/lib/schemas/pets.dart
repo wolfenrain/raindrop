@@ -31,11 +31,11 @@ class PetSchema extends Schema<Pet> {
         name: read(name),
       );
 
-  final IntColumn? id;
+  final ColumnType<int?> id;
 
-  final IntColumn ownerId;
+  final ColumnType<int> ownerId;
 
-  final TextColumn name;
+  final ColumnType<String> name;
 }
 
 final pets = postgresTable('pets', PetSchema.new);

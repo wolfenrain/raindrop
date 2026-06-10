@@ -1,0 +1,1 @@
+SELECT "users"."id" AS "users__id", "users"."name" AS "users__name", COUNT("pets"."id") FROM "users" INNER JOIN "pets" ON "users"."id" = "pets"."owner_id" GROUP BY "users"."id" ORDER BY "users"."name" ASC

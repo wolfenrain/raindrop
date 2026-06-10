@@ -1,25 +1,9 @@
-import 'package:raindrop/raindrop.dart';
+import 'package:raindrop/dialect.dart';
 
-export 'sqlite_update_returning_builder.dart';
-export 'sqlite_update_setting_builder.dart';
-
-/// {@template sqlite_update}
-/// SQL update statement tailored for SQLite.
-/// {@endtemplate}
-class SQLiteUpdate<S extends Schema<R>, R, V> extends Update<S, R, V>
-    with ReturningQuery, LimitedModifyQuery {
-  /// {@macro sqlite_update}
-  SQLiteUpdate({
-    required super.set,
-    required super.table,
-    super.where,
-    this.withReturning = false,
-    this.limit,
-  });
-
-  @override
-  final bool withReturning;
-
-  @override
-  final int? limit;
+/// SQLite supports `LIMIT` on `UPDATE`.
+extension SQLiteUpdateLimit<S extends Schema<R>, R, V>
+    on UpdateWhereBuilder<S, R, V> {
+  /// Cap how many rows the update affects.
+  UpdateWhereBuilder<S, R, V> limit(int limit) =>
+      withClause(UpdateSlot.where + 1000, LimitClause(limit));
 }

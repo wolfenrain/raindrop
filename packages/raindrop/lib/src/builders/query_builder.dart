@@ -1,6 +1,7 @@
 import 'dart:async';
 
-import 'package:raindrop/raindrop.dart';
+import 'package:meta/meta.dart';
+import 'package:raindrop/dialect.dart';
 
 /// Simple map that defines a query config.
 typedef QueryConfig = Map<Symbol, Object?>;
@@ -14,32 +15,42 @@ extension CloneConfig on QueryConfig {
 
   /// Get the value associated by [key] or use the [orElse] value.
   V? get<V>(Symbol key, {V? orElse}) => (this[key] as V?) ?? orElse;
+
+  /// Returns a clone with [clause] merged into the extra-clauses map at
+  /// [weight] (replacing any clause already at that weight).
+  QueryConfig addClause(int weight, Clause clause) => copyWith({
+        #extraClauses: {
+          ...?get<Map<int, Clause>>(#extraClauses),
+          weight: clause,
+        },
+      });
 }
 
 /// {@template query_builder}
 /// Abstract class for all query builders.
 /// {@endtemplate}
-abstract class QueryBuilder<S, V> implements Query<S, V> {
+abstract class QueryBuilder<S, V> {
   /// {@macro query_builder}
   QueryBuilder(this.executor, {required this.config});
 
   /// The executor being used to query the database with.
+  @internal
   final RaindropExecutor executor;
 
   /// The config of the query builder.
+  @internal
   final QueryConfig config;
 
   @override
   String toString() {
-    if (this is ToQuery<S, V>) {
-      final query = (this as ToQuery<S, V>).toQuery();
-      return executor.delegate.dialect.translate(query).$1;
+    if (this case final ToQuery<S, V> self) {
+      return executor.delegate.dialect.translate(self.compile()).$1;
     }
     return super.toString();
   }
 }
 
-/// Provide the [toQuery] method to a query builder.
+/// Makes a terminal builder awaitable.
 mixin ToQuery<S, V> on QueryBuilder<S, V> implements Future<List<V>> {
   /// The first element.
   ///
@@ -77,8 +88,9 @@ mixin ToQuery<S, V> on QueryBuilder<S, V> implements Future<List<V>> {
   /// the value is `null`.
   Future<V?> get singleOrNull async => (await this).singleOrNull;
 
-  /// Turn the builder into a [Query] instance.
-  Query<S, V> toQuery();
+  /// Compiles this builder's config into a renderable + decodable statement.
+  @visibleForTesting
+  Query<V> compile();
 
   @override
   Stream<List<V>> asStream() => _cache.asStream();
@@ -112,5 +124,5 @@ mixin ToQuery<S, V> on QueryBuilder<S, V> implements Future<List<V>> {
     return _cache.whenComplete(action);
   }
 
-  late final Future<List<V>> _cache = executor.query(toQuery());
+  late final Future<List<V>> _cache = executor.run<V>(compile());
 }

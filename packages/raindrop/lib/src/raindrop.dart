@@ -1,6 +1,6 @@
 import 'dart:async';
 
-import 'package:raindrop/raindrop.dart';
+import 'package:raindrop/dialect.dart';
 import 'package:raindrop/src/lock.dart';
 
 part 'raindrop_executor.dart';

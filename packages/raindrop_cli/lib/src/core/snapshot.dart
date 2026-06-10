@@ -342,6 +342,7 @@ class IndexSnapshot {
     required this.tableName,
     required this.columns,
     this.isUnique = false,
+    this.where,
   });
 
   /// The index name.
@@ -356,12 +357,18 @@ class IndexSnapshot {
   /// Whether this index enforces uniqueness.
   final bool isUnique;
 
+  /// Optional partial-index predicate (raw SQL).
+  final String? where;
+
   factory IndexSnapshot.fromMap(String name, Map<String, dynamic> data) {
     return IndexSnapshot(
       name: name,
       tableName: data['tableName'] as String,
-      columns: (data['columns'] as List<dynamic>).cast<String>(),
+      // Materialize (not a lazy `.cast` view): these end up in DiffOperation
+      // maps sent over an isolate SendPort, which rejects CastList instances.
+      columns: List<String>.from(data['columns'] as List<dynamic>),
       isUnique: data['isUnique'] as bool? ?? false,
+      where: data['where'] as String?,
     );
   }
 
@@ -371,6 +378,7 @@ class IndexSnapshot {
       'tableName': tableName,
       'columns': columns,
       'isUnique': isUnique,
+      if (where != null) 'where': where,
     };
   }
 
@@ -381,6 +389,7 @@ class IndexSnapshot {
     if (other.name != name) return false;
     if (other.tableName != tableName) return false;
     if (other.isUnique != isUnique) return false;
+    if (other.where != where) return false;
     if (other.columns.length != columns.length) return false;
     for (var i = 0; i < columns.length; i++) {
       if (other.columns[i] != columns[i]) return false;
@@ -395,6 +404,7 @@ class IndexSnapshot {
       tableName,
       Object.hashAll(columns),
       isUnique,
+      where,
     );
   }
 }

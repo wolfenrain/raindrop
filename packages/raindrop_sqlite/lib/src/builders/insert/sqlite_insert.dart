@@ -1,20 +1,13 @@
-import 'package:raindrop/raindrop.dart';
+import 'package:raindrop/dialect.dart';
 
-export 'sqlite_insert_returning_builder.dart';
-export 'sqlite_insert_values_builder.dart';
-
-/// {@template sqlite_insert}
-/// SQL insert statement tailored for SQLite.
-/// {@endtemplate}
-class SQLiteInsert<S extends Schema<R>, R, V> extends Insert<S, R, V>
-    with ReturningQuery {
-  /// {@macro sqlite_insert}
-  SQLiteInsert({
-    required super.into,
-    required super.values,
-    this.withReturning = false,
-  });
-
-  @override
-  final bool withReturning;
+/// Adds `insertOrIgnore` for SQLite, which skips rows that would violate a
+/// constraint instead of failing.
+extension SQLiteInsertOrIgnore on RaindropExecutor<RaindropDelegate> {
+  /// Like `insert`, but skips rows that would violate a constraint instead of
+  /// failing.
+  InsertValuesBuilder<Schema<R>, R, void> insertOrIgnore<R>({
+    required Schema<R> into,
+  }) =>
+      insert<R>(into: into)
+          .withClause(InsertSlot.verb + 500, const Keyword('OR IGNORE'));
 }

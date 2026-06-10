@@ -62,38 +62,17 @@ This bypasses the current transaction context and could lead to inconsistent beh
     );
   }
 
-  /// Execute the [queryOrBuilder] on the database and return the mapped
-  /// entities.
-  Future<List<V>> query<S, V>(Query<S, V> queryOrBuilder) {
-    final query = switch (queryOrBuilder) {
-      ToQuery() => queryOrBuilder.toQuery(),
-      _ => queryOrBuilder,
-    };
-
-    return Raindrop.tracer.trace('RaindropExecutor.query', (span) async {
-      span?.attributes.addAll({'query': '${query.runtimeType}'});
+  /// Render [query] to SQL, execute it, and decode the returned rows.
+  Future<List<V>> run<V>(Query<V> query) {
+    return Raindrop.tracer.trace('RaindropExecutor.run', (span) async {
       final (sql, values) = delegate.dialect.translate(query);
+      span?.attributes.addAll({'sql': sql, 'values': values});
       final result = await execute(sql, values);
-
-      final records = switch (query) {
-        final Insert q => result.rows.map((e) => _read(q.into, [...e])),
-        final Select q => result.rows.map((e) => _read(q.selecting, [...e])),
-        final Update q =>
-          result.rows.map((e) => _read(q.set.toReadable, [...e])),
-        final Delete q => result.rows.map((e) => _read(q.from, [...e])),
-        _ => throw UnimplementedError('${query.runtimeType}'),
-      };
-
-      return records.cast<V>().toList();
+      return result.rows
+          .map((e) => _read(query.shape, [...e]))
+          .cast<V>()
+          .toList();
     });
-  }
-
-  /// Return the first result of the [query].
-  ///
-  /// Note: if the query returns multiple rows they will be read and then
-  /// discarded, keep that in mind when writing your query.
-  Future<V?> queryOne<S, V>(Query<S, V> query) async {
-    return (await this.query(query)).firstOrNull;
   }
 }
 
@@ -124,6 +103,7 @@ R _read<R>(Selectable<R> selectable, List<Object?> rows) {
   }
 }
 
+// TODO(wolfen): generate this??
 extension<R> on SelectableResult<R> {
   R readRecord(List<Object?> rows) {
     return switch (selected.length) {
@@ -136,25 +116,47 @@ extension<R> on SelectableResult<R> {
           _read(selected[1], rows),
           _read(selected[2], rows),
         ) as R,
+      4 => (
+          _read(selected[0], rows),
+          _read(selected[1], rows),
+          _read(selected[2], rows),
+          _read(selected[3], rows),
+        ) as R,
+      5 => (
+          _read(selected[0], rows),
+          _read(selected[1], rows),
+          _read(selected[2], rows),
+          _read(selected[3], rows),
+          _read(selected[4], rows),
+        ) as R,
+      6 => (
+          _read(selected[0], rows),
+          _read(selected[1], rows),
+          _read(selected[2], rows),
+          _read(selected[3], rows),
+          _read(selected[4], rows),
+          _read(selected[5], rows),
+        ) as R,
+      7 => (
+          _read(selected[0], rows),
+          _read(selected[1], rows),
+          _read(selected[2], rows),
+          _read(selected[3], rows),
+          _read(selected[4], rows),
+          _read(selected[5], rows),
+          _read(selected[6], rows),
+        ) as R,
+      8 => (
+          _read(selected[0], rows),
+          _read(selected[1], rows),
+          _read(selected[2], rows),
+          _read(selected[3], rows),
+          _read(selected[4], rows),
+          _read(selected[5], rows),
+          _read(selected[6], rows),
+          _read(selected[7], rows),
+        ) as R,
       _ => throw UnsupportedError('${selected.length}'),
     };
-  }
-}
-
-extension<R> on Updateable<R> {
-  Selectable<R> get toReadable {
-    if (this case final UpdateableTable update) {
-      return update.table as Selectable<R>;
-    } else if (this case final UpdateableColumn update) {
-      return update.column as Selectable<R>;
-    } else if (this case final UpdateableExpression update) {
-      return update.expression as Selectable<R>;
-    } else if (this case final UpdateableResult<dynamic> result) {
-      return SelectableResult(
-        result.updating.map((u) => u.toReadable).toList(),
-      );
-    }
-
-    throw 'Unsupported $this';
   }
 }

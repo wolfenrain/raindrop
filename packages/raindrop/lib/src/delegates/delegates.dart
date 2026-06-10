@@ -1,6 +1,6 @@
 import 'dart:async';
 
-import 'package:raindrop/raindrop.dart';
+import 'package:raindrop/dialect.dart';
 
 part 'delegate.dart';
 part 'raindrop_delegate.dart';

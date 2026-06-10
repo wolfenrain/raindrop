@@ -87,10 +87,7 @@ class SchemaParser {
           );
 
           // Extract indexes for this table
-          final tableIndexes = _extractIndexes(
-            tableDef,
-            columns,
-          );
+          final tableIndexes = _extractIndexes(tableDef, columns);
           for (final index in tableIndexes) {
             indexes[index.name] = index;
           }
@@ -166,6 +163,7 @@ class SchemaParser {
           tableName: tableDef.tableName,
           columns: sqlColumns,
           isUnique: indexDef.isUnique,
+          where: indexDef.where,
         ));
       }
     }
@@ -218,6 +216,7 @@ class IndexDefinition {
     required this.name,
     required this.columnFields,
     this.isUnique = false,
+    this.where,
   });
 
   /// The name of the index.
@@ -230,4 +229,7 @@ class IndexDefinition {
 
   /// Whether this index is unique.
   final bool isUnique;
+
+  /// Optional partial-index predicate (raw SQL), if `where:` was passed.
+  final String? where;
 }

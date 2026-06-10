@@ -1,6 +1,6 @@
 import 'package:raindrop/raindrop.dart';
 
-extension IntOperators on ColumnOf<int> {
+extension IntOperators<V extends int?> on ColumnOf<V> {
   /// Row value of column equals [value].
   SQL equals(ColumnOr<int> value) => SQL([this, Op.equals, value]);
 

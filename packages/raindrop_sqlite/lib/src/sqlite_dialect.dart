@@ -1,9 +1,9 @@
-import 'package:raindrop/raindrop.dart';
+import 'package:raindrop/dialect.dart';
 
 /// {@template sqlite_dialect}
 /// SQL dialect for the SQLite database.
 /// {@endtemplate}
-class SQLiteDialect extends BaseSqlDialect {
+class SQLiteDialect extends SqlDialect {
   /// {@macro sqlite_dialect}
   const SQLiteDialect();
 

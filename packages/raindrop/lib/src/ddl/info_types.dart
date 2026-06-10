@@ -208,6 +208,7 @@ class IndexInfo {
     required this.tableName,
     required this.columns,
     this.isUnique = false,
+    this.where,
   });
 
   /// Creates an [IndexInfo] from a map representation.
@@ -217,6 +218,7 @@ class IndexInfo {
       tableName: map['tableName'] as String,
       columns: (map['columns'] as List<dynamic>).cast<String>(),
       isUnique: map['isUnique'] as bool? ?? false,
+      where: map['where'] as String?,
     );
   }
 
@@ -232,6 +234,10 @@ class IndexInfo {
   /// Whether this index enforces uniqueness.
   final bool isUnique;
 
+  /// Optional partial-index predicate (raw, dialect-owned SQL), rendered as
+  /// `WHERE <where>` by dialects that support partial indexes.
+  final String? where;
+
   /// Converts this index info to a map representation.
   Map<String, dynamic> toMap() {
     return {
@@ -239,6 +245,7 @@ class IndexInfo {
       'tableName': tableName,
       'columns': columns,
       'isUnique': isUnique,
+      if (where != null) 'where': where,
     };
   }
 
@@ -249,6 +256,7 @@ class IndexInfo {
     if (other.name != name) return false;
     if (other.tableName != tableName) return false;
     if (other.isUnique != isUnique) return false;
+    if (other.where != where) return false;
     if (other.columns.length != columns.length) return false;
     for (var i = 0; i < columns.length; i++) {
       if (other.columns[i] != columns[i]) return false;
@@ -263,6 +271,7 @@ class IndexInfo {
       tableName,
       Object.hashAll(columns),
       isUnique,
+      where,
     );
   }
 }

@@ -42,6 +42,9 @@ sealed class Op {
   /// The SQL equals operator.
   static const equals = RawSQL('=');
 
+  /// The SQL not-equals operator.
+  static const notEquals = RawSQL('!=');
+
   /// The SQL greater than operator.
   static const greaterThan = RawSQL('>');
 
