@@ -83,7 +83,7 @@ R _read<R>(Selectable<R> selectable, List<Object?> rows) {
 
   if (selectable case final Table table) {
     final data = <String, dynamic>{
-      for (final column in table.columns) column.name: _read(column, rows),
+      for (final column in table.columns) column.name: rows.removeAt(0),
     };
 
     return switch (data.values.whereType<Object>().isEmpty) {
