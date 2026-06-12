@@ -3,7 +3,7 @@ import 'dart:io';
 import 'package:analyzer/dart/analysis/analysis_context_collection.dart';
 import 'package:analyzer/dart/analysis/results.dart';
 import 'package:analyzer/dart/ast/ast.dart';
-import 'package:analyzer/dart/element/element.dart';
+import 'package:analyzer/dart/element/element2.dart';
 import 'package:analyzer/dart/element/type.dart';
 import 'package:path/path.dart' as p;
 
@@ -99,19 +99,19 @@ bool _isRaindropSchemaInstanceType(DartType? type) {
 
 bool _extendsOrImplementsRaindropSchema(InterfaceType type) {
   for (final sup in type.allSupertypes) {
-    if (_isRaindropSchemaElement(sup.element)) {
+    if (_isRaindropSchemaElement(sup.element3)) {
       return true;
     }
   }
   return false;
 }
 
-bool _isRaindropSchemaElement(InterfaceElement element) {
-  if (element.name != 'Schema') {
+bool _isRaindropSchemaElement(InterfaceElement2 element) {
+  if (element.name3 != 'Schema') {
     return false;
   }
-  final uri = element.library2?.uri;
-  return uri != null && uri.toString().startsWith('package:raindrop/');
+  final uri = element.library2.uri;
+  return uri.toString().startsWith('package:raindrop/');
 }
 
 /// All `.dart` files under [root], recursively.
