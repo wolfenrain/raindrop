@@ -30,6 +30,13 @@ class GenerateCommand extends Command<int> {
       help: 'Generate a Dart file with embedded migrations at the given path. '
           'Defaults to {out}/migrations.dart if no path is provided.',
     );
+    argParser.addOption(
+      'current-snapshot',
+      help: 'Use a pre-built schema snapshot (JSON) as the current state '
+          'instead of parsing the schema directory. Lets you feed a snapshot '
+          'built by runtime introspection, which captures what the static '
+          'parser cannot (e.g. filter-DSL partial-index predicates).',
+    );
   }
 
   @override
@@ -66,13 +73,30 @@ class GenerateCommand extends Command<int> {
       previousSnapshot = await SchemaSnapshot.load(snapshotPath);
     }
 
-    // Resolve schema via live Table metadata (generated runner under .dart_tool/raindrop)
-    final currentSnapshot = await RuntimeSchemaLoader.load(
-      projectRoot: findPubspecRootContaining(config.schemaPath),
-      schemaPath: config.schemaPath,
-      dialect: config.dialect,
-      prevId: journal.previousId,
-    );
+    // Build the current snapshot: either load a pre-built one (runtime
+    // introspection) or parse the schema directory statically.
+    final SchemaSnapshot currentSnapshot;
+    if ((argResults!['current-snapshot'] as String?) case final snapshotArg?) {
+      final loaded = await SchemaSnapshot.load(
+        p.normalize(p.join(config.configDir, snapshotArg)),
+      );
+      if (loaded == null) {
+        print('Current snapshot not found: $snapshotArg');
+        return 1;
+      }
+      currentSnapshot = loaded.copyWith(
+        id: SchemaSnapshot.generateId(),
+        prevId: journal.previousId,
+      );
+    } else {
+      // Resolve schema via live Table metadata (generated runner under .dart_tool/raindrop)
+      currentSnapshot = await RuntimeSchemaLoader.load(
+        projectRoot: findPubspecRootContaining(config.schemaPath),
+        schemaPath: config.schemaPath,
+        dialect: config.dialect,
+        prevId: journal.previousId,
+      );
+    }
 
     if (currentSnapshot.tables.isEmpty) {
       print(
