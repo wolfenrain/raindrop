@@ -162,16 +162,43 @@ class ColumnExtractor extends RecursiveAstVisitor<void> {
     // Check for references call
     final foreignKey = _checkReferencesCall(node);
 
+    // Extract a server-side default (`defaultValue: "datetime('now')"`).
+    final defaultValue = _extractDefaultValue(node);
+
     _currentColumns![columnName] = ColumnSnapshot(
       name: columnName,
       type: sqlType,
       isNullable: isNullable,
       primaryKey: isPrimaryKey,
       autoIncrement: autoIncrement,
+      defaultValue: defaultValue,
       foreignKey: foreignKey,
     );
 
     super.visitMethodInvocation(node);
+  }
+
+  /// Extracts the `defaultValue:` named argument (a raw SQL string literal)
+  /// from a column-definition call like `$.text('x', ..., defaultValue: "0")`.
+  String? _extractDefaultValue(MethodInvocation node) {
+    for (final arg in node.argumentList.arguments) {
+      if (arg is NamedExpression && arg.name.label.name == 'defaultValue') {
+        final expr = arg.expression;
+        if (expr is StringLiteral) {
+          final value = expr.stringValue;
+          if (value != null) return value;
+        }
+        // Resolve a `const` string reference (`defaultValue: _nowIso`).
+        if (expr is Identifier) {
+          final element = expr.staticElement;
+          if (element is VariableElement) {
+            final value = element.computeConstantValue()?.toStringValue();
+            if (value != null) return value;
+          }
+        }
+      }
+    }
+    return null;
   }
 
   bool _isSchemaType(NamedType type) {
@@ -304,13 +331,13 @@ class ColumnExtractor extends RecursiveAstVisitor<void> {
         final expr = body.expression;
         if (expr is PrefixedIdentifier) {
           // users.id -> table=users, column=id
-          referencedTable = expr.prefix.name;
+          referencedTable = _resolveTableName(expr.prefix) ?? expr.prefix.name;
           referencedColumn = expr.identifier.name;
         } else if (expr is PropertyAccess) {
           // users.id (when resolved differently)
           final target = expr.target;
           if (target is SimpleIdentifier) {
-            referencedTable = target.name;
+            referencedTable = _resolveTableName(target) ?? target.name;
           }
           referencedColumn = expr.propertyName.name;
         }
@@ -345,6 +372,40 @@ class ColumnExtractor extends RecursiveAstVisitor<void> {
       onDelete: onDelete,
       onUpdate: onUpdate,
     );
+  }
+
+  /// Resolves the SQL table name for a schema reference such as
+  /// `dailyChallenges` by finding its `...Table('name', ...)` initializer in the
+  /// declaring library and reading the first (table-name) string argument.
+  /// Returns null if it can't be resolved (caller falls back to the
+  /// identifier name).
+  String? _resolveTableName(SimpleIdentifier ref) {
+    final element = ref.staticElement;
+    final library = element?.library;
+    final session = element?.session;
+    if (library == null || session == null) return null;
+    try {
+      final result = session.getParsedLibraryByElement(library);
+      if (result is! ParsedLibraryResult) return null;
+      for (final unitResult in result.units) {
+        for (final decl in unitResult.unit.declarations) {
+          if (decl is! TopLevelVariableDeclaration) continue;
+          for (final variable in decl.variables.variables) {
+            if (variable.name.lexeme != ref.name) continue;
+            final init = variable.initializer;
+            if (init is MethodInvocation) {
+              final args = init.argumentList.arguments;
+              if (args.isNotEmpty && args.first is StringLiteral) {
+                return (args.first as StringLiteral).stringValue;
+              }
+            }
+          }
+        }
+      }
+    } catch (_) {
+      // Fall through to the caller's identifier-name fallback.
+    }
+    return null;
   }
 
   String? _referentialActionToSql(String action) {

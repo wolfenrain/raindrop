@@ -1,5 +1,9 @@
 import 'package:raindrop/raindrop.dart';
 
+/// SQL `COALESCE(value, fallback)`, [value] when non-null, else [fallback].
+Coalesce<V> coalesce<V>(ColumnOf<V> value, V fallback) =>
+    Coalesce<V>(value, fallback);
+
 /// {@template coalesce}
 /// SQL `COALESCE(value, fallback)`.
 /// {@endtemplate}

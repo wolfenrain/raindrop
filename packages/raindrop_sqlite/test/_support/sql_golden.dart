@@ -23,8 +23,8 @@ void goldenTest<S, V>(
 ) {
   test(description, () {
     final builder = build(_db);
-    final query = builder is ToQuery<S, V> ? builder.toQuery() : builder;
-    final (sql, values) = const SQLiteDialect().translate(query);
+    final compiled = (builder as ToQuery<S, V>).compile();
+    final (sql, values) = const SQLiteDialect().translate(compiled);
     _expectGolden(_resolveFixturePath(), _format(sql, values));
   });
 }

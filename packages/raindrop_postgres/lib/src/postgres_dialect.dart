@@ -1,9 +1,9 @@
-import 'package:raindrop/raindrop.dart';
+import 'package:raindrop/dialect.dart';
 
 /// {@template postgres_dialect}
 /// SQL dialect for the Postgres database.
 /// {@endtemplate}
-class PostgresDialect extends BaseSqlDialect {
+class PostgresDialect extends SqlDialect {
   /// {@macro postgres_dialect}
   const PostgresDialect();
 

@@ -25,10 +25,16 @@ class DdlRunner {
   }) async {
     final entryPointUri = await _resolveEntryPoint(dialect, projectPath);
 
-    final response = await _runInIsolate(entryPointUri, {
-      'action': 'generate',
-      'operations': operations.map((op) => op.toMap()).toList(),
-    });
+    final configFile = _findPackageConfig(projectPath);
+
+    final response = await _runInIsolate(
+      entryPointUri,
+      {
+        'action': 'generate',
+        'operations': operations.map((op) => op.toMap()).toList(),
+      },
+      packageConfig: configFile != null ? Uri.file(configFile.path) : null,
+    );
 
     return response['sql'] as String;
   }
@@ -114,18 +120,20 @@ class DdlRunner {
   /// Runs a command in an isolate and returns the response.
   static Future<Map<String, dynamic>> _runInIsolate(
     Uri entryPointUri,
-    Map<String, dynamic> message,
-  ) async {
+    Map<String, dynamic> message, {
+    Uri? packageConfig,
+  }) async {
     final receivePort = ReceivePort();
     final errorPort = ReceivePort();
 
-    late Isolate isolate;
+    Isolate? isolate;
     try {
       isolate = await Isolate.spawnUri(
         entryPointUri,
         [],
         receivePort.sendPort,
         onError: errorPort.sendPort,
+        packageConfig: packageConfig,
       );
 
       // Wait for the isolate to send back its SendPort
@@ -152,7 +160,7 @@ class DdlRunner {
     } finally {
       receivePort.close();
       errorPort.close();
-      isolate.kill(priority: Isolate.immediate);
+      isolate?.kill(priority: Isolate.immediate);
     }
   }
 

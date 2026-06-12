@@ -27,11 +27,11 @@ class UserSchema extends Schema<User> {
         deletedAt: read(deletedAt),
       );
 
-  final IntColumn? id;
+  final ColumnType<int?> id;
 
-  final TextColumn name;
+  final ColumnType<String> name;
 
-  final DateTimeColumn? deletedAt;
+  final ColumnType<DateTime?> deletedAt;
 }
 
 final users = sqliteTable('users', UserSchema.new);

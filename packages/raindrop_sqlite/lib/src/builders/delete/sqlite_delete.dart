@@ -1,23 +1,9 @@
-import 'package:raindrop/raindrop.dart';
+import 'package:raindrop/dialect.dart';
 
-export 'sqlite_delete_returning_builder.dart';
-
-/// {@template sqlite_delete}
-/// SQL delete statement tailored for SQLite.
-/// {@endtemplate}
-class SQLiteDelete<S extends Schema<R>, R, V> extends Delete<S, R, V>
-    with ReturningQuery, LimitedModifyQuery {
-  /// {@macro sqlite_delete}
-  SQLiteDelete({
-    required super.from,
-    super.where,
-    this.withReturning = false,
-    this.limit,
-  });
-
-  @override
-  final bool withReturning;
-
-  @override
-  final int? limit;
+/// SQLite supports `LIMIT` on `DELETE`.
+extension SQLiteDeleteLimit<S extends Schema<R>, R, V>
+    on DeleteWhereBuilder<S, R, V> {
+  /// Cap how many rows the delete affects.
+  DeleteWhereBuilder<S, R, V> limit(int limit) =>
+      withClause(DeleteSlot.where + 1000, LimitClause(limit));
 }

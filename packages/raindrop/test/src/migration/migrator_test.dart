@@ -1,9 +1,9 @@
 import 'dart:async';
 
-import 'package:raindrop/raindrop.dart';
+import 'package:raindrop/dialect.dart';
 import 'package:test/test.dart';
 
-class _FakeDialect extends BaseSqlDialect {
+class _FakeDialect extends SqlDialect {
   @override
   String escapeName(String name) => '"$name"';
 
@@ -166,8 +166,7 @@ void main() {
       expect(delegate.transactionCount, equals(0));
     });
 
-    test('throws MigrationChecksumMismatch on modified migration',
-        () async {
+    test('throws MigrationChecksumMismatch on modified migration', () async {
       final delegate = _FakeRaindropDelegate(
         appliedMigrations: [('0000_initial', 'wrong_checksum_xx')],
       );
@@ -233,7 +232,7 @@ void main() {
             const Migration(
               '0000_initial',
               'CREATE TABLE "a" (id INTEGER);\n'
-              'CREATE TABLE "b" (id INTEGER)',
+                  'CREATE TABLE "b" (id INTEGER)',
             ),
           ],
         );

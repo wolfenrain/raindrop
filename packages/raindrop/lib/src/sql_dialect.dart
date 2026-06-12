@@ -1,79 +1,89 @@
-import 'package:raindrop/raindrop.dart';
+import 'package:raindrop/dialect.dart';
 
 /// {@template sql_dialect}
-/// Base class for supporting any kind of SQL dialect.
+/// Base class for any SQL dialect.
+///
+/// A dialect supplies only the dialect-specific *mechanics* like identifier
+/// escaping ([escapeName]) and bind-parameter syntax ([escapeParam]). The SQL
+/// itself is assembled from composable [Clause]s produced by each query (see
+/// [Query]).
 /// {@endtemplate}
 abstract class SqlDialect {
   /// {@macro sql_dialect}
   const SqlDialect();
 
-  /// Translate [query] into a query statement with values.
-  (String, List<Object?>) translate<S, V>(Query<S, V> query) {
+  /// Translate [query] into a SQL statement with its ordered bind values.
+  (String, List<Object?>) translate(Query<dynamic> query) {
     return Raindrop.tracer.trace('$runtimeType.translate', (span) {
-      final values = <Object?>[];
-      final sql = switch (query) {
-        final Insert q => translateInsert(q, values),
-        final Select q => translateSelect(q, values),
-        final Update q => translateUpdate(q, values),
-        final Delete q => translateDelete(q, values),
-        _ => throw UnsupportedError('${query.runtimeType}'),
-      };
+      final clauses = query.clauses;
+      final weights = clauses.keys.toList()..sort();
 
-      span?.attributes.addAll({'sql': sql, 'values': values});
-
-      return (sql, values);
+      final context = RenderContext(this);
+      final parts = <String>[];
+      for (final weight in weights) {
+        final rendered = clauses[weight]!.render(context);
+        if (rendered.isNotEmpty) parts.add(rendered);
+      }
+      final sql = parts.join(' ');
+      span?.attributes.addAll({'sql': sql, 'values': context.values});
+      return (sql, context.values);
     });
   }
 
-  /// Escape the [name] for SQL consumption.
+  /// Escape the [name] of a table or column for SQL consumption.
   String escapeName(String name);
 
-  /// Escape the [number] for SQL consumption.
+  /// The placeholder for the bind parameter at zero-based [number].
   String escapeParam(int number);
 
-  /// Translate an [insert].
-  String translateInsert(Insert insert, List<Object?> values);
-
-  /// Translate a [select].
-  String translateSelect(Select select, List<Object?> values);
-
-  /// Translate an [update].
-  String translateUpdate(Update update, List<Object?> values);
-
-  /// Translate a [delete].
-  String translateDelete(Delete delete, List<Object?> values);
-
-  /// Translate a [filter].
-  String translateFilter(
-    Filter filter,
-    List<Object?> values, {
-    bool singleTable = false,
-    int level = 0,
-  });
-
   /// Ensures that the migration tracking storage exists.
-  ///
-  /// Use [execute] to run any necessary setup queries.
   Future<void> ensureMigrationStorage(
     Future<DatabaseResult> Function(String sql, [List<Object?> values]) execute,
-  );
+  ) async {
+    final table = escapeName('_raindrop_migrations');
+    final id = escapeName('id');
+    final tag = escapeName('tag');
+    final checksum = escapeName('checksum');
+    final appliedAt = escapeName('applied_at');
+    await execute(
+      'CREATE TABLE IF NOT EXISTS $table '
+      '($id INTEGER PRIMARY KEY, '
+      '$tag TEXT NOT NULL UNIQUE, '
+      '$checksum TEXT NOT NULL, '
+      '$appliedAt INTEGER NOT NULL)',
+    );
+  }
 
-  /// Loads all previously applied migrations.
-  ///
-  /// Must return a list of `(tag, checksum)` pairs, ordered by application
-  /// order.
+  /// Loads all previously applied migrations, ordered by application order.
   Future<List<({String tag, String checksum})>> loadAppliedMigrations(
     Future<DatabaseResult> Function(String sql, [List<Object?> values]) execute,
-  );
+  ) async {
+    final table = escapeName('_raindrop_migrations');
+    final tag = escapeName('tag');
+    final checksum = escapeName('checksum');
+    final id = escapeName('id');
+    final result =
+        await execute('SELECT $tag, $checksum FROM $table ORDER BY $id');
+    return result.rows.map((row) {
+      return (tag: row[0]! as String, checksum: row[1]! as String);
+    }).toList();
+  }
 
   /// Records a migration as applied.
-  ///
-  /// Called after a migration has been successfully executed within
-  /// a transaction. Use [execute] to persist the record.
   Future<void> recordMigration(
     Future<DatabaseResult> Function(String sql, [List<Object?> values])
         execute, {
     required String tag,
     required String checksum,
-  });
+  }) async {
+    final table = escapeName('_raindrop_migrations');
+    final tagCol = escapeName('tag');
+    final checksumCol = escapeName('checksum');
+    final appliedAt = escapeName('applied_at');
+    await execute(
+      'INSERT INTO $table ($tagCol, $checksumCol, $appliedAt) '
+      'VALUES (${escapeParam(0)}, ${escapeParam(1)}, ${escapeParam(2)})',
+      [tag, checksum, DateTime.now().millisecondsSinceEpoch],
+    );
+  }
 }

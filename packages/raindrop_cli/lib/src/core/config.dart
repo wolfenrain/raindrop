@@ -6,7 +6,7 @@ import 'package:yaml/yaml.dart';
 
 /// How migration SQL filenames are prefixed (before `_description`).
 enum MigrationNaming {
-  /// `0000_`, `0001_`, … (default).
+  /// `0000_`, `0001_`, ... (default).
   integer,
 
   /// Milliseconds since epoch, zero-padded to 15 digits for stable
@@ -62,7 +62,7 @@ class RaindropConfig {
   /// If set, `generate` also produces this Dart file alongside .sql files.
   final String? dartPath;
 
-  /// Prefix style for generated migration SQL filenames (`0000_…` vs epoch `…_`).
+  /// Prefix style for generated migration SQL filenames (`0000_...` vs epoch `..._`).
   final MigrationNaming migrationNaming;
 
   /// Directory containing the config file (absolute path).

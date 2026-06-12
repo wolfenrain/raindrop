@@ -17,9 +17,9 @@ class _ItemSchema extends Schema<_Item> {
   @override
   _Item fromRow(RowReader read) => _Item(id: read(id), label: read(label)!);
 
-  final IntColumn? id;
+  final ColumnType<int?> id;
 
-  final TextColumn label;
+  final ColumnType<String> label;
 }
 
 void main() {

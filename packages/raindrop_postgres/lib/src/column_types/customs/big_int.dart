@@ -3,22 +3,15 @@ import 'dart:typed_data';
 import 'package:raindrop/raindrop.dart';
 
 extension BigIntColumnDefinition<R> on SchemaBuilder<R> {
-  T bigInt<T extends BigIntColumn?>(
-    String name,
-    Field<R, BigInt> field,
-  ) {
-    return custom(
-      BigIntColumn.new,
+  ColumnType<W> bigInt<W extends BigInt?>(String name, Field<R, W> field) {
+    return custom<BigInt, Uint8List, W>(
       name,
       field,
       transformer: const BigIntTransfomer(),
       sqlType: 'BIGINT',
-    ) as T;
+    );
   }
 }
-
-extension type BigIntColumn(Column<dynamic, BigInt> _)
-    implements ColumnType<BigInt> {}
 
 class BigIntTransfomer extends ColumnTransformer<BigInt, Uint8List> {
   const BigIntTransfomer();

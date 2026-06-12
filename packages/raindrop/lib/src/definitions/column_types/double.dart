@@ -1,3 +1,3 @@
 import 'package:raindrop/raindrop.dart';
 
-extension DoubleOperators on ColumnOf<double> {}
+extension DoubleOperators<V extends double?> on ColumnOf<V> {}

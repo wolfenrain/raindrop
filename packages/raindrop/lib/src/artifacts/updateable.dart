@@ -59,13 +59,13 @@ extension UpdateColumn<V> on ColumnOf<V> {
       UpdateableExpression(this!, expression);
 }
 
-/// {@template updatable_result}
+/// {@template updateable_result}
 /// List of updateable results
 ///
 /// Used internally.
 /// {@endtemplate}
 class UpdateableResult<V> implements Updateable<V> {
-  /// {@macro updatable_result}
+  /// {@macro updateable_result}
   const UpdateableResult(this.updating);
 
   /// The updated items.

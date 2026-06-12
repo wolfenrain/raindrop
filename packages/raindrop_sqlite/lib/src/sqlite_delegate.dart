@@ -28,28 +28,6 @@ class SQLiteDelegate extends RaindropDelegate with _DatabaseDelegate {
   Future<void> onClose() async => _database.dispose();
 
   @override
-  SQLiteInsertValuesBuilder<Schema<R>, R, void> insert<R>(
-    RaindropExecutor<Delegate> executor,
-    Table<dynamic, R> into,
-  ) {
-    return SQLiteInsertValuesBuilder<Schema<R>, R, void>(
-      executor,
-      config: QueryConfig.from({#into: into}),
-    );
-  }
-
-  @override
-  SQLiteUpdateSettingBuilder<Schema<R>, R, void> update<R>(
-    RaindropExecutor<Delegate> executor,
-    Table<dynamic, R> table,
-  ) {
-    return SQLiteUpdateSettingBuilder<Schema<R>, R, void>(
-      executor,
-      config: QueryConfig.from({#table: table}),
-    );
-  }
-
-  @override
   Future<T> transaction<T>(
     Future<T> Function(TransactionDelegate delegate) transaction,
   ) async {

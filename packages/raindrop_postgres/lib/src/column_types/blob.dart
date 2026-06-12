@@ -3,13 +3,7 @@ import 'dart:typed_data';
 import 'package:raindrop/raindrop.dart';
 
 extension BlobColumnDefinition<R> on SchemaBuilder<R> {
-  T blob<T extends BlobColumn?>(
-    String name,
-    Field<R, Uint8List> field,
-  ) {
-    return column(BlobColumn.new, name, field, sqlType: 'BYTEA') as T;
+  ColumnType<W> blob<W extends Uint8List?>(String name, Field<R, W> field) {
+    return column<Uint8List, W>(name, field, sqlType: 'BYTEA');
   }
 }
-
-extension type BlobColumn(Column<dynamic, Uint8List> _)
-    implements ColumnType<Uint8List> {}

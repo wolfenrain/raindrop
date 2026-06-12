@@ -1,4 +1,4 @@
-import 'package:raindrop/raindrop.dart';
+import 'package:raindrop/dialect.dart';
 
 /// {@template delete_builder}
 /// The base class of any delete builder.
@@ -26,24 +26,33 @@ class DeleteAllBuilder<S extends Schema<R>, R, V> extends DeleteBuilder<S, R, V>
   }
 
   @override
-  Delete<S, R, V> toQuery() {
-    return Delete(from: config.get(#from) as Table<S, R>);
-  }
+  Query<V> compile() => Query<V>(
+        shape: config.get(#from)! as Table,
+        clauses: {
+          DeleteSlot.from: DeleteFromClause(config.get(#from)! as Table),
+          if (config.get<Filter>(#where) case final where?)
+            DeleteSlot.where: WhereClause(where, singleTable: true),
+          ...?config.get<Map<int, Clause>>(#extraClauses),
+        },
+      );
 }
 
 /// {@template delete_where_builder}
 /// Delete builder that does have filtering.
 /// {@endtemplate}
-class DeleteWhereBuilder<S extends Schema<R>, R, V> extends DeleteBuilder<S, R, V>
-    with ToQuery<S, V> {
+class DeleteWhereBuilder<S extends Schema<R>, R, V>
+    extends DeleteBuilder<S, R, V> with ToQuery<S, V> {
   /// {@macro delete_where_builder}
   DeleteWhereBuilder(super.executor, {required super.config});
 
   @override
-  Delete<S, R, V> toQuery() {
-    return Delete(
-      from: config.get(#from) as Table<S, R>,
-      where: config.get(#where),
-    );
-  }
+  Query<V> compile() => Query<V>(
+        shape: config.get(#from)! as Table,
+        clauses: {
+          DeleteSlot.from: DeleteFromClause(config.get(#from)! as Table),
+          if (config.get<Filter>(#where) case final where?)
+            DeleteSlot.where: WhereClause(where, singleTable: true),
+          ...?config.get<Map<int, Clause>>(#extraClauses),
+        },
+      );
 }

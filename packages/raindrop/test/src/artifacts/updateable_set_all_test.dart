@@ -12,7 +12,7 @@ class _Row {
   final String notes;
 }
 
-class _RowSchema extends Schema<_Row> implements _Row {
+class _RowSchema extends Schema<_Row> {
   _RowSchema(super.$)
       : id = $.integer('id', (s) => s.id).primaryKey(autoIncrement: true),
         name = $.text('name', (s) => s.name),
@@ -21,18 +21,13 @@ class _RowSchema extends Schema<_Row> implements _Row {
   @override
   _Row fromRow(RowReader read) => _Row(
         id: read(id),
-        name: read(name),
-        notes: read(notes),
+        name: read(name)!,
+        notes: read(notes)!,
       );
 
-  @override
-  final IntColumn? id;
-
-  @override
-  final TextColumn name;
-
-  @override
-  final TextColumn notes;
+  final ColumnType<int?> id;
+  final ColumnType<String> name;
+  final ColumnType<String> notes;
 }
 
 void main() {
@@ -57,19 +52,14 @@ void main() {
 
     test('setAll with one column matches set() SQL', () {
       final db = Raindrop(_FakeDelegate());
-      final withSet = db
-          .update(rows)
-          .set(rows.name.to('next'))
-          .where(rows.id.equals(1))
-          .toQuery();
+      final withSet =
+          db.update(rows).set(rows.name.to('next')).where(rows.id.equals(1));
       final withSetAll = db
           .update(rows)
-          .setAll([rows.name.to('next')])
-          .where(rows.id.equals(1))
-          .toQuery();
+          .setAll([rows.name.to('next')]).where(rows.id.equals(1));
 
-      final a = dialect.translate(withSet);
-      final b = dialect.translate(withSetAll);
+      final a = dialect.translate((withSet as ToQuery).compile());
+      final b = dialect.translate((withSetAll as ToQuery).compile());
       expect(a.$1, b.$1);
       expect(a.$2, b.$2);
     });
@@ -80,10 +70,9 @@ void main() {
         rows.name.to('a'),
         rows.notes.to('b'),
       ];
-      final q =
-          db.update(rows).setAll(updates).where(rows.id.equals(42)).toQuery();
+      final q = db.update(rows).setAll(updates).where(rows.id.equals(42));
 
-      final (sql, values) = dialect.translate(q);
+      final (sql, values) = dialect.translate((q as ToQuery).compile());
       expect(sql, contains('UPDATE'));
       expect(sql, contains('"name"'));
       expect(sql, contains('"notes"'));

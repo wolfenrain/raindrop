@@ -42,6 +42,24 @@ CREATE TABLE IF NOT EXISTS pets (
   final [user] = await db.insert(into: users).values([testUser]).returning();
   print('Inserted one user: $user');
 
+  await db.insert(into: pets).values([
+    const Pet(name: 'Rex', ownerId: 1),
+    const Pet(name: 'Milo', ownerId: 1),
+    const Pet(name: 'Smokey', ownerId: 2),
+  ]);
+
+  final petsPerUser = await db
+      .select(users.id, users.name, count(pets.id))
+      .from(users)
+      .join(pets, on: users.id.equals(pets.ownerId))
+      .groupBy(users.id)
+      .orderBy({count(pets.id): Order.desc, users.name: Order.asc});
+  print('Pets per user: $petsPerUser');
+
+  // MIN/MAX aggregates as a typed (int?, int?) tuple.
+  final idRange = await db.select(min(pets.id), max(pets.id)).from(pets);
+  print('Pet id range: $idRange');
+
   final namesAndTheirOccurrences = await db
       .select(users.name, users.name.count())
       .from(users)

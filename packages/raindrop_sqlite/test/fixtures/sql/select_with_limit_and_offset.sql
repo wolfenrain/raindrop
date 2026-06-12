@@ -1,1 +1,1 @@
-SELECT "id", "name", "favoriteGame", "age", "deletedAt" FROM "users" LIMIT 10 OFFSET 20
+SELECT "id", "name", "favoriteGame", "age", "is_active", "rating", "deletedAt" FROM "users" LIMIT 10 OFFSET 20

@@ -86,6 +86,7 @@ class SchemaDiffer {
       tableName: snapshot.tableName,
       columns: snapshot.columns,
       isUnique: snapshot.isUnique,
+      where: snapshot.where,
     );
   }
 

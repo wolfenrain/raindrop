@@ -1,9 +1,10 @@
-import 'package:raindrop/raindrop.dart';
+import 'package:raindrop/dialect.dart';
 
 /// {@template insert_values_builder}
 /// The insert builder that takes a list of values.
 /// {@endtemplate}
-class InsertValuesBuilder<S extends Schema<R>, R, V> extends InsertBuilder<S, R, V> {
+class InsertValuesBuilder<S extends Schema<R>, R, V>
+    extends InsertBuilder<S, R, V> {
   /// {@macro insert_values_builder}
   InsertValuesBuilder(super.executor, {required super.config});
 
@@ -27,10 +28,15 @@ class InsertWithValuesBuilder<S extends Schema<R>, R, V>
   InsertWithValuesBuilder(super.executor, {required super.config});
 
   @override
-  Query<S, V> toQuery() {
-    return Insert(
-      into: config.get(#into) as Table<S, R>,
-      values: config.get(#values)!,
-    );
-  }
+  Query<V> compile() => Query<V>(
+        shape: config.get(#into)! as Table,
+        clauses: {
+          InsertSlot.verb: const Keyword('INSERT'),
+          InsertSlot.body: InsertBodyClause(
+            config.get(#into)! as Table,
+            config.get(#values)! as List<dynamic>,
+          ),
+          ...?config.get<Map<int, Clause>>(#extraClauses),
+        },
+      );
 }
