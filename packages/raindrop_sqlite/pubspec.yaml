@@ -9,7 +9,7 @@ environment:
 
 dependencies:
   raindrop: ^0.1.0
-  sqlite3: ^2.7.6
+  sqlite3: ">=2.4.0 <4.0.0"
 
 dev_dependencies:
   meta: ^1.15.0

@@ -52,12 +52,6 @@ class _FakeRaindropDelegate extends RaindropDelegate {
   int transactionCount = 0;
 
   @override
-  Future<void> onOpen() async {}
-
-  @override
-  Future<void> onClose() async {}
-
-  @override
   Future<DatabaseResult> execute(
     String query,
     List<Object?> values,

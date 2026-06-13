@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:postgres/postgres.dart';
 import 'package:raindrop/raindrop.dart';
 import 'package:raindrop_postgres/raindrop_postgres.dart';
 
@@ -14,8 +15,17 @@ class ExampleLogger implements Logger {
 }
 
 void main() async {
+  final connection = await Connection.open(
+    Endpoint(
+      host: 'localhost',
+      database: 'postgres',
+      username: 'postgres',
+      password: 'postgres',
+    ),
+    settings: const ConnectionSettings(sslMode: SslMode.disable),
+  );
   final db = Raindrop(
-    PostgresDelegate(Uri.parse('')),
+    PostgresDelegate(connection),
     logger: ExampleLogger(),
   );
 
@@ -33,7 +43,6 @@ CREATE TABLE IF NOT EXISTS pets (
   owner_id INTEGER NULL
 );''');
 
-  await db.ensureOpen();
   final testUser = User(name: 'testing');
 
   final emptyResult = await db.insert(into: users).values([testUser]);
@@ -126,5 +135,5 @@ CREATE TABLE IF NOT EXISTS pets (
     db.execute('SELECT 4'),
   ]);
 
-  await db.close();
+  await connection.close();
 }

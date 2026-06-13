@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:meta/meta.dart';
 import 'package:raindrop/raindrop.dart';
 import 'package:raindrop_sqlite/raindrop_sqlite.dart';
+import 'package:sqlite3/sqlite3.dart';
 import 'package:test/test.dart';
 // ignore: implementation_imports, depend_on_referenced_packages
 import 'package:test_api/src/backend/invoker.dart';
@@ -29,7 +30,7 @@ void goldenTest<S, V>(
   });
 }
 
-final _db = Raindrop(SQLiteDelegate.memory());
+final _db = Raindrop(SQLiteDelegate(sqlite3.openInMemory()));
 
 void _expectGolden(String path, String actual) {
   final file = File(path);

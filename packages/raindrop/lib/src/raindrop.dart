@@ -15,28 +15,16 @@ class Raindrop extends RaindropExecutor<RaindropDelegate> {
   /// {@macro raindrop}
   Raindrop(super.delegate, {super.logger = const NoopLogger()});
 
-  /// Ensure the database is open.
-  Future<void> ensureOpen() {
-    return Raindrop.tracer.trace(
-      'Raindrop.ensureOpen',
-      (_) => _lock.run(delegate.ensureOpen),
-    );
-  }
-
   @override
   Future<DatabaseResult> execute(
     String query, [
     List<Object?> values = const [],
   ]) async {
-    await ensureOpen();
     return tracer.trace('Raindrop.execute', (span) {
       span?.attributes.addAll({'query': query, 'values': values});
       return super.execute(query, values);
     });
   }
-
-  /// Close the Raindrop database.
-  Future<void> close() => _lock.run(delegate.close);
 
   /// The default tracer used by [Raindrop].
   ///
