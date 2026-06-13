@@ -114,12 +114,6 @@ class _FakeDelegate extends RaindropDelegate {
   final _FakeTransactionDelegate _tx;
 
   @override
-  Future<void> onOpen() async {}
-
-  @override
-  Future<void> onClose() async {}
-
-  @override
   Future<DatabaseResult> execute(String query, List<Object?> values) async {
     return const DatabaseResult(
       columns: [],

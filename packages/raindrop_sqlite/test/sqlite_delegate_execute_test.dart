@@ -1,16 +1,19 @@
 import 'package:raindrop_sqlite/raindrop_sqlite.dart';
+import 'package:sqlite3/sqlite3.dart';
 import 'package:test/test.dart';
 
 void main() {
   group('SQLiteDelegate.execute', () {
+    late Database database;
     late SQLiteDelegate delegate;
 
     setUp(() {
-      delegate = SQLiteDelegate.memory();
+      database = sqlite3.openInMemory();
+      delegate = SQLiteDelegate(database);
     });
 
-    tearDown(() async {
-      await delegate.onClose();
+    tearDown(() {
+      database.dispose();
     });
 
     test('read-only statement reports no rows affected or last insert id',
@@ -56,7 +59,8 @@ void main() {
       expect(result.lastInsertedRowId, 1);
     });
 
-    test('UPDATE with no prior INSERT leaves lastInsertedRowId unset', () async {
+    test('UPDATE with no prior INSERT leaves lastInsertedRowId unset',
+        () async {
       await delegate.execute(
         'CREATE TABLE t (id INTEGER PRIMARY KEY, x TEXT)',
         const [],

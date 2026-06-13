@@ -5,6 +5,7 @@
 // ignore_for_file: public_member_api_docs, lines_longer_than_80_chars
 import 'package:raindrop/raindrop.dart';
 import 'package:raindrop_sqlite/raindrop_sqlite.dart';
+import 'package:sqlite3/sqlite3.dart';
 import 'package:test/test.dart';
 
 class _User {
@@ -83,7 +84,7 @@ final runs = sqliteTable('runs', _RunSchema.new);
 
 void main() {
   test('projection + JOIN + aggregate + GROUP BY in one query', () async {
-    final db = Raindrop(SQLiteDelegate.memory());
+    final db = Raindrop(SQLiteDelegate(sqlite3.openInMemory()));
 
     await db.execute(
       'CREATE TABLE users (id INTEGER PRIMARY KEY AUTOINCREMENT, display_name TEXT)',

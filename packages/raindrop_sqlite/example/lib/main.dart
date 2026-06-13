@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:raindrop/raindrop.dart';
 import 'package:raindrop_sqlite/raindrop_sqlite.dart';
 import 'package:raindrop_sqlite_example/database/migrations.dart';
+import 'package:sqlite3/sqlite3.dart';
 
 // import 'schemas/items.dart';
 import 'package:raindrop_sqlite_example/schemas/pets.dart';
@@ -16,15 +17,15 @@ class ExampleLogger implements Logger {
 }
 
 void main() async {
+  final database = sqlite3.openInMemory();
   final db = Raindrop(
-    SQLiteDelegate.memory(),
+    SQLiteDelegate(database),
     logger: ExampleLogger(),
   );
 
   // Run migrations programmatically using embedded SQL.
   await migrate(db, migrations);
 
-  await db.ensureOpen();
   final testUser = User(name: 'testing');
 
   final emptyResult = await db.insert(into: users).values([testUser]);
@@ -122,5 +123,5 @@ void main() async {
     db.execute('SELECT 4'),
   ]);
 
-  await db.close();
+  database.dispose();
 }

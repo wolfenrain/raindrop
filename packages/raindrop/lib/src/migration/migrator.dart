@@ -19,7 +19,6 @@ import 'package:raindrop/dialect.dart';
 /// ]);
 /// ```
 Future<void> migrate(Raindrop db, List<Migration> migrations) async {
-  await db.ensureOpen();
   await _Migrator(db).run(migrations);
 }
 

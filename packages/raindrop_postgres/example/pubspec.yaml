@@ -6,6 +6,7 @@ environment:
   sdk: ">3.5.0-0<=4.0.0"
 
 dependencies:
+  postgres: ^3.5.0
   raindrop:
     path: ../../raindrop
   raindrop_postgres:
