@@ -362,7 +362,7 @@ class IndexSnapshot {
 
   factory IndexSnapshot.fromMap(String name, Map<String, dynamic> data) {
     return IndexSnapshot(
-      name: name,
+      name: data['name'] as String? ?? name,
       tableName: data['tableName'] as String,
       // Materialize (not a lazy `.cast` view): these end up in DiffOperation
       // maps sent over an isolate SendPort, which rejects CastList instances.

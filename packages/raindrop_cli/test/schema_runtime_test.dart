@@ -85,7 +85,15 @@ void main() {
       final names = found.map((e) => e.variableName).toList();
       expect(
         names,
-        containsAll(<String>['pets', 'books', 'widgets']),
+        containsAll(<String>[
+          'pets',
+          'books',
+          'widgets',
+          'owners',
+          'items',
+          'tags',
+          'pgOnly',
+        ]),
         reason:
             'Includes sqliteTable, private wrapper, and unrelated factory name',
       );
@@ -119,11 +127,55 @@ void main() {
 
       expect(
         snapshot.tables.keys,
-        containsAll(<String>['pets', 'books', 'widgets']),
+        containsAll(<String>['pets', 'books', 'widgets', 'owners', 'items', 'tags']),
       );
+      expect(snapshot.tables, isNot(contains('pg_only')));
       expect(snapshot.tables['pets']?.columns['id']?.type, 'INTEGER');
       expect(snapshot.tables['pets']?.columns['id']?.primaryKey, isTrue);
       expect(snapshot.tables['books']?.columns['title']?.type, 'TEXT');
+    });
+
+    test('excludes tables whose dialect does not match the target', () async {
+      final snapshot = await RuntimeSchemaLoader.load(
+        projectRoot: _tempPkgRoot,
+        schemaPath: _tempLibDir,
+        dialect: 'sqlite',
+        prevId: null,
+      );
+
+      expect(snapshot.tables, isNot(contains('pg_only')));
+    });
+
+    test('captures foreign key onDelete/onUpdate actions', () async {
+      final snapshot = await RuntimeSchemaLoader.load(
+        projectRoot: _tempPkgRoot,
+        schemaPath: _tempLibDir,
+        dialect: 'sqlite',
+        prevId: null,
+      );
+
+      final fk = snapshot.tables['items']?.columns['owner_id']?.foreignKey;
+      expect(fk?.referencedTable, 'owners');
+      expect(fk?.referencedColumn, 'id');
+      expect(fk?.onDelete, 'CASCADE');
+      expect(fk?.onUpdate, 'SET NULL');
+    });
+
+    test('keys indexes by table and name and captures partial-index where', () async {
+      final snapshot = await RuntimeSchemaLoader.load(
+        projectRoot: _tempPkgRoot,
+        schemaPath: _tempLibDir,
+        dialect: 'sqlite',
+        prevId: null,
+      );
+
+      expect(snapshot.indexes.keys, containsAll(<String>[
+        'items.shared_idx',
+        'tags.shared_idx',
+      ]));
+      expect(snapshot.indexes['items.shared_idx']?.name, 'shared_idx');
+      expect(snapshot.indexes['tags.shared_idx']?.name, 'shared_idx');
+      expect(snapshot.indexes['items.shared_idx']?.where, '"deleted_at" IS NULL');
     });
   });
 }

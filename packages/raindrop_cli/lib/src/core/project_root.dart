@@ -38,7 +38,9 @@ String findProjectRoot(String startDir) {
     }
     final parent = p.dirname(current);
     if (parent == current) {
-      return startDir;
+      throw StateError(
+        'No pubspec.yaml found above config path: ${p.normalize(startDir)}',
+      );
     }
     current = parent;
   }

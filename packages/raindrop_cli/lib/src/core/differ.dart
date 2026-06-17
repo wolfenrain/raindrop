@@ -54,24 +54,24 @@ class SchemaDiffer {
     final operations = <DiffOperation>[];
 
     // Find dropped indexes
-    for (final name in oldIndexes.keys) {
-      if (!newIndexes.containsKey(name)) {
-        operations.add(DropIndex(name));
+    for (final entry in oldIndexes.entries) {
+      if (!newIndexes.containsKey(entry.key)) {
+        operations.add(DropIndex(entry.value.name));
       }
     }
 
     // Find new or changed indexes
     for (final entry in newIndexes.entries) {
-      final name = entry.key;
+      final key = entry.key;
       final newIndex = entry.value;
-      final oldIndex = oldIndexes[name];
+      final oldIndex = oldIndexes[key];
 
       if (oldIndex == null) {
         // New index
         operations.add(CreateIndex(index: _toIndexInfo(newIndex)));
       } else if (oldIndex != newIndex) {
         // Changed index - drop and recreate
-        operations.add(DropIndex(name));
+        operations.add(DropIndex(oldIndex.name));
         operations.add(CreateIndex(index: _toIndexInfo(newIndex)));
       }
     }

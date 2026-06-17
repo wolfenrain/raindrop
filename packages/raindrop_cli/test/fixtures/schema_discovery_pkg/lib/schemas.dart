@@ -79,6 +79,108 @@ WidgetSchema totallyUnrelatedFactory() {
 
 final widgets = totallyUnrelatedFactory();
 
+// ── Dialect filtering: postgres table excluded from sqlite snapshots ─────────
+
+class PgOnly {
+  const PgOnly({required this.n});
+
+  final int n;
+}
+
+class PgOnlySchema extends Schema<PgOnly> {
+  PgOnlySchema(super.$) : n = $.integer('n', (s) => s.n);
+
+  @override
+  PgOnly fromRow(RowReader read) => PgOnly(n: read(n)!);
+
+  final ColumnType<int> n;
+}
+
+final pgOnly = table('pg_only', PgOnlySchema.new, dialect: 'postgres');
+
+// ── Index metadata: partial where + duplicate names across tables ───────────
+
+class Owner {
+  const Owner({this.id});
+
+  final int? id;
+}
+
+class OwnerSchema extends Schema<Owner> {
+  OwnerSchema(super.$)
+      : id = $.integer('id', (s) => s.id).primaryKey(autoIncrement: true);
+
+  @override
+  Owner fromRow(RowReader read) => Owner(id: read(id));
+
+  final ColumnType<int?> id;
+}
+
+final owners = sqliteTable('owners', OwnerSchema.new);
+
+class Item {
+  const Item({this.id, required this.ownerId, this.deletedAt});
+
+  final int? id;
+  final int ownerId;
+  final int? deletedAt;
+}
+
+class ItemSchema extends Schema<Item> {
+  ItemSchema(super.$)
+      : id = $.integer('id', (s) => s.id).primaryKey(autoIncrement: true),
+        ownerId = $
+            .integer('owner_id', (s) => s.ownerId)
+            .references(
+              () => owners.id,
+              onDelete: ReferentialAction.cascade,
+              onUpdate: ReferentialAction.setNull,
+            ),
+        deletedAt = $.integer('deleted_at', (s) => s.deletedAt);
+
+  @override
+  Item fromRow(RowReader read) => Item(
+        id: read(id),
+        ownerId: read(ownerId)!,
+        deletedAt: read(deletedAt),
+      );
+
+  final ColumnType<int?> id;
+  final ColumnType<int> ownerId;
+  final ColumnType<int?> deletedAt;
+}
+
+final items = sqliteTable(
+  'items',
+  ItemSchema.new,
+  (table) {
+    index('shared_idx', where: table.deletedAt.isNull()).on(table.ownerId);
+  },
+);
+
+class Tag {
+  const Tag({required this.label});
+
+  final String label;
+}
+
+class TagSchema extends Schema<Tag> {
+  TagSchema(super.$) : label = $.text('label', (s) => s.label);
+
+  @override
+  Tag fromRow(RowReader read) => Tag(label: read(label)!);
+
+  final ColumnType<String> label;
+}
+
+final tags = sqliteTable(
+  'tags',
+  TagSchema.new,
+  (table) {
+    index('shared_idx').on(table.label);
+  },
+);
+
 // ── Negatives: must not be discovered ───────────────────────────────────────
 
 final notATable = 42;
