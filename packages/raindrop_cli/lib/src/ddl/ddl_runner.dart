@@ -4,6 +4,7 @@ import 'dart:isolate';
 
 import 'package:path/path.dart' as p;
 import 'package:raindrop/ddl.dart';
+import 'package:raindrop_cli/src/core/dart_executable.dart';
 
 /// Runs DDL generation in an isolated process by dynamically loading
 /// the appropriate dialect package's DDL generator.
@@ -27,13 +28,18 @@ class DdlRunner {
 
     final configFile = _findPackageConfig(projectPath);
 
-    final response = await _runInIsolate(
+    final message = {
+      'action': 'generate',
+      'operations': operations.map((op) => op.toMap()).toList(),
+    };
+    final packageConfig =
+        configFile != null ? Uri.file(configFile.path) : null;
+
+    final response = await _runCommand(
       entryPointUri,
-      {
-        'action': 'generate',
-        'operations': operations.map((op) => op.toMap()).toList(),
-      },
-      packageConfig: configFile != null ? Uri.file(configFile.path) : null,
+      message,
+      projectPath: projectPath,
+      packageConfig: packageConfig,
     );
 
     return response['sql'] as String;
@@ -112,6 +118,125 @@ class DdlRunner {
         break;
       }
       current = parent;
+    }
+
+    return null;
+  }
+
+  static bool get _isDartVm {
+    final name = p.basename(Platform.resolvedExecutable).toLowerCase();
+    return name == 'dart' || name == 'dart.exe';
+  }
+
+  static Future<Map<String, dynamic>> _runCommand(
+    Uri entryPointUri,
+    Map<String, dynamic> message, {
+    required String? projectPath,
+    Uri? packageConfig,
+  }) async {
+    if (_isDartVm) {
+      return _runInIsolate(
+        entryPointUri,
+        message,
+        packageConfig: packageConfig,
+      );
+    }
+
+    return _runInSubprocess(
+      entryPointUri,
+      message,
+      projectPath: projectPath,
+      packageConfig: packageConfig,
+    );
+  }
+
+  static Future<Map<String, dynamic>> _runInSubprocess(
+    Uri entryPointUri,
+    Map<String, dynamic> message, {
+    required String? projectPath,
+    Uri? packageConfig,
+  }) async {
+    final hostScript = await _resolvePackageFile(
+      'raindrop_cli',
+      'lib/src/ddl/ddl_subprocess_host.dart',
+      projectPath,
+    );
+    if (hostScript == null) {
+      throw StateError(
+        'raindrop_cli package not found. Run "dart pub get" first.',
+      );
+    }
+
+    final dart = await DartExecutable.resolve(
+      projectRoot: projectPath ?? Directory.current.path,
+    );
+    final args = <String>[
+      hostScript.path,
+      entryPointUri.toFilePath(),
+      if (packageConfig != null) '--packages=${packageConfig.toFilePath()}',
+    ];
+
+    final process = await Process.start(
+      dart,
+      args,
+      workingDirectory: projectPath ?? Directory.current.path,
+    );
+    process.stdin.write(utf8.encode(jsonEncode(message)));
+    await process.stdin.close();
+
+    final stdout = await process.stdout.transform(utf8.decoder).join();
+    final stderr = await process.stderr.transform(utf8.decoder).join();
+    final exitCode = await process.exitCode;
+
+    if (exitCode != 0) {
+      final details = [
+        stderr,
+        stdout,
+      ].map((s) => s.trim()).where((s) => s.isNotEmpty).join('\n');
+      throw StateError(
+        details.isEmpty
+            ? 'DDL subprocess failed (exit $exitCode).'
+            : 'DDL subprocess failed:\n$details',
+      );
+    }
+
+    final trimmed = stdout.trim();
+    if (trimmed.isEmpty) {
+      throw StateError('DDL subprocess returned no output.');
+    }
+
+    return jsonDecode(trimmed) as Map<String, dynamic>;
+  }
+
+  static Future<File?> _resolvePackageFile(
+    String packageName,
+    String relativePath,
+    String? projectPath,
+  ) async {
+    final configFile = _findPackageConfig(projectPath);
+    if (configFile == null) {
+      return null;
+    }
+
+    final configContent = await configFile.readAsString();
+    final config = jsonDecode(configContent) as Map<String, dynamic>;
+    final packages = config['packages'] as List<dynamic>;
+
+    for (final pkg in packages) {
+      final pkgMap = pkg as Map<String, dynamic>;
+      if (pkgMap['name'] != packageName) {
+        continue;
+      }
+
+      final rootUri = pkgMap['rootUri'] as String;
+      final configDir = p.dirname(configFile.path);
+      final packageRoot = rootUri.startsWith('file://')
+          ? Uri.parse(rootUri).toFilePath()
+          : p.normalize(p.join(configDir, rootUri));
+      final file = File(p.join(packageRoot, relativePath));
+      if (file.existsSync()) {
+        return file;
+      }
     }
 
     return null;

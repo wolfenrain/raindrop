@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:path/path.dart' as p;
 import 'package:yaml/yaml.dart';
 
+import 'package:raindrop_cli/src/core/dart_executable.dart';
 import 'package:raindrop_cli/src/core/snapshot.dart';
 import 'package:raindrop_cli/src/runtime/schema_table_discovery.dart';
 
@@ -14,37 +15,6 @@ import 'package:raindrop_cli/src/runtime/schema_table_discovery.dart';
 /// generated introspection runner can import them via `package:` URIs.
 class RuntimeSchemaLoader {
   const RuntimeSchemaLoader._();
-
-  /// Prefer the current VM when it is `dart`; otherwise search common install
-  /// locations (FVM, Flutter SDK, Homebrew) before falling back to `dart` on PATH.
-  static String _dartExecutable({String? projectRoot}) {
-    final resolved = Platform.resolvedExecutable;
-    final name = p.basename(resolved).toLowerCase();
-    if (name == 'dart' || name == 'dart.exe') {
-      return resolved;
-    }
-
-    final home = Platform.environment['HOME'] ??
-        Platform.environment['USERPROFILE'];
-    final candidates = <String>[
-      if (projectRoot != null)
-        p.join(projectRoot, '.fvm', 'flutter_sdk', 'bin', 'dart'),
-      if (home != null) ...[
-        p.join(home, 'fvm', 'default', 'bin', 'dart'),
-        p.join(home, '.fvm', 'default', 'bin', 'dart'),
-        p.join(home, 'flutter', 'bin', 'dart'),
-      ],
-      '/opt/homebrew/bin/dart',
-      '/usr/local/bin/dart',
-    ];
-
-    for (final candidate in candidates) {
-      if (File(candidate).existsSync()) {
-        return candidate;
-      }
-    }
-    return 'dart';
-  }
 
   /// Writes `.dart_tool/raindrop/schema_snapshot_runner.dart` under
   /// [projectRoot], runs it with the Dart VM, and decodes JSON into a snapshot.
@@ -89,7 +59,7 @@ class RuntimeSchemaLoader {
     File(runnerPath).writeAsStringSync(source);
 
     final result = await Process.run(
-      _dartExecutable(projectRoot: normalizedProject),
+      await DartExecutable.resolve(projectRoot: normalizedProject),
       [runnerPath],
       workingDirectory: normalizedProject,
       stdoutEncoding: utf8,
