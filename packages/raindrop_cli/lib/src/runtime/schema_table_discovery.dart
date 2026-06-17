@@ -28,6 +28,11 @@ class DiscoveredSchemaVariable {
 /// [packageRoot] must be the root of the Dart package (directory containing
 /// `pubspec.yaml`) so imports and `package:raindrop` resolve correctly.
 /// [schemaDir] limits which files are scanned (typically `lib/.../schemas`).
+bool _isDartVmHost() {
+  final name = p.basename(Platform.resolvedExecutable).toLowerCase();
+  return name == 'dart' || name == 'dart.exe';
+}
+
 Future<List<DiscoveredSchemaVariable>> discoverSchemaVariables({
   required String schemaDir,
   required String packageRoot,
@@ -35,6 +40,10 @@ Future<List<DiscoveredSchemaVariable>> discoverSchemaVariables({
   final dartFiles = _discoverDartFiles(schemaDir);
   if (dartFiles.isEmpty) {
     return const [];
+  }
+
+  if (!_isDartVmHost()) {
+    return _discoverSchemaVariablesWithoutAnalyzer(dartFiles);
   }
 
   final absRoot = p.normalize(p.absolute(packageRoot));
@@ -66,6 +75,44 @@ Future<List<DiscoveredSchemaVariable>> discoverSchemaVariables({
           variableName: variable.name.lexeme,
         ));
       }
+    }
+  }
+
+  out.sort((a, b) {
+    final c = a.filePath.compareTo(b.filePath);
+    if (c != 0) {
+      return c;
+    }
+    return a.variableName.compareTo(b.variableName);
+  });
+
+  return out;
+}
+
+/// Regex-based discovery for compiled hosts where the analyzer cannot load a
+/// Dart SDK (see `FolderBasedDartSdk` / `allowed_experiments.json` failures).
+///
+/// The runtime introspection runner skips values that are not Raindrop schemas.
+List<DiscoveredSchemaVariable> _discoverSchemaVariablesWithoutAnalyzer(
+  List<String> dartFiles,
+) {
+  final declarationPattern = RegExp(
+    r'^\s*(?:final|const|var)\s+(\w+)\s*=',
+    multiLine: true,
+  );
+  final out = <DiscoveredSchemaVariable>[];
+
+  for (final path in dartFiles) {
+    final content = File(path).readAsStringSync();
+    for (final match in declarationPattern.allMatches(content)) {
+      final name = match.group(1);
+      if (name == null || name.isEmpty) {
+        continue;
+      }
+      out.add(DiscoveredSchemaVariable(
+        filePath: path,
+        variableName: name,
+      ));
     }
   }
 

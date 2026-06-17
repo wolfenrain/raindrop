@@ -5,6 +5,7 @@ import 'dart:isolate';
 import 'package:path/path.dart' as p;
 import 'package:raindrop/ddl.dart';
 import 'package:raindrop_cli/src/core/dart_executable.dart';
+import 'package:raindrop_cli/src/core/package_paths.dart';
 
 /// Runs DDL generation in an isolated process by dynamically loading
 /// the appropriate dialect package's DDL generator.
@@ -156,10 +157,10 @@ class DdlRunner {
     required String? projectPath,
     Uri? packageConfig,
   }) async {
-    final hostScript = await _resolvePackageFile(
-      'raindrop_cli',
-      'lib/src/ddl/ddl_subprocess_host.dart',
-      projectPath,
+    final hostScript = await RaindropPackagePaths.packageFile(
+      packageName: 'raindrop_cli',
+      relativePath: 'lib/src/ddl/ddl_subprocess_host.dart',
+      projectPath: projectPath,
     );
     if (hostScript == null) {
       throw StateError(
@@ -176,12 +177,20 @@ class DdlRunner {
       if (packageConfig != null) '--packages=${packageConfig.toFilePath()}',
     ];
 
+    final workingDirectory = projectPath ?? Directory.current.path;
+    final messageFile = File(
+      p.join(workingDirectory, '.dart_tool', 'raindrop', 'ddl_message.json'),
+    );
+    messageFile.parent.createSync(recursive: true);
+    messageFile.writeAsStringSync(jsonEncode(message));
+    args.add('--message-file=${messageFile.path}');
+
     final process = await Process.start(
       dart,
       args,
-      workingDirectory: projectPath ?? Directory.current.path,
+      workingDirectory: workingDirectory,
+      mode: ProcessStartMode.normal,
     );
-    process.stdin.write(utf8.encode(jsonEncode(message)));
     await process.stdin.close();
 
     final stdout = await process.stdout.transform(utf8.decoder).join();
@@ -213,33 +222,11 @@ class DdlRunner {
     String relativePath,
     String? projectPath,
   ) async {
-    final configFile = _findPackageConfig(projectPath);
-    if (configFile == null) {
-      return null;
-    }
-
-    final configContent = await configFile.readAsString();
-    final config = jsonDecode(configContent) as Map<String, dynamic>;
-    final packages = config['packages'] as List<dynamic>;
-
-    for (final pkg in packages) {
-      final pkgMap = pkg as Map<String, dynamic>;
-      if (pkgMap['name'] != packageName) {
-        continue;
-      }
-
-      final rootUri = pkgMap['rootUri'] as String;
-      final configDir = p.dirname(configFile.path);
-      final packageRoot = rootUri.startsWith('file://')
-          ? Uri.parse(rootUri).toFilePath()
-          : p.normalize(p.join(configDir, rootUri));
-      final file = File(p.join(packageRoot, relativePath));
-      if (file.existsSync()) {
-        return file;
-      }
-    }
-
-    return null;
+    return RaindropPackagePaths.packageFile(
+      packageName: packageName,
+      relativePath: relativePath,
+      projectPath: projectPath,
+    );
   }
 
   /// Runs a command in an isolate and returns the response.

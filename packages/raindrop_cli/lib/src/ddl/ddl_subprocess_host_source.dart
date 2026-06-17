@@ -1,16 +1,10 @@
+/// Embedded copy of [ddl_subprocess_host.dart] for compiled hosts that lack
+/// raindrop_cli on disk. Keep in sync with ddl_subprocess_host.dart.
+const ddlSubprocessHostSource = '''
 import 'dart:convert';
 import 'dart:io';
 import 'dart:isolate';
 
-/// Runs [DdlRunner] isolate logic in a `dart` subprocess.
-///
-/// Usage:
-/// ```sh
-/// dart ddl_subprocess_host.dart <entryPoint> [--packages=<packageConfig>] \
-///   < message.json
-/// ```
-///
-/// Writes a JSON response map to stdout.
 void main(List<String> args) async {
   if (args.isEmpty) {
     stderr.writeln('Usage: dart ddl_subprocess_host.dart <entryPoint> '
@@ -46,7 +40,7 @@ void main(List<String> args) async {
     );
     stdout.writeln(jsonEncode(response));
   } catch (e, st) {
-    stdout.writeln(jsonEncode({'success': false, 'error': '$e\n$st'}));
+    stdout.writeln(jsonEncode({'success': false, 'error': '\$e\\n\$st'}));
     exitCode = 1;
   }
 }
@@ -84,10 +78,11 @@ Future<Map<String, dynamic>> _runInIsolate(
       return response;
     }
 
-    throw Exception('DDL operation failed: ${response['error']}');
+    throw Exception('DDL operation failed: \${response['error']}');
   } finally {
     receivePort.close();
     errorPort.close();
     isolate?.kill(priority: Isolate.immediate);
   }
 }
+''';
