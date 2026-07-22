@@ -83,17 +83,30 @@ extension ColumnOperators<V extends Object?> on ColumnOf<V> {
   /// Make an alias of the column.
   ColumnAlias<dynamic, V> as(String alias) => this!.as(alias);
 
+  /// Row value for column equals [value].
+  SQL equals(ColumnOr<V> value) => SQL([this, Op.equals, _operand(value)]);
+
+  /// Row value for column does not equal [value]. Binds like [equals].
+  SQL notEquals(ColumnOr<V> value) =>
+      SQL([this, Op.notEquals, _operand(value)]);
+
   /// Row value for column is in the list of [values].
   ///
   /// An empty [values] list can never match, so it emits an always-false
   /// predicate rather than the invalid `IN ()`.
   SQL inList(List<V> values) => switch (values) {
         final list when list.isEmpty => SQL([const RawSQL('1 = 0')]),
-        final values => SQL([this, const RawSQL('IN'), values]),
+        final values => SQL([
+            this,
+            const RawSQL('IN'),
+            [...values.map(_operand)],
+          ]),
       };
 
-  /// Row value for column does not equal [value].
-  SQL notEquals(ColumnOr<V> value) => SQL([this, Op.notEquals, value]);
+  /// Binds a predicate operand: a [Column] stays a column reference, a literal
+  /// is encoded through the column's transformer (a no-op when there is none).
+  Object? _operand(ColumnOr<V> value) =>
+      value is Column ? value : this!.encode(value as V);
 
   /// Returns the count of what is being selected.
   Count<V> count() => Count<V>(this);

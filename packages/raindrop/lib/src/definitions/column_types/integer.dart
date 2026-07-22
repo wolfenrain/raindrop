@@ -1,9 +1,6 @@
 import 'package:raindrop/raindrop.dart';
 
 extension IntOperators<V extends int?> on ColumnOf<V> {
-  /// Row value of column equals [value].
-  SQL equals(ColumnOr<int> value) => SQL([this, Op.equals, value]);
-
   /// Row value of column is greater than [value].
   SQL greaterThan(ColumnOr<int> value) => SQL([this, Op.greaterThan, value]);
 

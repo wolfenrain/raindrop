@@ -232,6 +232,11 @@ class ColumnExtractor extends RecursiveAstVisitor<void> {
                 // Check if the field type is nullable
                 final type = member.fields.type;
                 if (type is NamedType) {
+                  final args = type.typeArguments?.arguments;
+                  if (args != null && args.length == 1) {
+                    final arg = args.first;
+                    if (arg is NamedType) return arg.question != null;
+                  }
                   return type.question != null;
                 }
               }
