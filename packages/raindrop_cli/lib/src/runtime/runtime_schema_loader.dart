@@ -42,7 +42,6 @@ class RuntimeSchemaLoader {
       );
     }
 
-    final packageName = _readPackageName(normalizedProject);
     final runnerDir =
         Directory(p.join(normalizedProject, '.dart_tool', 'raindrop'));
     if (!runnerDir.existsSync()) {
@@ -51,8 +50,6 @@ class RuntimeSchemaLoader {
     final runnerPath =
         p.join(runnerDir.path, 'schema_snapshot_runner.dart');
     final source = _emitRunner(
-      packageName: packageName,
-      normalizedProject: normalizedProject,
       variables: variables,
       dialect: dialect,
     );
@@ -113,13 +110,35 @@ class RuntimeSchemaLoader {
     return name;
   }
 
+  /// Finds the nearest enclosing package (its `lib/` dir and pubspec name)
+  /// for [file], walking upward from its directory. Schema files may live in
+  /// a different package than the one being generated for (e.g. a shared
+  /// schema package depended on via a path dependency), so each file's
+  /// `package:` import must be resolved against its own package, not the
+  /// calling project's.
+  static ({String libRoot, String packageName}) _packageFor(String file) {
+    var dir = p.dirname(file);
+    while (true) {
+      if (File(p.join(dir, 'pubspec.yaml')).existsSync()) {
+        return (
+          libRoot: p.normalize(p.absolute(p.join(dir, 'lib'))),
+          packageName: _readPackageName(dir),
+        );
+      }
+      final parent = p.dirname(dir);
+      if (parent == dir) {
+        throw StateError(
+          'Unable to find a pubspec.yaml above schema file: $file',
+        );
+      }
+      dir = parent;
+    }
+  }
+
   static String _emitRunner({
-    required String packageName,
-    required String normalizedProject,
     required List<DiscoveredSchemaVariable> variables,
     required String dialect,
   }) {
-    final libRoot = p.normalize(p.absolute(p.join(normalizedProject, 'lib')));
     final byFile = <String, List<String>>{};
     for (final v in variables) {
       byFile.putIfAbsent(p.normalize(p.absolute(v.filePath)), () => []).add(v.variableName);
@@ -133,15 +152,16 @@ class RuntimeSchemaLoader {
     final schemaExpressions = StringBuffer();
     var i = 0;
     for (final file in sortedFiles) {
-      if (!p.isWithin(libRoot, file)) {
+      final pkg = _packageFor(file);
+      if (!p.isWithin(pkg.libRoot, file)) {
         throw StateError(
           'Raindrop runtime schema loading requires schema files under '
-          '`lib/`. Offending file: $file',
+          'a package `lib/`. Offending file: $file',
         );
       }
-      final rel = p.relative(file, from: libRoot);
+      final rel = p.relative(file, from: pkg.libRoot);
       final posixRel = rel.split(p.separator).join('/');
-      final importUri = 'package:$packageName/$posixRel';
+      final importUri = 'package:${pkg.packageName}/$posixRel';
 
       final prefix = 'r${i++}';
       imports.writeln("import '$importUri' as $prefix;");

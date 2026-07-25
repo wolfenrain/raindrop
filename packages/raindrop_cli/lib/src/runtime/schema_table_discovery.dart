@@ -47,7 +47,9 @@ Future<List<DiscoveredSchemaVariable>> discoverSchemaVariables({
   }
 
   final absRoot = p.normalize(p.absolute(packageRoot));
-  final collection = AnalysisContextCollection(includedPaths: [absRoot]);
+  final absSchemaRoot = p.normalize(p.absolute(schemaDir));
+  final includedPaths = {absRoot, absSchemaRoot}.toList();
+  final collection = AnalysisContextCollection(includedPaths: includedPaths);
   final out = <DiscoveredSchemaVariable>[];
 
   for (final path in dartFiles) {
