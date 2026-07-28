@@ -12,8 +12,38 @@ class SQLiteDelegate extends RaindropDelegate with _DatabaseDelegate {
   @override
   final CommonDatabase _database;
 
+  /// Serializes every top-level [execute]/[transaction] call against this
+  /// connection.
+  ///
+  /// `sqlite3` only allows one transaction open at a time per connection —
+  /// a second `BEGIN` before the first `COMMIT`/`ROLLBACK` throws "cannot
+  /// start a transaction within a transaction" rather than queuing. Without
+  /// this chain, two concurrent callers sharing one [SQLiteDelegate] (e.g.
+  /// concurrent HTTP requests reusing the read connection) race on that
+  /// `BEGIN` and one of them fails. Chaining onto a single `Future` forces
+  /// each call to wait for the previous one's `COMMIT`/`ROLLBACK` before
+  /// starting its own.
+  Future<void> _chain = Future.value();
+
+  Future<T> _serialized<T>(Future<T> Function() body) {
+    final ticket = _chain.then((_) => body());
+    _chain = ticket.then((_) {}, onError: (_) {});
+    return ticket;
+  }
+
+  @override
+  Future<DatabaseResult> execute(String query, List<Object?> values) {
+    return _serialized(() => super.execute(query, values));
+  }
+
   @override
   Future<T> transaction<T>(
+    Future<T> Function(TransactionDelegate delegate) transaction,
+  ) {
+    return _serialized(() => _runTransaction(transaction));
+  }
+
+  Future<T> _runTransaction<T>(
     Future<T> Function(TransactionDelegate delegate) transaction,
   ) async {
     final tx = _TransactionDelegate(_database, dialect);
