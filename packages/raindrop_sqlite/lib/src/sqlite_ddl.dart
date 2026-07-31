@@ -141,9 +141,10 @@ class SQLiteDdlGenerator extends DdlGenerator {
     // DROP TABLE fails when foreign keys reference this table (or vice versa)
     // unless enforcement is disabled for the rebuild.
     steps.add('PRAGMA foreign_keys=OFF;');
+    final columnNames = tableColumns.map((c) => escapeName(c.name)).join(', ');
     steps.addAll([
       'CREATE TABLE $temp (\n  $defs\n);',
-      'INSERT INTO $temp SELECT * FROM $table;',
+      'INSERT INTO $temp ($columnNames) SELECT $columnNames FROM $table;',
       'DROP TABLE $table;',
       'ALTER TABLE $temp RENAME TO $table;',
     ]);

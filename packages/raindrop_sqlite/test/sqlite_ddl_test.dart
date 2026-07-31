@@ -165,6 +165,43 @@ void main() {
       );
     });
 
+    test('inserts by explicit column name, not positional SELECT *', () {
+      // Simulates a table whose on-disk physical column order (via prior
+      // `ALTER TABLE ADD COLUMN`s) no longer matches the schema's declared
+      // order in `tableColumns` -- a positional `SELECT *` would shuffle
+      // these into the wrong slots on rebuild.
+      const oldColumn = ColumnInfo(
+        name: 'age',
+        type: 'INTEGER',
+        isNullable: true,
+      );
+      const newColumn = ColumnInfo(
+        name: 'age',
+        type: 'INTEGER',
+        isNullable: false,
+      );
+      const tableColumns = [
+        ColumnInfo(name: 'age', type: 'INTEGER', isNullable: false),
+        ColumnInfo(name: 'name', type: 'TEXT', isNullable: true),
+      ];
+
+      final sql = generator.alterColumn(
+        'users',
+        oldColumn,
+        newColumn,
+        tableColumns,
+      );
+
+      expect(sql, isNot(contains('SELECT * FROM')));
+      expect(
+        sql,
+        contains(
+          'INSERT INTO "users_raindrop_rebuild" ("age", "name") '
+          'SELECT "age", "name" FROM "users";',
+        ),
+      );
+    });
+
     test('recreates indexes dropped by table rebuild before re-enabling FKs', () {
       const oldColumn = ColumnInfo(
         name: 'id',
