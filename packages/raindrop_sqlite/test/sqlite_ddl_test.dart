@@ -37,6 +37,7 @@ void main() {
         sql,
         startsWith(
           'UPDATE "items" SET "score" = 0 WHERE "score" IS NULL;\n'
+          'PRAGMA foreign_keys=OFF;\n'
           'CREATE TABLE "items_raindrop_rebuild"',
         ),
       );
