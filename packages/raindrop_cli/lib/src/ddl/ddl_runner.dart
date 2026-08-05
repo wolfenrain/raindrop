@@ -217,18 +217,6 @@ class DdlRunner {
     return jsonDecode(trimmed) as Map<String, dynamic>;
   }
 
-  static Future<File?> _resolvePackageFile(
-    String packageName,
-    String relativePath,
-    String? projectPath,
-  ) async {
-    return RaindropPackagePaths.packageFile(
-      packageName: packageName,
-      relativePath: relativePath,
-      projectPath: projectPath,
-    );
-  }
-
   /// Runs a command in an isolate and returns the response.
   static Future<Map<String, dynamic>> _runInIsolate(
     Uri entryPointUri,
