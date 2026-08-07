@@ -14,7 +14,6 @@ class SchemaSnapshot {
     required this.prevId,
     required this.tables,
     this.indexes = const {},
-    this.foreignKeys = const {},
   });
 
   /// The current snapshot format version.
@@ -38,11 +37,8 @@ class SchemaSnapshot {
   /// Map of table name to table snapshot.
   final Map<String, TableSnapshot> tables;
 
-  /// Map of index name to index definition (for future use).
+  /// Map of index name to index definition.
   final Map<String, IndexSnapshot> indexes;
-
-  /// Map of foreign key name to foreign key definition (for future use).
-  final Map<String, ForeignKeySnapshot> foreignKeys;
 
   /// Generates a random UUID v4.
   static String generateId() {
@@ -81,14 +77,6 @@ class SchemaSnapshot {
             entry.value as Map<String, dynamic>,
           )
       },
-      foreignKeys: {
-        for (final entry
-            in (data['foreignKeys'] as Map<String, dynamic>? ?? {}).entries)
-          entry.key: ForeignKeySnapshot.fromMap(
-            entry.key,
-            entry.value as Map<String, dynamic>,
-          ),
-      },
     );
   }
 
@@ -115,9 +103,6 @@ class SchemaSnapshot {
       'indexes': {
         for (final entry in indexes.entries) entry.key: entry.value.toMap(),
       },
-      'foreignKeys': {
-        for (final entry in foreignKeys.entries) entry.key: entry.value.toMap(),
-      }
     });
   }
 
@@ -143,7 +128,6 @@ class SchemaSnapshot {
       prevId: prevId ?? this.prevId,
       tables: tables,
       indexes: indexes,
-      foreignKeys: foreignKeys,
     );
   }
 }
@@ -153,6 +137,7 @@ class TableSnapshot {
   const TableSnapshot({
     required this.name,
     required this.columns,
+    this.checks = const {},
   });
 
   /// The table name.
@@ -160,6 +145,9 @@ class TableSnapshot {
 
   /// Map of column name to column snapshot.
   final Map<String, ColumnSnapshot> columns;
+
+  /// Map of constraint name to raw CHECK expression.
+  final Map<String, String> checks;
 
   /// Creates a table snapshot from a map.
   factory TableSnapshot.fromMap(String name, Map<String, dynamic> data) {
@@ -172,6 +160,11 @@ class TableSnapshot {
           ColumnSnapshot.fromMap(key, value as Map<String, dynamic>),
         ),
       ),
+      // Materialize (not a lazy `.cast` view): these end up in DiffOperation
+      // maps sent over an isolate SendPort, which rejects CastMap instances.
+      checks: Map<String, String>.from(
+        data['checks'] as Map<String, dynamic>? ?? {},
+      ),
     );
   }
 
@@ -182,6 +175,7 @@ class TableSnapshot {
       'columns': columns.map(
         (key, value) => MapEntry(key, value.toMap()),
       ),
+      if (checks.isNotEmpty) 'checks': checks,
     };
   }
 }
@@ -286,7 +280,7 @@ class ColumnSnapshot {
       type: data['type'] as String,
       isNullable: data['isNullable'] as bool? ?? false,
       primaryKey: data['primaryKey'] as bool? ?? false,
-      autoIncrement: data['autoincrement'] as bool? ?? false,
+      autoIncrement: data['autoIncrement'] as bool? ?? false,
       defaultValue: data['default'] as String?,
       foreignKey: switch (data['foreignKey']) {
         final Map<String, dynamic> data => ForeignKeySnapshotRef.fromMap(data),
@@ -302,7 +296,7 @@ class ColumnSnapshot {
       'type': type,
       'primaryKey': primaryKey,
       'isNullable': isNullable,
-      if (autoIncrement) 'autoincrement': autoIncrement,
+      if (autoIncrement) 'autoIncrement': autoIncrement,
       if (defaultValue != null) 'default': defaultValue,
       if (foreignKey != null) 'foreignKey': foreignKey!.toMap(),
     };
@@ -406,50 +400,5 @@ class IndexSnapshot {
       isUnique,
       where,
     );
-  }
-}
-
-/// Represents a foreign key snapshot (for future use).
-class ForeignKeySnapshot {
-  const ForeignKeySnapshot({
-    required this.name,
-    required this.tableFrom,
-    required this.tableTo,
-    required this.columnsFrom,
-    required this.columnsTo,
-    this.onDelete,
-    this.onUpdate,
-  });
-
-  final String name;
-  final String tableFrom;
-  final String tableTo;
-  final List<String> columnsFrom;
-  final List<String> columnsTo;
-  final String? onDelete;
-  final String? onUpdate;
-
-  factory ForeignKeySnapshot.fromMap(String name, Map<String, dynamic> data) {
-    return ForeignKeySnapshot(
-      name: name,
-      tableFrom: data['tableFrom'] as String,
-      tableTo: data['tableTo'] as String,
-      columnsFrom: (data['columnsFrom'] as List<dynamic>).cast<String>(),
-      columnsTo: (data['columnsTo'] as List<dynamic>).cast<String>(),
-      onDelete: data['onDelete'] as String?,
-      onUpdate: data['onUpdate'] as String?,
-    );
-  }
-
-  Map<String, dynamic> toMap() {
-    return {
-      'name': name,
-      'tableFrom': tableFrom,
-      'tableTo': tableTo,
-      'columnsFrom': columnsFrom,
-      'columnsTo': columnsTo,
-      if (onDelete != null) 'onDelete': onDelete,
-      if (onUpdate != null) 'onUpdate': onUpdate,
-    };
   }
 }

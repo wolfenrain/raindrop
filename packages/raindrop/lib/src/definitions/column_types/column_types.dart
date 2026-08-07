@@ -1,3 +1,4 @@
+import 'package:meta/meta.dart';
 import 'package:raindrop/raindrop.dart';
 
 export 'boolean.dart';
@@ -14,7 +15,7 @@ extension ColumnBuilderProvider<R> on SchemaBuilder<R> {
     String name,
     Field<R, W> field, {
     String? sqlType,
-    String? defaultValue,
+    ColumnOr<V>? defaultValue,
   }) {
     return _column<R, V, W>(
       this,
@@ -33,7 +34,7 @@ extension ColumnBuilderProvider<R> on SchemaBuilder<R> {
     Field<R, W> field, {
     required ColumnTransformer<I, O> transformer,
     String? sqlType,
-    String? defaultValue,
+    ColumnOr<I>? defaultValue,
   }) {
     return _column<R, I, W>(
       this,
@@ -52,7 +53,7 @@ ColumnType<W> _column<R, V extends Object, W extends V?>(
   Field<R, W> field, {
   ColumnTransformer<V, Object?>? transformer,
   String? sqlType,
-  String? defaultValue,
+  ColumnOr<V>? defaultValue,
 }) {
   final column = $.table.addColumn<V>(
     name,
@@ -84,29 +85,35 @@ extension ColumnOperators<V extends Object?> on ColumnOf<V> {
   ColumnAlias<dynamic, V> as(String alias) => this!.as(alias);
 
   /// Row value for column equals [value].
-  SQL equals(ColumnOr<V> value) => SQL([this, Op.equals, _operand(value)]);
+  SQL equals(ColumnOr<V> value) => SQL([this, Op.equals, operand(value)]);
 
   /// Row value for column does not equal [value]. Binds like [equals].
-  SQL notEquals(ColumnOr<V> value) =>
-      SQL([this, Op.notEquals, _operand(value)]);
+  SQL notEquals(ColumnOr<V> value) => SQL([this, Op.notEquals, operand(value)]);
 
   /// Row value for column is in the list of [values].
   ///
   /// An empty [values] list can never match, so it emits an always-false
   /// predicate rather than the invalid `IN ()`.
-  SQL inList(List<V> values) => switch (values) {
+  SQL inList(List<ColumnOr<V>> values) => switch (values) {
         final list when list.isEmpty => SQL([const RawSQL('1 = 0')]),
         final values => SQL([
             this,
             const RawSQL('IN'),
-            [...values.map(_operand)],
+            [...values.map(operand)],
           ]),
       };
 
-  /// Binds a predicate operand: a [Column] stays a column reference, a literal
-  /// is encoded through the column's transformer (a no-op when there is none).
-  Object? _operand(ColumnOr<V> value) =>
-      value is Column ? value : this!.encode(value as V);
+  /// Row value for column is in the rows [query] returns.
+  SQL inQuery(ToQuery<dynamic, V> query) =>
+      SQL([this, const RawSQL('IN'), subquery(query)]);
+
+  /// Prepares a predicate operand.
+  ///
+  /// A column or an expression is already SQL and passes straight through.
+  /// Only a literal is encoded, through the column's transformer (a no-op when
+  /// there is none).
+  @protected
+  Object? operand(ColumnOr<V> value) => operandFor(this!, value);
 
   /// Returns the count of what is being selected.
   Count<V> count() => Count<V>(this);

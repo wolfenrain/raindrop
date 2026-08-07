@@ -1,4 +1,4 @@
-// GENERATED CODE — DO NOT EDIT BY HAND.
+// GENERATED CODE - DO NOT EDIT BY HAND.
 // Run `dart run tools/generate_the_magic.dart` to regenerate.
 // ignore_for_file: public_member_api_docs, lines_longer_than_80_chars
 import 'package:raindrop/raindrop.dart';
@@ -30,6 +30,31 @@ extension ISUDRaindropExecutor on RaindropExecutor<RaindropDelegate> {
 
 typedef SelectingBuilder<S0 extends Selectable<Object?>?, S1 extends Selectable<Object?>?, S2 extends Selectable<Object?>?, S3 extends Selectable<Object?>?, S4 extends Selectable<Object?>?, S5 extends Selectable<Object?>?, S6 extends Selectable<Object?>?, S7 extends Selectable<Object?>?, S8 extends Selectable<Object?>?, S9 extends Selectable<Object?>?, S10 extends Selectable<Object?>?, S11 extends Selectable<Object?>?, S12 extends Selectable<Object?>?, S13 extends Selectable<Object?>?, S14 extends Selectable<Object?>?, S15 extends Selectable<Object?>?, S16 extends Selectable<Object?>?, S17 extends Selectable<Object?>?, S18 extends Selectable<Object?>?, S19 extends Selectable<Object?>?> = SelectBuilder<(S0, S1, S2, S3, S4, S5, S6, S7, S8, S9, S10, S11, S12, S13, S14, S15, S16, S17, S18, S19)?>;
 
+/// The signature of [ISUDRaindropExecutor.select].
+typedef SelectFunction = SelectingBuilder<S0, S1, S2, S3, S4, S5, S6, S7, S8, S9, S10, S11, S12, S13, S14, S15, S16, S17, S18, S19> Function<S0 extends Selectable<Object?>?, S1 extends Selectable<Object?>?, S2 extends Selectable<Object?>?, S3 extends Selectable<Object?>?, S4 extends Selectable<Object?>?, S5 extends Selectable<Object?>?, S6 extends Selectable<Object?>?, S7 extends Selectable<Object?>?, S8 extends Selectable<Object?>?, S9 extends Selectable<Object?>?, S10 extends Selectable<Object?>?, S11 extends Selectable<Object?>?, S12 extends Selectable<Object?>?, S13 extends Selectable<Object?>?, S14 extends Selectable<Object?>?, S15 extends Selectable<Object?>?, S16 extends Selectable<Object?>?, S17 extends Selectable<Object?>?, S18 extends Selectable<Object?>?, S19 extends Selectable<Object?>?>([S0?, S1?, S2?, S3?, S4?, S5?, S6?, S7?, S8?, S9?, S10?, S11?, S12?, S13?, S14?, S15?, S16?, S17?, S18?, S19?]);
+
+/// `SELECT DISTINCT`, as an extension on the torn-off [select] itself.
+extension DistinctSelect on SelectFunction {
+  /// Select distinct rows:
+  ///
+  /// ```dart
+  /// db.select.distinct(users.country, users.city).from(users);
+  /// // SELECT DISTINCT "country", "city" FROM "users"
+  /// ```
+  ///
+  /// Takes the same columns and returns the same builder as [ISUDRaindropExecutor.select].
+  ///
+  /// For one aggregate's operand, `COUNT(DISTINCT x)`, wrap the column in
+  /// `distinct()` instead.
+  SelectingBuilder<S0, S1, S2, S3, S4, S5, S6, S7, S8, S9, S10, S11, S12, S13, S14, S15, S16, S17, S18, S19> distinct<S0 extends Selectable<Object?>?, S1 extends Selectable<Object?>?, S2 extends Selectable<Object?>?, S3 extends Selectable<Object?>?, S4 extends Selectable<Object?>?, S5 extends Selectable<Object?>?, S6 extends Selectable<Object?>?, S7 extends Selectable<Object?>?, S8 extends Selectable<Object?>?, S9 extends Selectable<Object?>?, S10 extends Selectable<Object?>?, S11 extends Selectable<Object?>?, S12 extends Selectable<Object?>?, S13 extends Selectable<Object?>?, S14 extends Selectable<Object?>?, S15 extends Selectable<Object?>?, S16 extends Selectable<Object?>?, S17 extends Selectable<Object?>?, S18 extends Selectable<Object?>?, S19 extends Selectable<Object?>?>([S0? s0, S1? s1, S2? s2, S3? s3, S4? s4, S5? s5, S6? s6, S7? s7, S8? s8, S9? s9, S10? s10, S11? s11, S12? s12, S13? s13, S14? s14, S15? s15, S16? s16, S17? s17, S18? s18, S19? s19]) {
+    final builder = this<S0, S1, S2, S3, S4, S5, S6, S7, S8, S9, S10, S11, S12, S13, S14, S15, S16, S17, S18, S19>(s0, s1, s2, s3, s4, s5, s6, s7, s8, s9, s10, s11, s12, s13, s14, s15, s16, s17, s18, s19);
+    return SelectBuilder(
+      builder.executor,
+      config: builder.config.copyWith({#distinct: true}),
+    );
+  }
+}
+
 typedef _Unused = Selectable<Object?>?;
 
 class _Selecting<S0 extends Selectable<Object?>?, S1 extends Selectable<Object?>?, S2 extends Selectable<Object?>?, S3 extends Selectable<Object?>?, S4 extends Selectable<Object?>?, S5 extends Selectable<Object?>?, S6 extends Selectable<Object?>?, S7 extends Selectable<Object?>?, S8 extends Selectable<Object?>?, S9 extends Selectable<Object?>?, S10 extends Selectable<Object?>?, S11 extends Selectable<Object?>?, S12 extends Selectable<Object?>?, S13 extends Selectable<Object?>?, S14 extends Selectable<Object?>?, S15 extends Selectable<Object?>?, S16 extends Selectable<Object?>?, S17 extends Selectable<Object?>?, S18 extends Selectable<Object?>?, S19 extends Selectable<Object?>?> implements Selectable<(S0, S1, S2, S3, S4, S5, S6, S7, S8, S9, S10, S11, S12, S13, S14, S15, S16, S17, S18, S19)?> {
@@ -59,9 +84,9 @@ class _Selecting<S0 extends Selectable<Object?>?, S1 extends Selectable<Object?>
 
 extension SelectableColumns on SelectBuilder<(_Unused, _Unused, _Unused, _Unused, _Unused, _Unused, _Unused, _Unused, _Unused, _Unused, _Unused, _Unused, _Unused, _Unused, _Unused, _Unused, _Unused, _Unused, _Unused, _Unused)?> {
   /// Create a from builder where the whole table gets selected.
-  SelectFromBuilder<Schema<R>, R, R> from<R>(Schema<R> from) {
+  WholeRowFromBuilder<Schema<R>, R> from<R>(Schema<R> from) {
     final table = Table.get(from);
-    return SelectFromBuilder(
+    return WholeRowFromBuilder(
       executor,
       config: config.copyWith({#selecting: table, #from: table}),
     );
@@ -71,9 +96,9 @@ extension SelectableColumns on SelectBuilder<(_Unused, _Unused, _Unused, _Unused
 extension SelectableColumns0<V0>
     on SelectBuilder<(Selectable<V0>, _Unused, _Unused, _Unused, _Unused, _Unused, _Unused, _Unused, _Unused, _Unused, _Unused, _Unused, _Unused, _Unused, _Unused, _Unused, _Unused, _Unused, _Unused, _Unused)?> {
   /// Create a from builder.
-  ProjectionFromBuilder<Schema<R>, R, V0> from<R>(Schema<R> from) {
+  SingleProjectionFromBuilder<Schema<R>, R, V0> from<R>(Schema<R> from) {
     final selecting = config[#selecting]! as _Selecting;
-    return ProjectionFromBuilder(
+    return SingleProjectionFromBuilder(
       executor,
       config: config.copyWith({
         #selecting: selecting.s0,

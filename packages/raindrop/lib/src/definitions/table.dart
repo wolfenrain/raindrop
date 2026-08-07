@@ -1,4 +1,6 @@
+import 'package:meta/meta.dart';
 import 'package:raindrop/raindrop.dart';
+import 'package:raindrop/src/rendering/clause.dart';
 
 /// {@macro table}
 S table<S extends Schema<R>, R>(
@@ -12,6 +14,18 @@ S table<S extends Schema<R>, R>(
   return table.schema;
 }
 
+/// A table whose rows come from [query] rather than from storage.
+///
+/// Used by the generated `DerivedN` extensions; not meant to be called
+/// directly.
+@internal
+S derivedTable<S extends Schema<R>, R>(
+  String name,
+  S Function(SchemaBuilder<R>) builder,
+  Query<dynamic> query,
+) =>
+    Table<S, R>._(name, builder, derivedFrom: query).schema;
+
 /// {@template table}
 /// A table holds all the data related to building and querying tables.
 ///
@@ -20,9 +34,10 @@ S table<S extends Schema<R>, R>(
 /// {@endtemplate}
 class Table<S extends Schema<R>, R> implements Selectable<R> {
   /// {@macro table}
-  Table._(this.name, this.builder, {this.alias, this.dialect})
+  Table._(this.name, this.builder, {this.alias, this.dialect, this.derivedFrom})
       : columns = [],
-        indexes = [] {
+        indexes = [],
+        checks = [] {
     schema = builder(SchemaBuilder<R>(this));
     Table._schemaToTable[schema as Schema] = this;
   }
@@ -51,6 +66,9 @@ class Table<S extends Schema<R>, R> implements Selectable<R> {
   /// The indexes defined on this table.
   final List<Index> indexes;
 
+  /// The table-level CHECK constraints defined on this table.
+  final List<Check> checks;
+
   /// Create a new row [R] instance from a raw column map.
   R create(Map<String, dynamic> data) {
     T read<T extends Object?>(ColumnType<T>? column) {
@@ -65,9 +83,21 @@ class Table<S extends Schema<R>, R> implements Selectable<R> {
     return schema.fromRow(read);
   }
 
+  /// The rows a query returns, standing where a table would.
+  final Query<dynamic>? derivedFrom;
+
   /// Create an aliased instance of the table.
   Table<S, R> aliased(String alias) =>
       Table<S, R>._(name, builder, alias: alias, dialect: dialect);
+
+  /// This table's shape over [query]'s rows instead of its own.
+  Table<S, R> asDerived(Query<dynamic> query) => Table<S, R>._(
+        name,
+        builder,
+        alias: alias,
+        dialect: dialect,
+        derivedFrom: query,
+      );
 
   /// Returns the values of a row [instance] in column order.
   List<dynamic> values(dynamic instance) {
@@ -87,8 +117,15 @@ class Table<S extends Schema<R>, R> implements Selectable<R> {
     bool isNullable = false,
     ColumnTransformer<V, Object?>? transformer,
     String? sqlType,
-    String? defaultValue,
+    ColumnOr<V>? defaultValue,
   }) {
+    if (defaultValue is Column) {
+      throw ArgumentError.value(
+        defaultValue,
+        'defaultValue',
+        'cannot be another column',
+      );
+    }
     final column = Column<R, V>(
       this,
       name,
@@ -104,6 +141,9 @@ class Table<S extends Schema<R>, R> implements Selectable<R> {
 
   /// Adds an index to the table.
   void addIndex(Index index) => indexes.add(index);
+
+  /// Adds a table-level CHECK constraint to the table.
+  void addCheck(Check check) => checks.add(check);
 
   bool _instanceOfSchema(Schema r) => r is S;
 

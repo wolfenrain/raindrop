@@ -5,19 +5,29 @@ import 'package:path/path.dart' as p;
 
 import 'package:raindrop_cli/src/core/config.dart';
 import 'package:raindrop_cli/src/core/differ.dart';
+import 'package:raindrop_cli/src/core/emitter.dart';
 import 'package:raindrop_cli/src/core/journal.dart';
 import 'package:raindrop_cli/src/core/snapshot.dart';
 import 'package:raindrop_cli/src/ddl/ddl_runner.dart';
-import 'package:raindrop_cli/src/parser/schema_parser.dart';
+import 'package:raindrop_cli/src/introspect/snapshot_runner.dart';
 
-/// Command to generate a new migration from schema changes.
+/// Command to generate a new SQL migration.
 class GenerateCommand extends Command<int> {
   GenerateCommand() {
     argParser.addOption(
       'name',
       abbr: 'n',
       help: 'Name for the migration.',
-      mandatory: true,
+    );
+    argParser.addFlag(
+      'empty',
+      help: 'Write a migration for by hand.',
+      defaultsTo: false,
+    );
+    argParser.addFlag(
+      'dart-only',
+      help: 'Rewrite the embedded Dart migrations from the journal and stop.',
+      defaultsTo: false,
     );
     argParser.addFlag(
       'dry-run',
@@ -32,9 +42,7 @@ class GenerateCommand extends Command<int> {
     argParser.addOption(
       'current-snapshot',
       help: 'Use a pre-built schema snapshot (JSON) as the current state '
-          'instead of parsing the schema directory. Lets you feed a snapshot '
-          'built by runtime introspection, which captures what the static '
-          'parser cannot (e.g. filter-DSL partial-index predicates).',
+          'instead of running the schema.',
     );
   }
 
@@ -42,38 +50,44 @@ class GenerateCommand extends Command<int> {
   String get name => 'generate';
 
   @override
-  String get description => 'Generate a new SQL migration from schema changes.';
+  String get description => 'Generate a new SQL migration.';
 
   @override
   Future<int> run() async {
-    final migrationName = argResults!['name'] as String;
+    final empty = argResults!['empty'] as bool;
+    final dartOnly = argResults!['dart-only'] as bool;
     final dryRun = argResults!['dry-run'] as bool;
 
-    // Load configuration
     final config = await RaindropConfig.loadResolved(globalResults!);
 
-    // Determine dart output path.
     final dartOutputPath = switch (argResults!['dart'] as String?) {
       final String path => p.normalize(p.join(config.configDir, path)),
       _ => config.dartPath,
     };
 
-    // Load the journal
     final journal = await MigrationJournal.load(
       config.journalPath,
       config.dialect,
     );
 
-    // Load previous snapshot if it exists
-    SchemaSnapshot? previousSnapshot;
-    if (journal.entries.isNotEmpty) {
-      final lastEntry = journal.entries.last;
-      final snapshotPath = config.snapshotPath(lastEntry.idx);
-      previousSnapshot = await SchemaSnapshot.load(snapshotPath);
+    if (dartOnly) {
+      return _emitOnly(config, journal, dartOutputPath);
     }
 
-    // Build the current snapshot: either load a pre-built one (runtime
-    // introspection) or parse the schema directory statically.
+    final migrationName = argResults!['name'] as String?;
+    if (migrationName == null || migrationName.trim().isEmpty) {
+      print('Missing --name.');
+      return 1;
+    }
+
+    SchemaSnapshot? previousSnapshot;
+    if (journal.entries.isNotEmpty) {
+      previousSnapshot = await SchemaSnapshot.load(
+        config.snapshotPath(journal.entries.last.idx),
+      );
+    }
+
+    // Built even for --empty, so that pending schema changes can be DETECTED.
     final SchemaSnapshot currentSnapshot;
     if ((argResults!['current-snapshot'] as String?) case final snapshotArg?) {
       final loaded = await SchemaSnapshot.load(
@@ -88,52 +102,56 @@ class GenerateCommand extends Command<int> {
         prevId: journal.previousId,
       );
     } else {
-      currentSnapshot = await SchemaParser().parseDirectory(
-        config.schemaPath,
+      currentSnapshot = await SnapshotRunner.build(
+        schemaPath: config.schemaPath,
         dialect: config.dialect,
+        configDir: config.configDir,
         prevId: journal.previousId,
       );
     }
 
-    if (currentSnapshot.tables.isEmpty) {
-      print(
-          'No tables found for "${config.dialect}" in schema directory: ${config.schemaPath}');
+    if (!empty && currentSnapshot.tables.isEmpty) {
+      print('No tables found for "${config.dialect}" in schema directory: '
+          '${config.schemaPath}');
       return 1;
     }
 
-    // Calculate diff
-    final differ = SchemaDiffer();
-    final operations = differ.diff(previousSnapshot, currentSnapshot);
+    final operations = SchemaDiffer().diff(previousSnapshot, currentSnapshot);
 
-    if (operations.isEmpty) {
+    if (empty) {
+      if (operations.isNotEmpty) {
+        print(
+          'Schema changes are pending, so an empty migration would bury them.\n'
+          'Run `raindrop generate` first, then create this one:',
+        );
+        for (final operation in operations) {
+          print('  - ${operation.describe()}');
+        }
+        return 1;
+      }
+    } else if (operations.isEmpty) {
       print('No schema changes detected.');
       return 0;
     }
 
-    // Find project root (where pubspec.yaml lives) for package resolution
-    final projectPath = _findProjectRoot(config.configDir);
-
-    // Determine migration index and tag
     final migrationIndex = journal.nextIndex;
     final now = DateTime.now();
-    final prefix = migrationTagPrefix(
+    final tag = '${migrationTagPrefix(
       naming: config.migrationNaming,
       migrationIndex: migrationIndex,
       at: now,
-    );
-    final tag = '${prefix}_${_sanitizeName(migrationName)}';
+    )}_${sanitizeMigrationName(migrationName)}';
 
-    // Generate SQL using the dialect's DDL generator via isolate
-    final sql = await DdlRunner.generate(
-      currentSnapshot.dialect,
-      operations,
-      projectPath: projectPath,
-    );
+    final sql = empty
+        ? _emptyTemplate(tag)
+        : await DdlRunner.generate(
+            currentSnapshot.dialect,
+            operations,
+            projectPath: findProjectRoot(config.configDir),
+          );
 
-    if (sql.trim().isEmpty) {
-      print(
-        'Nothing to migrate: no SQL for the current diff.',
-      );
+    if (!empty && sql.trim().isEmpty) {
+      print('Nothing to migrate: no SQL for the current diff.');
       return 0;
     }
 
@@ -145,35 +163,20 @@ class GenerateCommand extends Command<int> {
       return 0;
     }
 
-    // Create migration directory
-    final migrationDir = Directory(config.outPath);
-    if (!migrationDir.existsSync()) {
-      migrationDir.createSync(recursive: true);
-    }
-
-    // Create meta directory
-    final metaDir = Directory(config.metaPath);
-    if (!metaDir.existsSync()) {
-      metaDir.createSync(recursive: true);
-    }
+    Directory(config.outPath).createSync(recursive: true);
+    Directory(config.metaPath).createSync(recursive: true);
 
     final migrationPath = p.join(config.outPath, '$tag.sql');
     await File(migrationPath).writeAsString(sql);
+    await currentSnapshot.save(config.snapshotPath(migrationIndex));
 
-    // Save the snapshot
-    final snapshotPath = config.snapshotPath(migrationIndex);
-    await currentSnapshot.save(snapshotPath);
-
-    // Update the journal
-    final timestamp = now.millisecondsSinceEpoch;
     final entry = JournalEntry(
       idx: migrationIndex,
       version: SchemaSnapshot.currentVersion,
-      when: timestamp,
+      when: now.millisecondsSinceEpoch,
       tag: tag,
       snapshotId: currentSnapshot.id,
     );
-
     final updatedJournal = switch (journal.entries.isEmpty) {
       true => MigrationJournal(
           version: MigrationJournal.currentVersion,
@@ -182,12 +185,10 @@ class GenerateCommand extends Command<int> {
         ),
       false => journal.addEntry(entry),
     };
-
     await updatedJournal.save(config.journalPath);
 
-    // Write Dart migrations file if configured or --dart flag passed
     if (dartOutputPath != null) {
-      await _generateDartFile(config, updatedJournal, dartOutputPath);
+      await emitDartMigrations(config, updatedJournal, dartOutputPath);
     }
 
     print('Generated migration: $migrationPath');
@@ -195,68 +196,56 @@ class GenerateCommand extends Command<int> {
       print('Generated Dart migrations file: $dartOutputPath');
     }
     print('');
-    print('Changes:');
-    for (final op in operations) {
-      print('  - ${op.describe()}');
+    if (empty) {
+      print('Write the SQL into that file before it is first applied.');
+    } else {
+      print('Changes:');
+      for (final op in operations) {
+        print('  - ${op.describe()}');
+      }
     }
 
     return 0;
   }
 
-  Future<void> _generateDartFile(
+  Future<int> _emitOnly(
     RaindropConfig config,
     MigrationJournal journal,
-    String outputPath,
+    String? dartOutputPath,
   ) async {
-    final buffer = StringBuffer()
-      ..writeln("import 'package:raindrop/raindrop.dart';")
-      ..writeln()
-      ..writeln('/// Generated migrations. Do not edit by hand.')
-      ..writeln('final migrations = [');
-
-    for (final entry in journal.entries) {
-      final sql =
-          await File(p.join(config.outPath, '${entry.tag}.sql')).readAsString();
-      final escapedSql = sql.replaceAll("'''", r"\'''");
-      buffer
-        ..writeln("  const Migration('${entry.tag}', '''")
-        ..write(escapedSql)
-        ..writeln("'''),");
+    if (dartOutputPath == null) {
+      print(
+          'No Dart output path. Set "dart:" in raindrop.yaml or pass --dart.');
+      return 1;
+    }
+    if (journal.entries.isEmpty) {
+      print('No migrations in the journal: ${config.journalPath}');
+      return 1;
     }
 
-    buffer.writeln('];');
-
-    final dartFile = File(outputPath);
-    final dartDir = Directory(dartFile.parent.path);
-    if (!dartDir.existsSync()) {
-      dartDir.createSync(recursive: true);
+    final missing = [
+      for (final entry in journal.entries)
+        if (!File(p.join(config.outPath, '${entry.tag}.sql')).existsSync())
+          entry.tag,
+    ];
+    if (missing.isNotEmpty) {
+      print('Missing SQL for journalled migrations: ${missing.join(', ')}');
+      return 1;
     }
-    await dartFile.writeAsString(buffer.toString());
+
+    await emitDartMigrations(config, journal, dartOutputPath);
+    print('Generated Dart migrations file: $dartOutputPath');
+    print('Embedded ${journal.entries.length} migration(s).');
+    return 0;
   }
 
-  String _sanitizeName(String name) {
-    return name
-        .toLowerCase()
-        .replaceAll(RegExp(r'[^a-z0-9_]'), '_')
-        .replaceAll(RegExp(r'_+'), '_');
-  }
-
-  /// Find the project root by walking up from the given directory until
-  /// finding a pubspec.yaml file.
-  String _findProjectRoot(String startDir) {
-    var current = startDir;
-    while (true) {
-      final pubspecPath = p.join(current, 'pubspec.yaml');
-      if (File(pubspecPath).existsSync()) {
-        return current;
-      }
-      final parent = p.dirname(current);
-      if (parent == current) {
-        // Reached filesystem root without finding pubspec.yaml
-        // Fall back to config directory
-        return startDir;
-      }
-      current = parent;
-    }
-  }
+  String _emptyTemplate(String tag) => '''
+-- $tag
+--
+-- A hand-written migration. Runs once, in order, inside a transaction, and is
+-- checksummed after it is applied: edit it now, never later.
+--
+-- Nothing here is derived from the schema, so a later `generate` will neither
+-- write to this file nor notice if it disagrees with the tables.
+''';
 }

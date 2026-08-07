@@ -2,19 +2,21 @@ import 'package:raindrop/raindrop.dart';
 
 extension StringOperators<V extends String?> on ColumnOf<V> {
   /// String like [value].
-  SQL like(ColumnOr<String> value) => SQL([this, const RawSQL('LIKE'), value]);
+  SQL like(ColumnOr<V> value) =>
+      SQL([this, const RawSQL('LIKE'), operand(value)]);
 
   /// Lexicographic ordering.
-  SQL greaterThan(ColumnOr<String> value) => SQL([this, Op.greaterThan, value]);
+  SQL greaterThan(ColumnOr<V> value) =>
+      SQL([this, Op.greaterThan, operand(value)]);
 
   /// Lexicographic ordering.
-  SQL greaterThanOrEqual(ColumnOr<String> value) =>
-      SQL([this, Op.greaterThanOrEqual, value]);
+  SQL greaterThanOrEqual(ColumnOr<V> value) =>
+      SQL([this, Op.greaterThanOrEqual, operand(value)]);
 
   /// Lexicographic ordering.
-  SQL lessThan(ColumnOr<String> value) => SQL([this, Op.lessThan, value]);
+  SQL lessThan(ColumnOr<V> value) => SQL([this, Op.lessThan, operand(value)]);
 
   /// Lexicographic ordering.
-  SQL lessThanOrEqual(ColumnOr<String> value) =>
-      SQL([this, Op.lessThanOrEqual, value]);
+  SQL lessThanOrEqual(ColumnOr<V> value) =>
+      SQL([this, Op.lessThanOrEqual, operand(value)]);
 }

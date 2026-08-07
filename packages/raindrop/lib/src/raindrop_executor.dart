@@ -91,11 +91,9 @@ R _read<R>(Selectable<R> selectable, List<Object?> rows) {
       true => null,
       _ => table.create(data)
     } as R;
-  } else if (selectable case final Column column) {
+  } else if (selectable case final SqlOperand operand) {
     final value = rows.removeAt(0);
-    return column.decode(value) as R;
-  } else if (selectable is Expression) {
-    return rows.removeAt(0) as R;
+    return operand.decode(value) as R;
   } else if (selectable case final SelectableResult result) {
     return result.readRecord(rows) as R;
   } else {

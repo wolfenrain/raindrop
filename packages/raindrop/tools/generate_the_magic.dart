@@ -33,12 +33,72 @@ void main(List<String> arguments) {
     'Right',
     amount,
   );
+
+  derivedSchemas(
+    '${script.parent.path}/../lib/src/definitions/derived_schemas.dart',
+    amount,
+  );
+}
+
+void derivedSchemas(String path, int amount) {
+  final buffer = StringBuffer()..writeln('''
+// GENERATED CODE - DO NOT EDIT BY HAND.
+// Run `dart run tools/generate_the_magic.dart` to regenerate.
+// ignore_for_file: public_member_api_docs, lines_longer_than_80_chars
+import 'package:raindrop/raindrop.dart';
+import 'package:raindrop/src/builders/derived.dart';
+import 'package:raindrop/src/definitions/table.dart';
+''');
+
+  for (var n = 1; n <= amount; n++) {
+    final indices = List.generate(n, (j) => j);
+    final params = indices.map((j) => 'V$j').join(', ');
+    final record =
+        n == 1 ? '(V0,)' : '(${indices.map((j) => 'V$j').join(', ')})';
+    final on = n == 1
+        ? 'SingleProjectionFromBuilder<Schema<dynamic>, dynamic, V0>'
+        : 'ProjectionFromBuilder<Schema<dynamic>, dynamic, $record>';
+    final element = n == 1 ? 'V0' : record;
+
+    buffer.writeln('''
+class Derived$n<$params> extends Schema<$record> {
+  Derived$n(super.\$, ${indices.map((j) => 'this.\$${j + 1}').join(', ')});
+
+${indices.map((j) => '  final ColumnType<V$j> \$${j + 1};').join('\n')}
+
+  @override
+  $record fromRow(RowReader read) => (${indices.map((j) => 'read(\$${j + 1})').join(', ')}${n == 1 ? ',' : ''});
+}
+
+extension DerivedProjection$n<$params> on $on {
+  /// The rows this projection returns, usable where a table is.
+  ///
+  /// Pass [as] when a single query holds more than one derived table, so their
+  /// names cannot collide.
+  Derived$n<$params> derived({String? as}) {
+    final prepared = prepareDerived<$element>(this);
+    return derivedTable<Derived$n<$params>, $record>(
+      as ?? defaultDerivedName(config),
+      (\$) => Derived$n<$params>(
+        \$,
+${indices.map((j) => '        ColumnType(derivedColumn<$record, V$j>(\$, prepared, $j, (r) => r.\$${j + 1})),').join('\n')}
+      ),
+      prepared.query,
+    );
+  }
+}
+''');
+  }
+
+  File(path)
+    ..createSync(recursive: true)
+    ..writeAsStringSync(buffer.toString());
 }
 
 void selectableColumns(String path, int amount) {
   final indices = List.generate(amount, (i) => i);
   final buffer = StringBuffer()..writeln('''
-// GENERATED CODE — DO NOT EDIT BY HAND.
+// GENERATED CODE - DO NOT EDIT BY HAND.
 // Run `dart run tools/generate_the_magic.dart` to regenerate.
 // ignore_for_file: public_member_api_docs, lines_longer_than_80_chars
 import 'package:raindrop/raindrop.dart';
@@ -70,6 +130,31 @@ extension ISUDRaindropExecutor on RaindropExecutor<RaindropDelegate> {
 
 typedef SelectingBuilder<${indices.map((i) => 'S$i extends Selectable<Object?>?').join(', ')}> = SelectBuilder<(${indices.map((i) => 'S$i').join(', ')})?>;
 
+/// The signature of [ISUDRaindropExecutor.select].
+typedef SelectFunction = SelectingBuilder<${indices.map((i) => 'S$i').join(', ')}> Function<${indices.map((i) => 'S$i extends Selectable<Object?>?').join(', ')}>([${indices.map((i) => 'S$i?').join(', ')}]);
+
+/// `SELECT DISTINCT`, as an extension on the torn-off [select] itself.
+extension DistinctSelect on SelectFunction {
+  /// Select distinct rows:
+  ///
+  /// ```dart
+  /// db.select.distinct(users.country, users.city).from(users);
+  /// // SELECT DISTINCT "country", "city" FROM "users"
+  /// ```
+  ///
+  /// Takes the same columns and returns the same builder as [ISUDRaindropExecutor.select].
+  ///
+  /// For one aggregate's operand, `COUNT(DISTINCT x)`, wrap the column in
+  /// `distinct()` instead.
+  SelectingBuilder<${indices.map((i) => 'S$i').join(', ')}> distinct<${indices.map((i) => 'S$i extends Selectable<Object?>?').join(', ')}>([${indices.map((i) => 'S$i? s$i').join(', ')}]) {
+    final builder = this<${indices.map((i) => 'S$i').join(', ')}>(${indices.map((i) => 's$i').join(', ')});
+    return SelectBuilder(
+      builder.executor,
+      config: builder.config.copyWith({#distinct: true}),
+    );
+  }
+}
+
 typedef _Unused = Selectable<Object?>?;
 
 class _Selecting<${indices.map((i) => 'S$i extends Selectable<Object?>?').join(', ')}> implements Selectable<(${indices.map((i) => 'S$i').join(', ')})?> {
@@ -80,9 +165,9 @@ ${indices.map((i) => '  final S$i? s$i;').join('\n')}
 
 extension SelectableColumns on SelectBuilder<(${List.filled(amount, '_Unused').join(', ')})?> {
   /// Create a from builder where the whole table gets selected.
-  SelectFromBuilder<Schema<R>, R, R> from<R>(Schema<R> from) {
+  WholeRowFromBuilder<Schema<R>, R> from<R>(Schema<R> from) {
     final table = Table.get(from);
-    return SelectFromBuilder(
+    return WholeRowFromBuilder(
       executor,
       config: config.copyWith({#selecting: table, #from: table}),
     );
@@ -108,13 +193,18 @@ extension SelectableColumns on SelectBuilder<(${List.filled(amount, '_Unused').j
     final resultType =
         i == 0 ? 'V0' : '(${activeIndices.map((j) => 'V$j').join(', ')})';
 
+    // One column is its own class: its element type is V0 rather than a
+    // 1-tuple, so nothing downstream can tell it apart by element type.
+    final builder =
+        i == 0 ? 'SingleProjectionFromBuilder' : 'ProjectionFromBuilder';
+
     buffer.writeln('''
 extension SelectableColumns$i<$typeParams>
     on SelectBuilder<($onTypeInner)?> {
   /// Create a from builder.
-  ProjectionFromBuilder<Schema<R>, R, $resultType> from<R>(Schema<R> from) {
+  $builder<Schema<R>, R, $resultType> from<R>(Schema<R> from) {
     final selecting = config[#selecting]! as _Selecting;
-    return ProjectionFromBuilder(
+    return $builder(
       executor,
       config: config.copyWith({
         #selecting: ${i == 0 ? 'selecting.s0' : 'SelectableResult<$resultType>([${activeIndices.map((j) => 'selecting.s$j!').join(', ')}])'},
@@ -131,7 +221,7 @@ extension SelectableColumns$i<$typeParams>
 void indexableColumns(String path, int amount) {
   final columns = List.generate(amount - 1, (i) => i + 1);
   final buffer = StringBuffer()..writeln('''
-// GENERATED CODE — DO NOT EDIT BY HAND.
+// GENERATED CODE - DO NOT EDIT BY HAND.
 // Run `dart run tools/generate_the_magic.dart` to regenerate.
 // ignore_for_file: public_member_api_docs, lines_longer_than_80_chars
 import 'package:raindrop/raindrop.dart';
@@ -164,7 +254,7 @@ void updateableColumns(String path, int amount) {
       '[${indices.skip(1).map((i) => 'Updateable<dynamic>? u$i').join(', ')}]',
   ].join(', ');
   final buffer = StringBuffer()..writeln('''
-// GENERATED CODE — DO NOT EDIT BY HAND.
+// GENERATED CODE - DO NOT EDIT BY HAND.
 // Run `dart run tools/generate_the_magic.dart` to regenerate.
 // ignore_for_file: public_member_api_docs, lines_longer_than_80_chars
 import 'package:raindrop/raindrop.dart';
@@ -209,7 +299,7 @@ void generateJoin(String path, String type, int amount) {
   };
 
   final buffer = StringBuffer()..writeln('''
-// GENERATED CODE — DO NOT EDIT BY HAND.
+// GENERATED CODE - DO NOT EDIT BY HAND.
 // Run `dart run tools/generate_the_magic.dart` to regenerate.
 // ignore_for_file: public_member_api_docs, lines_longer_than_80_chars
 

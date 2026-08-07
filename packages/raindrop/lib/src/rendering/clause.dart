@@ -109,6 +109,9 @@ abstract final class SelectSlot {
   /// `GROUP BY ...`.
   static const int groupBy = 6000;
 
+  /// `HAVING ...`.
+  static const int having = 6500;
+
   /// `ORDER BY ...`.
   static const int orderBy = 7000;
 

@@ -17,8 +17,9 @@ class UpdateableColumn<V> implements Updateable<V> {
   /// The column in question.
   final Column<dynamic, V> column;
 
-  /// The value to update it too.
-  final V value;
+  /// The prepared operand: an encoded literal, a column reference, or an
+  /// expression.
+  final Object? value;
 }
 
 /// {@template updateable_table}
@@ -35,28 +36,11 @@ class UpdateableTable<S extends Schema<R>, R> implements Updateable<R> {
   final R value;
 }
 
-/// {@template updateable_expression}
-/// A column whose new value is the result of a SQL [Expression].
-/// {@endtemplate}
-class UpdateableExpression<V> implements Updateable<V> {
-  /// {@macro updateable_expression}
-  const UpdateableExpression(this.column, this.expression);
-
-  /// The column being updated.
-  final Column<dynamic, V> column;
-
-  /// The expression producing the new value.
-  final Expression<V> expression;
-}
-
 /// Provide a set method to a column to update a column.
 extension UpdateColumn<V> on ColumnOf<V> {
-  /// Set the column for a given row to [value].
-  UpdateableColumn<V> to(V value) => UpdateableColumn(this!, value);
-
-  /// Set the column to the result of a SQL [expression].
-  UpdateableExpression<V> toExpression(Expression<V> expression) =>
-      UpdateableExpression(this!, expression);
+  /// Set the column to [value]: a literal, another column, or an expression.
+  UpdateableColumn<V> to(ColumnOr<V> value) =>
+      UpdateableColumn(this!, operand(value));
 }
 
 /// {@template updateable_result}

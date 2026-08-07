@@ -89,8 +89,27 @@ mixin ToQuery<S, V> on QueryBuilder<S, V> implements Future<List<V>> {
   Future<V?> get singleOrNull async => (await this).singleOrNull;
 
   /// Compiles this builder's config into a renderable + decodable statement.
+  ///
+  /// [qualified] forces column references to carry their table, which a
+  /// statement standing on its own does not need but a subquery does: a
+  /// correlated one references the outer query's columns, and an unqualified
+  /// name there is ambiguous rather than wrong-looking.
   @visibleForTesting
-  Query<V> compile();
+  Query<V> compile({bool qualified = false});
+
+  /// This builder's statement, prepared to sit inside another one.
+  ///
+  /// [qualified] differs by position, and getting it wrong is quiet rather
+  /// than loud. A subquery in a predicate wants it on, so correlated
+  /// references name their table. A derived table wants it OFF: qualifying
+  /// makes the projection come out aliased (`"users"."name" AS "users__name"`)
+  /// and the outer query's `"name"` then matches nothing.
+  ///
+  /// Exists because [compile] is test-visible only, and embedding is a library
+  /// concern rather than a test one.
+  @internal
+  Query<V> compileEmbedded({bool qualified = false}) =>
+      compile(qualified: qualified);
 
   @override
   Stream<List<V>> asStream() => _cache.asStream();

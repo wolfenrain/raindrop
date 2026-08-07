@@ -4,36 +4,6 @@ import 'package:raindrop/raindrop.dart';
 
 typedef ColumnOr<V> = FutureOr<V>;
 
-/// Makes a [Column] usable as a [ColumnOr] operand by posing as a `Future<V>`.
-///
-/// This is a deliberate fiction: `ColumnOr<V>` is `FutureOr<V>` so a column
-/// must satisfy `Future<V>` to be accepted alongside a literal `V`.
-mixin ColumnOperand<V> implements Future<V> {
-  static Never _notAFuture() => throw UnsupportedError(
-        'A Column is not a real Future, it only poses as one so it can be '
-        'used as a ColumnOr operand.',
-      );
-
-  @override
-  Stream<V> asStream() => _notAFuture();
-
-  @override
-  Future<V> catchError(Function onError, {bool Function(Object error)? test}) =>
-      _notAFuture();
-
-  @override
-  Future<R> then<R>(FutureOr<R> Function(V value) onValue,
-          {Function? onError}) =>
-      _notAFuture();
-
-  @override
-  Future<V> timeout(Duration timeLimit, {FutureOr<V> Function()? onTimeout}) =>
-      _notAFuture();
-
-  @override
-  Future<V> whenComplete(FutureOr<void> Function() action) => _notAFuture();
-}
-
 /// Row field getter for schema [R].
 ///
 /// Use [W] such that `null is W` matches the column's nullability
@@ -42,9 +12,7 @@ mixin ColumnOperand<V> implements Future<V> {
 /// [Column.isNullable].
 typedef Field<R, W extends Object?> = W Function(R);
 
-class Column<R, V extends Object?>
-    with ColumnOperand<V>
-    implements Selectable<V> {
+class Column<R, V extends Object?> with SqlOperand<V> implements Selectable<V> {
   Column(
     this.table,
     this.name, {
@@ -73,24 +41,8 @@ class Column<R, V extends Object?>
   /// This is useful for internal use mostly.
   dynamic readValueOf(Object? r) => valueOf!(r as R) as dynamic;
 
-  Object? encode(V? input) {
-    if (input == null) return null;
-
-    return switch (transformer) {
-      final ColumnTransformer transformer => transformer.encode(input),
-      _ => input
-    };
-  }
-
-  V? decode(Object? input) {
-    if (input == null) return null;
-
-    return switch (transformer) {
-      final ColumnTransformer transformer => transformer.decode(input),
-      _ => input
-    } as V?;
-  }
-
+  /// A column's transformer for Dart to SQL conversion.
+  @override
   final ColumnTransformer<V, Object?>? transformer;
 
   /// If the column is a primary key.
@@ -105,8 +57,11 @@ class Column<R, V extends Object?>
   /// Whether this column auto-increments (for primary keys).
   bool autoIncrement;
 
-  /// Default value expression for the column.
-  final String? defaultValue;
+  /// The column's default: a value in the column's own type, or an
+  /// expression the database evaluates.
+  ///
+  /// `null` means the column has no default.
+  final ColumnOr<V>? defaultValue;
 
   /// Foreign key reference for this column.
   ForeignKeyReference? foreignKeyReference;

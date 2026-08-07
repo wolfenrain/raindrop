@@ -161,13 +161,15 @@ class ColumnInfo {
 }
 
 /// {@template table_info}
-/// Table information for DDL generation.
+/// Table information for DDL generation: the full definition a generator
+/// needs to emit a CREATE TABLE, or to rebuild one.
 /// {@endtemplate}
 class TableInfo {
   /// {@macro table_info}
   const TableInfo({
     required this.name,
     required this.columns,
+    this.checks = const {},
   });
 
   /// Creates a [TableInfo] from a map representation.
@@ -177,6 +179,9 @@ class TableInfo {
       columns: (map['columns'] as List<dynamic>)
           .map((c) => ColumnInfo.fromMap(c as Map<String, dynamic>))
           .toList(),
+      checks: Map<String, String>.from(
+        map['checks'] as Map<String, dynamic>? ?? {},
+      ),
     );
   }
 
@@ -186,11 +191,62 @@ class TableInfo {
   /// The columns in the table.
   final List<ColumnInfo> columns;
 
+  /// Table-level CHECK constraints, by constraint name, as raw SQL
+  /// expressions.
+  final Map<String, String> checks;
+
+  /// The column named [name], or null.
+  ColumnInfo? column(String name) {
+    for (final column in columns) {
+      if (column.name == name) return column;
+    }
+    return null;
+  }
+
   /// Converts this table info to a map representation.
   Map<String, dynamic> toMap() {
     return {
       'name': name,
       'columns': columns.map((c) => c.toMap()).toList(),
+      if (checks.isNotEmpty) 'checks': checks,
+    };
+  }
+}
+
+/// {@template referenced_by}
+/// A table whose foreign keys reference the table being altered, with its
+/// indexes.
+///
+/// Carried on `AlterTable` so a dialect that must REBUILD the altered table
+/// (SQLite) can rebuild its dependents too, dropping a table that is still
+/// referenced fires `ON DELETE CASCADE` on the referencing rows, silently.
+/// Dialects that alter in place (Postgres) ignore this.
+/// {@endtemplate}
+class ReferencedBy {
+  /// {@macro referenced_by}
+  const ReferencedBy({required this.table, this.indexes = const []});
+
+  /// Creates a [ReferencedBy] from a map representation.
+  factory ReferencedBy.fromMap(Map<String, dynamic> map) {
+    return ReferencedBy(
+      table: TableInfo.fromMap(map['table'] as Map<String, dynamic>),
+      indexes: (map['indexes'] as List<dynamic>? ?? [])
+          .map((i) => IndexInfo.fromMap(i as Map<String, dynamic>))
+          .toList(),
+    );
+  }
+
+  /// The referencing table's full (current) definition.
+  final TableInfo table;
+
+  /// The referencing table's indexes, which die with it in a rebuild.
+  final List<IndexInfo> indexes;
+
+  /// Converts this to a map representation.
+  Map<String, dynamic> toMap() {
+    return {
+      'table': table.toMap(),
+      if (indexes.isNotEmpty) 'indexes': indexes.map((i) => i.toMap()).toList(),
     };
   }
 }
@@ -216,7 +272,7 @@ class IndexInfo {
     return IndexInfo(
       name: map['name'] as String,
       tableName: map['tableName'] as String,
-      columns: (map['columns'] as List<dynamic>).cast<String>(),
+      columns: List<String>.from(map['columns'] as List<dynamic>),
       isUnique: map['isUnique'] as bool? ?? false,
       where: map['where'] as String?,
     );

@@ -10,10 +10,10 @@ import 'package:raindrop/dialect.dart';
 /// implementation of this interface and define a main method in the file so
 /// it can be dynamically executed by the DDL runtime.
 /// ```
-/// void main(List<String> args, SendPort sendPort) => MyDdqlGenerator(sendPort);
+/// void main(List<String> args, SendPort sendPort) => MyDdlGenerator(sendPort);
 ///
-/// class MyDdqlGenerator extends DdlGenerator {
-///   MyDdqlGenerator(super.sendPort) : super(dialect: const MyDialect());
+/// class MyDdlGenerator extends DdlGenerator {
+///   MyDdlGenerator(super.sendPort) : super(dialect: const MyDialect());
 ///
 ///   ...
 /// }
@@ -22,7 +22,7 @@ import 'package:raindrop/dialect.dart';
 abstract class DdlGenerator {
   /// {@macro ddl_generator}
   DdlGenerator(SendPort sendPort, {required this.dialect}) {
-    final receivePort = ReceivePort();
+    final receivePort = _receivePort = ReceivePort();
     sendPort.send(receivePort.sendPort);
 
     receivePort.listen((message) {
@@ -55,51 +55,47 @@ abstract class DdlGenerator {
   /// The SQL dialect used by this generator.
   final SqlDialect dialect;
 
+  late final ReceivePort _receivePort;
+
+  /// Closes the command port.
+  void dispose() => _receivePort.close();
+
   /// Generates SQL DDL statements from a list of diff operations.
+  ///
+  /// Overridable so a dialect can validate ACROSS operations (e.g. SQLite
+  /// rejects a rebuild whose dependent table is itself altered in the same
+  /// run), overrides should still delegate here for the per-operation work.
   String generate(List<DiffOperation> operations) {
     return [
-      for (final op in operations)
-        switch (op) {
-          CreateTable(:final tableName, :final columns) =>
-            createTable(tableName, columns),
-          RenameTable(:final oldName, :final newName) =>
-            renameTable(oldName, newName),
-          DropTable(:final tableName) => dropTable(tableName),
-          AddColumn(:final tableName, :final column) =>
-            addColumn(tableName, column),
-          RenameColumn(:final tableName, :final oldName, :final newName) =>
-            renameColumn(tableName, oldName, newName),
-          DropColumn(:final tableName, :final columnName) =>
-            dropColumn(tableName, columnName),
-          AlterColumn(:final tableName, :final oldColumn, :final newColumn) =>
-            alterColumn(tableName, oldColumn, newColumn),
-          CreateIndex(:final index) => createIndex(index),
-          DropIndex(:final indexName) => dropIndex(indexName),
-        },
+      for (final op in operations) _nonBlank(op, render(op)),
     ].join('\n\n');
   }
 
-  /// Generates a CREATE TABLE statement.
-  String createTable(String tableName, List<ColumnInfo> columns);
+  /// Renders a single operation through the dialect's methods.
+  String render(DiffOperation operation) => switch (operation) {
+        CreateTable(:final table) => createTable(table),
+        DropTable(:final tableName) => dropTable(tableName),
+        final AlterTable alter => alterTable(alter),
+        CreateIndex(:final index) => createIndex(index),
+        DropIndex(:final indexName) => dropIndex(indexName),
+      };
 
-  /// Generate SQL to rename an existing table.
-  String renameTable(String oldName, String newName);
+  String _nonBlank(DiffOperation operation, String sql) {
+    if (sql.trim().isEmpty) {
+      throw StateError('${operation.describe()} produced no SQL.');
+    }
+    return sql;
+  }
+
+  /// Generates a CREATE TABLE statement.
+  String createTable(TableInfo table);
 
   /// Generates a DROP TABLE statement.
   String dropTable(String tableName);
 
-  /// Generates an ADD COLUMN statement.
-  String addColumn(String tableName, ColumnInfo column);
-
-  /// Generate SQL to rename an existing column.
-  String renameColumn(String tableName, String oldName, String newName);
-
-  /// Generates a DROP COLUMN statement.
-  String dropColumn(String tableName, String columnName);
-
-  /// Generates an ALTER COLUMN statement (or equivalent).
-  String alterColumn(
-      String tableName, ColumnInfo oldColumn, ColumnInfo newColumn);
+  /// Expresses every change [operation] carries, column changes, checks,
+  /// and this table's index changes.
+  String alterTable(AlterTable operation);
 
   /// Generates a CREATE INDEX statement.
   String createIndex(IndexInfo index);

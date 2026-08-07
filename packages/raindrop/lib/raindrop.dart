@@ -1,8 +1,9 @@
 export 'src/artifacts/artifacts.dart';
-export 'src/builders/builders.dart';
+export 'src/builders/builders.dart'
+    hide PreparedDerived, defaultDerivedName, derivedColumn, prepareDerived;
 export 'src/cached_future.dart';
 export 'src/database_result.dart';
-export 'src/definitions/definitions.dart';
+export 'src/definitions/definitions.dart' hide derivedTable;
 export 'src/delegates/delegates.dart';
 export 'src/expressions/expressions.dart';
 export 'src/filters/filters.dart';

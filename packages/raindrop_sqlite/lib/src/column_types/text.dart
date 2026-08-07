@@ -4,7 +4,7 @@ extension TextColumnDefinition<R> on SchemaBuilder<R> {
   ColumnType<W> text<W extends String?>(
     String name,
     Field<R, W> field, {
-    String? defaultValue,
+    ColumnOr<String>? defaultValue,
   }) {
     return column<String, W>(
       name,

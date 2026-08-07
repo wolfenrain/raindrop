@@ -4,7 +4,7 @@ extension IntColumnDefinition<R> on SchemaBuilder<R> {
   ColumnType<W> integer<W extends int?>(
     String name,
     Field<R, W> field, {
-    String? defaultValue,
+    ColumnOr<int>? defaultValue,
   }) {
     return column<int, W>(
       name,

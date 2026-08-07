@@ -136,8 +136,13 @@ class DdlRunner {
         packageConfig: packageConfig,
       );
 
-      // Wait for the isolate to send back its SendPort
-      final isolateSendPort = await receivePort.first as SendPort;
+      // A generator that fails to compile or throws while initialising never
+      // sends its port, so race the error channel or this would hang.
+      final failure = errorPort.first.then((error) => throw StateError(
+            'The DDL generator could not be loaded:\n$error',
+          ));
+      final isolateSendPort =
+          await Future.any([receivePort.first, failure]) as SendPort;
 
       // Create a port for the response
       final responsePort = ReceivePort();
@@ -149,7 +154,8 @@ class DdlRunner {
       });
 
       // Wait for the response
-      final response = await responsePort.first as Map<String, dynamic>;
+      final response = await Future.any([responsePort.first, failure])
+          as Map<String, dynamic>;
       responsePort.close();
 
       if (response['success'] == true) {

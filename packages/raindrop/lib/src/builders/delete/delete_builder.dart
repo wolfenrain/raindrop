@@ -26,7 +26,7 @@ class DeleteAllBuilder<S extends Schema<R>, R, V> extends DeleteBuilder<S, R, V>
   }
 
   @override
-  Query<V> compile() => Query<V>(
+  Query<V> compile({bool qualified = false}) => Query<V>(
         shape: config.get(#from)! as Table,
         clauses: {
           DeleteSlot.from: DeleteFromClause(config.get(#from)! as Table),
@@ -46,7 +46,7 @@ class DeleteWhereBuilder<S extends Schema<R>, R, V>
   DeleteWhereBuilder(super.executor, {required super.config});
 
   @override
-  Query<V> compile() => Query<V>(
+  Query<V> compile({bool qualified = false}) => Query<V>(
         shape: config.get(#from)! as Table,
         clauses: {
           DeleteSlot.from: DeleteFromClause(config.get(#from)! as Table),

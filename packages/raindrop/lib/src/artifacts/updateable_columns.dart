@@ -1,4 +1,4 @@
-// GENERATED CODE — DO NOT EDIT BY HAND.
+// GENERATED CODE - DO NOT EDIT BY HAND.
 // Run `dart run tools/generate_the_magic.dart` to regenerate.
 // ignore_for_file: public_member_api_docs, lines_longer_than_80_chars
 import 'package:raindrop/raindrop.dart';

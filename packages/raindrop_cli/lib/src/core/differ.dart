@@ -15,155 +15,175 @@ class SchemaDiffer {
     final oldIndexes = from?.indexes ?? {};
     final newIndexes = to.indexes;
 
-    // Find dropped tables
+    // Dropped tables. Their indexes die with them, so the index pass below
+    // must not emit a DropIndex that would run after the table is gone.
     for (final tableName in oldTables.keys) {
       if (!newTables.containsKey(tableName)) {
         operations.add(DropTable(tableName));
       }
     }
 
-    // Find new and modified tables
+    // Tables whose intra-table state is reconciled by an AlterTable, their
+    // index changes travel ON the operation rather than as global index ops,
+    // so exactly one operation owns each table's reconciliation.
+    final altered = <String>{};
+
     for (final entry in newTables.entries) {
       final tableName = entry.key;
       final newTable = entry.value;
 
       if (!oldTables.containsKey(tableName)) {
-        // New table
-        operations.add(CreateTable(
-          tableName: tableName,
-          columns: newTable.columns.values.map(_toColumnInfo).toList(),
-        ));
-      } else {
-        // Existing table - check for column changes
-        final oldTable = oldTables[tableName]!;
-        operations.addAll(_diffTable(tableName, oldTable, newTable));
+        operations.add(CreateTable(_toTableInfo(newTable)));
+        continue;
       }
+
+      final oldTable = oldTables[tableName]!;
+      final tableOldIndexes = _tableIndexes(oldIndexes, tableName);
+      final tableNewIndexes = _tableIndexes(newIndexes, tableName);
+
+      final changed = !_sameColumns(oldTable, newTable) ||
+          !_sameChecks(oldTable, newTable) ||
+          !_sameIndexes(tableOldIndexes, tableNewIndexes);
+      if (!changed) continue;
+
+      altered.add(tableName);
+      operations.add(
+        AlterTable(
+          oldTable: _toTableInfo(oldTable),
+          newTable: _toTableInfo(newTable),
+          renamedColumns: _detectRenames(oldTable, newTable),
+          oldIndexes: tableOldIndexes,
+          newIndexes: tableNewIndexes,
+          referencedBy: _referencedByClosure(to, tableName),
+        ),
+      );
     }
 
-    // Diff indexes
-    operations.addAll(_diffIndexes(oldIndexes, newIndexes));
+    operations.addAll(
+      _diffIndexes(oldIndexes, newIndexes, skipTables: {
+        ...altered,
+        // Dropped tables' indexes are gone already.
+        for (final name in oldTables.keys)
+          if (!newTables.containsKey(name)) name,
+      }),
+    );
 
     return operations;
   }
 
-  /// Calculates the list of index operations needed.
+  bool _sameColumns(TableSnapshot old, TableSnapshot new_) =>
+      old.columns.length == new_.columns.length &&
+      old.columns.entries.every((e) => new_.columns[e.key] == e.value);
+
+  bool _sameChecks(TableSnapshot old, TableSnapshot new_) =>
+      old.checks.length == new_.checks.length &&
+      old.checks.entries.every((e) => new_.checks[e.key] == e.value);
+
+  bool _sameIndexes(List<IndexInfo> old, List<IndexInfo> new_) =>
+      old.length == new_.length &&
+      [for (var i = 0; i < old.length; i++) old[i] == new_[i]]
+          .every((same) => same);
+
+  /// The indexes of [tableName], in snapshot order.
+  List<IndexInfo> _tableIndexes(
+    Map<String, IndexSnapshot> indexes,
+    String tableName,
+  ) =>
+      [
+        for (final index in indexes.values)
+          if (index.tableName == tableName) _toIndexInfo(index),
+      ];
+
+  /// The transitive closure of tables whose foreign keys reference
+  /// [tableName], in the new schema, each with its indexes.
+  List<ReferencedBy> _referencedByClosure(SchemaSnapshot to, String tableName) {
+    final result = <ReferencedBy>[];
+    final seen = {tableName};
+    var frontier = {tableName};
+
+    while (frontier.isNotEmpty) {
+      final next = <String>{};
+      for (final entry in to.tables.entries) {
+        if (seen.contains(entry.key)) continue;
+        final references = entry.value.columns.values.any(
+          (column) => frontier.contains(column.foreignKey?.referencedTable),
+        );
+        if (references) {
+          seen.add(entry.key);
+          next.add(entry.key);
+          result.add(
+            ReferencedBy(
+              table: _toTableInfo(entry.value),
+              indexes: _tableIndexes(to.indexes, entry.key),
+            ),
+          );
+        }
+      }
+      frontier = next;
+    }
+
+    return result;
+  }
+
+  /// Index operations for tables not owned by an [AlterTable] this run.
   List<DiffOperation> _diffIndexes(
     Map<String, IndexSnapshot> oldIndexes,
-    Map<String, IndexSnapshot> newIndexes,
-  ) {
+    Map<String, IndexSnapshot> newIndexes, {
+    required Set<String> skipTables,
+  }) {
     final operations = <DiffOperation>[];
 
-    // Find dropped indexes
-    for (final name in oldIndexes.keys) {
-      if (!newIndexes.containsKey(name)) {
-        operations.add(DropIndex(name));
+    for (final entry in oldIndexes.entries) {
+      if (skipTables.contains(entry.value.tableName)) continue;
+      if (!newIndexes.containsKey(entry.key)) {
+        operations.add(DropIndex(entry.key, tableName: entry.value.tableName));
       }
     }
 
-    // Find new or changed indexes
     for (final entry in newIndexes.entries) {
       final name = entry.key;
       final newIndex = entry.value;
-      final oldIndex = oldIndexes[name];
+      if (skipTables.contains(newIndex.tableName)) continue;
 
+      final oldIndex = oldIndexes[name];
       if (oldIndex == null) {
-        // New index
         operations.add(CreateIndex(index: _toIndexInfo(newIndex)));
       } else if (oldIndex != newIndex) {
         // Changed index - drop and recreate
-        operations.add(DropIndex(name));
-        operations.add(CreateIndex(index: _toIndexInfo(newIndex)));
+        operations
+          ..add(DropIndex(name, tableName: newIndex.tableName))
+          ..add(CreateIndex(index: _toIndexInfo(newIndex)));
       }
     }
 
     return operations;
   }
 
-  /// Converts an [IndexSnapshot] to an [IndexInfo].
-  IndexInfo _toIndexInfo(IndexSnapshot snapshot) {
-    return IndexInfo(
-      name: snapshot.name,
-      tableName: snapshot.tableName,
-      columns: snapshot.columns,
-      isUnique: snapshot.isUnique,
-      where: snapshot.where,
-    );
-  }
+  /// Detects column renames: a column that disappeared and a column that
+  /// appeared with an identical definition are treated as one rename.
+  Map<String, String> _detectRenames(TableSnapshot old, TableSnapshot new_) {
+    final dropped = [
+      for (final column in old.columns.values)
+        if (!new_.columns.containsKey(column.name)) column,
+    ];
+    final added = [
+      for (final column in new_.columns.values)
+        if (!old.columns.containsKey(column.name)) column,
+    ];
 
-  /// Calculates column-level diff for a table.
-  List<DiffOperation> _diffTable(
-    String tableName,
-    TableSnapshot oldTable,
-    TableSnapshot newTable,
-  ) {
-    final operations = <DiffOperation>[];
-
-    final oldColumns = Map<String, ColumnSnapshot>.from(oldTable.columns);
-    final newColumns = Map<String, ColumnSnapshot>.from(newTable.columns);
-
-    // First, find columns that exist in both (possibly modified)
-    final matchedOldColumns = <String>{};
-    final matchedNewColumns = <String>{};
-
-    for (final oldName in oldColumns.keys) {
-      if (newColumns.containsKey(oldName)) {
-        matchedOldColumns.add(oldName);
-        matchedNewColumns.add(oldName);
-
-        final oldColumn = oldColumns[oldName]!;
-        final newColumn = newColumns[oldName]!;
-        if (oldColumn != newColumn) {
-          operations.add(AlterColumn(
-            tableName,
-            _toColumnInfo(oldColumn),
-            _toColumnInfo(newColumn),
-          ));
-        }
-      }
-    }
-
-    // Find dropped and added columns
-    final droppedColumns = oldColumns.keys
-        .where((name) => !matchedOldColumns.contains(name))
-        .map((name) => oldColumns[name]!)
-        .toList();
-    final addedColumns = newColumns.keys
-        .where((name) => !matchedNewColumns.contains(name))
-        .map((name) => newColumns[name]!)
-        .toList();
-
-    // Try to detect renames: match dropped columns with added columns
-    // that have the same type and constraints
-    final renamedFrom = <ColumnSnapshot>{};
-    final renamedTo = <ColumnSnapshot>{};
-
-    for (final dropped in droppedColumns) {
-      for (final added in addedColumns) {
-        if (renamedTo.contains(added)) continue;
-
-        if (_columnsMatchForRename(dropped, added)) {
-          operations.add(RenameColumn(tableName, dropped.name, added.name));
-          renamedFrom.add(dropped);
-          renamedTo.add(added);
+    final renames = <String, String>{};
+    final claimed = <ColumnSnapshot>{};
+    for (final from in dropped) {
+      for (final to in added) {
+        if (claimed.contains(to)) continue;
+        if (_columnsMatchForRename(from, to)) {
+          renames[from.name] = to.name;
+          claimed.add(to);
           break;
         }
       }
     }
-
-    // Add remaining drops and adds
-    for (final dropped in droppedColumns) {
-      if (!renamedFrom.contains(dropped)) {
-        operations.add(DropColumn(tableName, dropped.name));
-      }
-    }
-
-    for (final added in addedColumns) {
-      if (!renamedTo.contains(added)) {
-        operations.add(AddColumn(tableName, _toColumnInfo(added)));
-      }
-    }
-
-    return operations;
+    return renames;
   }
 
   /// Checks if two columns match for a potential rename operation.
@@ -177,6 +197,25 @@ class SchemaDiffer {
         old.autoIncrement == new_.autoIncrement &&
         old.defaultValue == new_.defaultValue &&
         old.foreignKey == new_.foreignKey;
+  }
+
+  TableInfo _toTableInfo(TableSnapshot snapshot) {
+    return TableInfo(
+      name: snapshot.name,
+      columns: snapshot.columns.values.map(_toColumnInfo).toList(),
+      checks: snapshot.checks,
+    );
+  }
+
+  /// Converts an [IndexSnapshot] to an [IndexInfo].
+  IndexInfo _toIndexInfo(IndexSnapshot snapshot) {
+    return IndexInfo(
+      name: snapshot.name,
+      tableName: snapshot.tableName,
+      columns: snapshot.columns,
+      isUnique: snapshot.isUnique,
+      where: snapshot.where,
+    );
   }
 
   /// Converts a [ColumnSnapshot] to a [ColumnInfo].

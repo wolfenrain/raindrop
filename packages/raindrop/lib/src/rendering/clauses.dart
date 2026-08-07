@@ -17,24 +17,17 @@ class ExpressionClause extends Clause {
     final buffer = StringBuffer();
     for (var i = 0; i < sql.chunks.length; i++) {
       final chunk = sql.chunks[i];
-      if (chunk case final RawSQL chunk) {
-        buffer.write(chunk.sql);
-      } else if (chunk case final Column column) {
-        if (column.table.alias case final String alias) {
-          buffer.write('${context.escapeName(alias)}.');
-        } else if (!singleTable) {
-          buffer.write('${context.escapeName(column.table.name)}.');
-        }
-        buffer.write(context.escapeName(column.name));
+      if (chunk case [final Subquery<dynamic> only]) {
+        buffer.write(_chunk(context, only));
       } else if (chunk case final List<dynamic> list) {
         buffer.write('(');
         for (var j = 0; j < list.length; j++) {
           if (j > 0) buffer.write(', ');
-          buffer.write(context.param(list[j]));
+          buffer.write(_chunk(context, list[j]));
         }
         buffer.write(')');
       } else {
-        buffer.write(context.param(chunk));
+        buffer.write(_chunk(context, chunk));
       }
 
       if (i != sql.chunks.length - 1 &&
@@ -45,6 +38,48 @@ class ExpressionClause extends Clause {
       }
     }
     return buffer.toString();
+  }
+
+  /// Renders one chunk.
+  ///
+  /// Anything that is already SQL, is already written out:
+  /// - raw text
+  /// - a column reference
+  /// - a nested expression
+  ///
+  /// Only a value falls through to a bind, which is what keeps
+  /// [RenderContext.values] aligned with the placeholders.
+  ///
+  /// Nested expressions render recursively rather than having their chunks
+  /// spliced in: the spacing rules below key off neighbouring [RawSQL], and a
+  /// rendered string is opaque to them.
+  String _chunk(RenderContext context, Object? chunk) {
+    if (chunk case final RawSQL raw) return raw.sql;
+
+    if (chunk case final Column column) {
+      final buffer = StringBuffer();
+      if (column.table.alias case final String alias) {
+        buffer.write('${context.escapeName(alias)}.');
+      } else if (!singleTable) {
+        buffer.write('${context.escapeName(column.table.name)}.');
+      }
+      return (buffer..write(context.escapeName(column.name))).toString();
+    }
+
+    if (chunk case final Expression<dynamic> expression) {
+      return ExpressionClause(expression.build(), singleTable: singleTable)
+          .render(context);
+    }
+
+    if (chunk case final SQL nested) {
+      return ExpressionClause(nested, singleTable: singleTable).render(context);
+    }
+
+    if (chunk case final Clause clause) {
+      return clause.render(context);
+    }
+
+    return context.param(chunk);
   }
 
   static bool _endsWithOpenParen(Object? chunk) =>
@@ -94,6 +129,11 @@ class FilterClause extends Clause {
       final inverted =
           FilterClause(f.invert, singleTable: singleTable).render(context);
       buffer.write('NOT ($inverted)');
+    } else if (f case final Expression<dynamic> expression) {
+      buffer.write(
+        ExpressionClause(SQL([expression]), singleTable: singleTable)
+            .render(context),
+      );
     } else {
       throw UnsupportedError('${f.runtimeType}');
     }
@@ -132,14 +172,28 @@ class SelectionClause extends Clause {
         if (i != table.columns.length - 1) chunks.add(', ');
       }
     } else if (select case final Column column) {
+      final explicit = switch (column) {
+        final ColumnAlias<dynamic, dynamic> aliased => aliased.alias,
+        _ => null,
+      };
       if (singleTable) {
-        chunks.add(context.escapeName(column.name));
+        final name = context.escapeName(column.name);
+        chunks.add(
+          explicit == null ? name : '$name AS ${context.escapeName(explicit)}',
+        );
       } else {
         final prefix = column.table.alias ?? column.table.name;
         final colName = context.escapeName(column.name);
-        final alias = context.escapeName('${prefix}__${column.name}');
+        final alias =
+            context.escapeName(explicit ?? '${prefix}__${column.name}');
         chunks.add('${context.escapeName(prefix)}.$colName AS $alias');
       }
+    } else if (select case final AliasedExpression<dynamic> aliased) {
+      final rendered = ExpressionClause(
+        aliased.build(),
+        singleTable: singleTable,
+      ).render(context);
+      chunks.add('$rendered AS ${context.escapeName(aliased.alias)}');
     } else if (select case final Expression<dynamic> expr) {
       chunks.add(ExpressionClause(expr.build(), singleTable: singleTable)
           .render(context));
@@ -166,11 +220,33 @@ class TableClause extends Clause {
   final Table table;
 
   @override
-  String render(RenderContext context) => [
-        context.escapeName(table.name),
-        if (table.alias case final String alias)
-          'AS ${context.escapeName(alias)}',
-      ].join(' ');
+  String render(RenderContext context) {
+    if (table.derivedFrom case final Query<dynamic> query) {
+      final inner = QueryClause(query).render(context);
+      return '($inner) AS ${context.escapeName(table.aliasOrName)}';
+    }
+    return [
+      context.escapeName(table.name),
+      if (table.alias case final String alias)
+        'AS ${context.escapeName(alias)}',
+    ].join(' ');
+  }
+}
+
+/// `HAVING <filter>`, the group-level counterpart to `WHERE`.
+class HavingClause extends Clause {
+  /// Creates a having clause.
+  const HavingClause(this.filter, {this.singleTable = false});
+
+  /// The filter.
+  final Filter filter;
+
+  /// When false, column references are table-qualified.
+  final bool singleTable;
+
+  @override
+  String render(RenderContext context) =>
+      'HAVING ${FilterClause(filter, singleTable: singleTable).render(context)}';
 }
 
 /// Renders a list of `JOIN` clauses.
@@ -216,20 +292,9 @@ class UpdateSetClause extends Clause {
     final updateSet = this.updateSet;
     final chunks = <String>[];
     if (updateSet case UpdateableColumn(:final column, :final value)) {
-      if (value is SQL) {
-        chunks.add(
-          '${context.escapeName(column.name)} = '
-          '${ExpressionClause(value, singleTable: true).render(context)}',
-        );
-      } else {
-        chunks.add(
-            '${context.escapeName(column.name)} = ${context.param(column.encode(value))}');
-      }
-    } else if (updateSet
-        case UpdateableExpression(:final column, :final expression)) {
       chunks.add(
         '${context.escapeName(column.name)} = '
-        '${ExpressionClause(expression.build(), singleTable: true).render(context)}',
+        '${ExpressionClause(SQL([value]), singleTable: true).render(context)}',
       );
     } else if (updateSet case UpdateableTable(:final table, :final value)) {
       final buffer = StringBuffer();
@@ -402,6 +467,33 @@ class InsertBodyClause extends Clause {
 
     return 'INTO ${TableClause(into).render(context)} '
         '(${sqlColumns.join(', ')}) VALUES ${tuples.join(', ')}';
+  }
+}
+
+/// Renders a whole [Query], every clause in weight order, into the context
+/// it is given.
+///
+/// The context matters more than it looks. Bind placeholders are numbered from
+/// how many values the context has already collected, so a nested query has to
+/// share the outer one's context or it restarts at the first placeholder and
+/// silently renumbers everything after it. Rendering through this clause is
+/// what keeps a subquery's binds interleaved with its parent's.
+class QueryClause extends Clause {
+  /// Creates a clause that renders [query].
+  const QueryClause(this.query);
+
+  /// The query to render.
+  final Query<dynamic> query;
+
+  @override
+  String render(RenderContext context) {
+    final weights = query.clauses.keys.toList()..sort();
+    final parts = <String>[];
+    for (final weight in weights) {
+      final rendered = query.clauses[weight]!.render(context);
+      if (rendered.isNotEmpty) parts.add(rendered);
+    }
+    return parts.join(' ');
   }
 }
 

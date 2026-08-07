@@ -28,7 +28,7 @@ class InsertWithValuesBuilder<S extends Schema<R>, R, V>
   InsertWithValuesBuilder(super.executor, {required super.config});
 
   @override
-  Query<V> compile() => Query<V>(
+  Query<V> compile({bool qualified = false}) => Query<V>(
         shape: config.get(#into)! as Table,
         clauses: {
           InsertSlot.verb: const Keyword('INSERT'),

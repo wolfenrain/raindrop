@@ -9,6 +9,9 @@ class _FakeDialect extends SqlDialect {
 
   @override
   String escapeParam(int number) => '?$number';
+
+  @override
+  String escapeLiteral(Object? value) => throw UnimplementedError();
 }
 
 class _FakeTransactionDelegate extends TransactionDelegate {
@@ -235,6 +238,78 @@ void main() {
         expect(delegate.txDelegate.executedQueries, hasLength(3));
       },
     );
+  });
+
+  group('statement splitting', () {
+    Future<List<String>> statementsOf(String sql) async {
+      final delegate = _FakeRaindropDelegate(appliedMigrations: []);
+      await migrate(Raindrop(delegate), [Migration('0000_custom', sql)]);
+      return [
+        for (final query in delegate.txDelegate.executedQueries)
+          if (!query.$1.contains('_raindrop_migrations')) query.$1,
+      ];
+    }
+
+    test('a semicolon inside a string literal does not split', () async {
+      expect(
+        await statementsOf(
+          "INSERT INTO \"teams\" (id, name) VALUES ('t1', 'Acme; Inc');",
+        ),
+        ["INSERT INTO \"teams\" (id, name) VALUES ('t1', 'Acme; Inc')"],
+      );
+    });
+
+    test('a doubled quote is an escape, not a terminator', () async {
+      expect(
+        await statementsOf("INSERT INTO \"t\" (v) VALUES ('it''s; fine');"),
+        ["INSERT INTO \"t\" (v) VALUES ('it''s; fine')"],
+      );
+    });
+
+    test('a semicolon inside a quoted identifier does not split', () async {
+      expect(
+        await statementsOf('CREATE TABLE "od;d" (id INTEGER);'),
+        ['CREATE TABLE "od;d" (id INTEGER)'],
+      );
+    });
+
+    test('a semicolon inside a comment does not split', () async {
+      final statements = await statementsOf(
+        '-- seeds the row; then stops\n'
+        'INSERT INTO "t" (v) VALUES (1);',
+      );
+      expect(statements, hasLength(1));
+      expect(statements.single, contains('VALUES (1)'));
+    });
+
+    test('a comment-only migration executes nothing', () async {
+      expect(
+        await statementsOf('-- nothing to do yet\n/* also nothing; here */\n'),
+        isEmpty,
+      );
+    });
+
+    test('several statements still split', () async {
+      expect(
+          await statementsOf('INSERT INTO "t" (v) VALUES (1);\n'
+              'INSERT INTO "t" (v) VALUES (2);'),
+          [
+            'INSERT INTO "t" (v) VALUES (1)',
+            'INSERT INTO "t" (v) VALUES (2)',
+          ]);
+    });
+
+    test('a trailing semicolon does not add an empty statement', () async {
+      expect(
+        await statementsOf('INSERT INTO "t" (v) VALUES (1);   \n\n'),
+        hasLength(1),
+      );
+    });
+
+    test('a statement without a trailing semicolon still runs', () async {
+      expect(
+          await statementsOf('INSERT INTO "t" (v) VALUES (1)'), hasLength(1));
+    });
   });
 
   group('MigrationChecksumMismatch', () {

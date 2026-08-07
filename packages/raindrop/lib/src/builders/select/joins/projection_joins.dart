@@ -16,9 +16,6 @@ import 'package:raindrop/raindrop.dart';
 /// // SELECT "runs"."user_id", MIN("runs"."solve_ms"), "users"."display_name"
 /// // FROM "runs" INNER JOIN "users" ON ... GROUP BY "runs"."user_id"
 /// ```
-///
-/// A single extension covers every projection arity because `.join` does not
-/// change [V] — there is no per-arity machinery here.
 extension ProjectionJoins<S extends Schema<R>, R, V>
     on ProjectionFromBuilder<S, R, V> {
   /// Add an `INNER JOIN` against [table] without altering the projection.

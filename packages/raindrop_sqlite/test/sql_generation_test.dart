@@ -143,8 +143,33 @@ void main() {
     );
 
     goldenTest(
+      'where compares against an expression',
+      (db) => db.select().from(users).where(
+            users.name.equals(Coalesce(users.favoriteGame, 'none')),
+          ),
+    );
+
+    goldenTest(
+      'where compares against arithmetic on a column',
+      (db) =>
+          db.select().from(users).where(users.age.greaterThan(users.age + 1)),
+    );
+
+    goldenTest(
       'with IN list',
       (db) => db.select().from(users).where(users.age.inList([18, 21, 30])),
+    );
+
+    goldenTest(
+      'with IN list mixing a column and a literal',
+      (db) => db.select().from(users).where(users.age.inList([users.age, 30])),
+    );
+
+    goldenTest(
+      'with IN list holding an expression',
+      (db) => db.select().from(users).where(
+            users.name.inList([Coalesce(users.favoriteGame, 'none'), 'Morgan']),
+          ),
     );
 
     goldenTest(
@@ -185,8 +210,7 @@ void main() {
 
     goldenTest(
       'with greater than or equal on int',
-      (db) =>
-          db.select().from(users).where(users.age.greaterThanOrEqual(18)),
+      (db) => db.select().from(users).where(users.age.greaterThanOrEqual(18)),
     );
 
     goldenTest(
@@ -237,9 +261,9 @@ void main() {
     goldenTest(
       'order by multiple terms',
       (db) => db.select().from(users).orderBy({
-            users.age: Order.desc,
-            users.name: Order.asc,
-          }),
+        users.age: Order.desc,
+        users.name: Order.asc,
+      }),
     );
 
     goldenTest(
@@ -333,16 +357,29 @@ void main() {
       'set to coalesce expression',
       (db) => db
           .update(users)
-          .set(users.name.toExpression(Coalesce(users.name, 'anon')))
+          .set(users.name.to(Coalesce(users.name, 'anon')))
           .where(users.id.equals(1)),
+    );
+
+    goldenTest(
+      'set to arithmetic on the column itself',
+      (db) => db
+          .update(users)
+          .set(users.age.to(users.age + 1))
+          .where(users.id.equals(1)),
+    );
+
+    goldenTest(
+      'set to another column',
+      (db) => db.update(users).set(users.name.to(users.favoriteGame)),
     );
 
     goldenTest(
       'set all from a list',
       (db) => db
           .update(users)
-          .setAll([users.name.to('Renamed'), users.age.to(31)])
-          .where(users.id.equals(1)),
+          .setAll([users.name.to('Renamed'), users.age.to(31)]).where(
+              users.id.equals(1)),
     );
   });
 

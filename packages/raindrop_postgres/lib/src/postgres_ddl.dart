@@ -15,14 +15,13 @@ class PostgresDdlGenerator extends DdlGenerator {
       : super(dialect: const PostgresDialect());
 
   @override
-  String createTable(String tableName, List<ColumnInfo> columns) {
-    final columnDefs = columns.map(_columnDefinition).join(',\n  ');
-    return 'CREATE TABLE ${escapeName(tableName)} (\n  $columnDefs\n);';
-  }
-
-  @override
-  String renameTable(String oldName, String newName) {
-    return 'ALTER TABLE ${escapeName(oldName)} RENAME TO ${escapeName(newName)};';
+  String createTable(TableInfo table) {
+    final defs = [
+      ...table.columns.map(_columnDefinition),
+      for (final entry in table.checks.entries)
+        'CONSTRAINT ${escapeName(entry.key)} CHECK (${entry.value})',
+    ].join(',\n  ');
+    return 'CREATE TABLE ${escapeName(table.name)} (\n  $defs\n);';
   }
 
   @override
@@ -31,72 +30,116 @@ class PostgresDdlGenerator extends DdlGenerator {
   }
 
   @override
-  String addColumn(String tableName, ColumnInfo column) {
-    return 'ALTER TABLE ${escapeName(tableName)} ADD COLUMN ${_columnDefinition(column)};';
+  String alterTable(AlterTable operation) {
+    final diff = TableDiff.of(operation);
+    final table = escapeName(operation.tableName);
+    final statements = <String>[
+      for (final entry in operation.renamedColumns.entries)
+        'ALTER TABLE $table RENAME COLUMN ${escapeName(entry.key)} '
+            'TO ${escapeName(entry.value)};',
+      for (final column in diff.droppedColumns)
+        'ALTER TABLE $table DROP COLUMN ${escapeName(column.name)};',
+      for (final column in diff.addedColumns)
+        'ALTER TABLE $table ADD COLUMN ${_columnDefinition(column)};',
+    ];
+
+    for (final (old, new_) in diff.alteredColumns) {
+      statements.addAll(_alterColumn(operation.tableName, old, new_));
+    }
+
+    statements.addAll([
+      for (final name in {
+        ...diff.droppedChecks.keys,
+        ...diff.changedChecks.keys,
+      })
+        'ALTER TABLE $table DROP CONSTRAINT ${escapeName(name)};',
+      for (final entry in {
+        ...diff.addedChecks,
+        for (final changed in diff.changedChecks.entries)
+          changed.key: changed.value.$2,
+      }.entries)
+        'ALTER TABLE $table ADD CONSTRAINT ${escapeName(entry.key)} '
+            'CHECK (${entry.value});',
+      for (final index in diff.droppedIndexes) dropIndex(index.name),
+      for (final index in diff.addedIndexes) createIndex(index),
+    ]);
+
+    return statements.join('\n');
   }
 
-  @override
-  String renameColumn(String tableName, String oldName, String newName) {
-    return 'ALTER TABLE ${escapeName(tableName)} RENAME COLUMN ${escapeName(oldName)} TO ${escapeName(newName)};';
-  }
-
-  @override
-  String dropColumn(String tableName, String columnName) {
-    return 'ALTER TABLE ${escapeName(tableName)} DROP COLUMN ${escapeName(columnName)};';
-  }
-
-  @override
-  String alterColumn(
+  /// One column's in-place changes.
+  ///
+  /// A foreign-key change drops and re-adds the constraint under postgres's
+  /// default name for an inline reference, `<table>_<column>_fkey`, so it
+  /// also matches constraints created before raindrop named them.
+  List<String> _alterColumn(
     String tableName,
     ColumnInfo oldColumn,
     ColumnInfo newColumn,
   ) {
-    final statements = <String>[];
+    if (oldColumn.primaryKey != newColumn.primaryKey ||
+        oldColumn.autoIncrement != newColumn.autoIncrement) {
+      throw UnsupportedError(
+        'Changing the primary key or auto-increment of '
+        '"$tableName"."${newColumn.name}" is not generated automatically. '
+        'Write the migration by hand with `generate --empty`.',
+      );
+    }
+
     final table = escapeName(tableName);
     final column = escapeName(newColumn.name);
+    final statements = <String>[];
 
-    // Type change
     if (oldColumn.type != newColumn.type) {
       statements.add(
         'ALTER TABLE $table ALTER COLUMN $column TYPE ${getColumnType(newColumn)};',
       );
     }
 
-    // Nullability change
     if (oldColumn.isNullable != newColumn.isNullable) {
-      if (newColumn.isNullable) {
-        statements.add(
-          'ALTER TABLE $table ALTER COLUMN $column DROP NOT NULL;',
-        );
-      } else {
-        statements.add(
-          'ALTER TABLE $table ALTER COLUMN $column SET NOT NULL;',
-        );
-      }
+      statements.add(
+        newColumn.isNullable
+            ? 'ALTER TABLE $table ALTER COLUMN $column DROP NOT NULL;'
+            : 'ALTER TABLE $table ALTER COLUMN $column SET NOT NULL;',
+      );
     }
 
-    // Default value change
     if (oldColumn.defaultValue != newColumn.defaultValue) {
-      if (newColumn.defaultValue == null) {
+      statements.add(
+        newColumn.defaultValue == null
+            ? 'ALTER TABLE $table ALTER COLUMN $column DROP DEFAULT;'
+            : 'ALTER TABLE $table ALTER COLUMN $column SET DEFAULT ${newColumn.defaultValue};',
+      );
+    }
+
+    if (oldColumn.foreignKey != newColumn.foreignKey) {
+      final constraint = escapeName('${tableName}_${newColumn.name}_fkey');
+      if (oldColumn.foreignKey != null) {
+        statements.add('ALTER TABLE $table DROP CONSTRAINT $constraint;');
+      }
+      if (newColumn.foreignKey case final fk?) {
+        final actions = [
+          if (fk.onDelete != null) ' ON DELETE ${fk.onDelete}',
+          if (fk.onUpdate != null) ' ON UPDATE ${fk.onUpdate}',
+        ].join();
         statements.add(
-          'ALTER TABLE $table ALTER COLUMN $column DROP DEFAULT;',
-        );
-      } else {
-        statements.add(
-          'ALTER TABLE $table ALTER COLUMN $column SET DEFAULT ${newColumn.defaultValue};',
+          'ALTER TABLE $table ADD CONSTRAINT $constraint FOREIGN KEY '
+          '($column) REFERENCES ${escapeName(fk.referencedTable)}'
+          '(${escapeName(fk.referencedColumn)})$actions;',
         );
       }
     }
 
-    return statements.join('\n');
+    return statements;
   }
 
   @override
   String createIndex(IndexInfo index) {
     final unique = index.isUnique ? 'UNIQUE ' : '';
     final cols = index.columns.map(escapeName).join(', ');
+    final where = index.where != null ? ' WHERE ${index.where}' : '';
     return 'CREATE ${unique}INDEX ${escapeName(index.name)} '
-        'ON ${escapeName(index.tableName)} ($cols);';
+        'ON ${escapeName(index.tableName)} ($cols)$where;';
   }
 
   @override

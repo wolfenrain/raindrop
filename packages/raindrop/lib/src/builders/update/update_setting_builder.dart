@@ -27,7 +27,7 @@ class UpdateWhereBuilder<S extends Schema<R>, R, V>
   }
 
   @override
-  Query<V> compile() => Query<V>(
+  Query<V> compile({bool qualified = false}) => Query<V>(
         shape: config.get(#table)! as Table,
         clauses: {
           UpdateSlot.verb: const Keyword('UPDATE'),

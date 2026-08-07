@@ -1,9 +1,9 @@
 export 'src/core/config.dart';
 export 'src/core/differ.dart';
+export 'src/core/emitter.dart';
 export 'src/core/journal.dart';
 export 'src/core/snapshot.dart';
 export 'src/ddl/ddl_runner.dart';
+export 'src/introspect/schema_locator.dart';
+export 'src/introspect/snapshot_runner.dart';
 export 'src/migration/migration_tracker.dart';
-export 'src/parser/column_extractor.dart';
-export 'src/parser/schema_parser.dart';
-export 'src/parser/table_visitor.dart';
