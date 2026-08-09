@@ -73,36 +73,35 @@ class SelectFromBuilder<S extends Schema<R>, R, V> extends QueryBuilder<S, V>
 
   @override
   Query<V> compile({bool qualified = false}) {
-    final joins = config.get(#joins, orElse: <Join>[])!.cast<Join>();
+    final joins = config.joins;
     final singleTable = joins.isEmpty && !qualified;
-    final orderBy =
-        config.get(#orderBy, orElse: const <OrderBy>[])!.cast<OrderBy>();
-    final selecting = config.get(#selecting)! as Selectable<dynamic>;
+    final orderBy = config.orderBy;
+    final selecting = config.selecting!;
     return Query<V>(
       shape: selecting,
       clauses: {
-        SelectSlot.verb: config.get<bool>(#distinct, orElse: false)!
+        SelectSlot.verb: config.distinct
             ? const Keyword('SELECT DISTINCT')
             : const Keyword('SELECT'),
         SelectSlot.columns: SelectionClause(
           selecting,
           singleTable: singleTable,
         ),
-        SelectSlot.from: FromClause(config.get(#from)! as Table),
+        SelectSlot.from: FromClause(config.from!),
         if (joins.isNotEmpty) SelectSlot.joins: JoinsClause(joins),
-        if (config.get<Filter>(#where) case final where?)
+        if (config.where case final where?)
           SelectSlot.where: WhereClause(where, singleTable: singleTable),
-        if (config.get<Selectable<dynamic>>(#groupBy) case final groupBy?)
+        if (config.groupBy case final groupBy?)
           SelectSlot.groupBy: GroupByClause(groupBy, singleTable: singleTable),
-        if (config.get<Filter>(#having) case final having?)
+        if (config.having case final having?)
           SelectSlot.having: HavingClause(having, singleTable: singleTable),
         if (orderBy.isNotEmpty)
           SelectSlot.orderBy: OrderByClause(orderBy, singleTable: singleTable),
-        if (config.get<int>(#limit) case final limit?)
+        if (config.limit case final limit?)
           SelectSlot.limit: LimitClause(limit),
-        if (config.get<int>(#offset) case final offset?)
+        if (config.offset case final offset?)
           SelectSlot.offset: OffsetClause(offset),
-        ...?config.get<Map<int, Clause>>(#extraClauses),
+        ...?config.extraClauses,
       },
     );
   }
@@ -289,98 +288,3 @@ class SingleProjectionFromBuilder<S extends Schema<R>, R, V>
         }),
       );
 }
-
-// TODO: come up with a way for select from with join with a custom select.
-// extension SelectWithInnerJoin1<S> on SelectFromBuilder<S, S> {
-//   /// Set a join clause of the builder.
-//   SelectFromBuilder<S, (S, O)> join<O extends Schema<O, dynamic>>(
-//     O table, {
-//     required Filter on,
-//   }) {
-//     final (s) = config.get(#selecting) as Table<S>;
-//     final o = Table.get(table)! as Table<O>;
-
-//     return SelectFromBuilder(
-//       executor,
-//       config: config.copyWith({
-//         #selecting: SelectableResult<(S, O)>([s, o]),
-//         #joins: <Join>[
-//           ...(config.get(#joins) ?? []),
-//           InnerJoin<O>(o, on: on),
-//         ],
-//       }),
-//     );
-//   }
-// }
-
-// extension SelectWithInnerJoin2<
-//     S extends Schema<S>,
-//     S1 extends Schema<S1>? //
-//     > on SelectFromBuilder<S, (S, S1)> {
-//   /// Set a join clause of the builder.
-//   SelectFromBuilder<S, (S, S1, O)> join<O extends Schema<O, dynamic>>(
-//     O table, {
-//     required Filter on,
-//   }) {
-//     final result = config.get(#selecting) as SelectableResult;
-//     final o = Table.get(table)! as Table<O>;
-
-//     return SelectFromBuilder(
-//       executor,
-//       config: config.copyWith({
-//         #selecting: SelectableResult<(S, S1, O)>([...result.selected, o]),
-//         #joins: <Join>[
-//           ...(config.get(#joins) ?? []),
-//           InnerJoin<O>(o, on: on),
-//         ],
-//       }),
-//     );
-//   }
-// }
-
-// extension SelectWithLeftJoin1<S> on SelectFromBuilder<S, S> {
-//   /// Set a left join clause of the builder.
-//   SelectFromBuilder<S, (S, O?)> leftJoin<O extends Schema<O, dynamic>>(
-//     O table, {
-//     required Filter on,
-//   }) {
-//     final (s) = config.get(#selecting) as Table<S>;
-//     final o = Table.get(table)! as Table<O>;
-
-//     return SelectFromBuilder(
-//       executor,
-//       config: config.copyWith({
-//         #selecting: SelectableResult<(S, O)>([s, o]),
-//         #joins: <Join>[
-//           ...config.get(#joins) ?? [],
-//           LeftJoin<O>(Table.get(table)! as Table<O>, on: on),
-//         ],
-//       }),
-//     );
-//   }
-// }
-
-// extension SelectWithLeftJoin2<
-//     S extends Schema<S>,
-//     S1 extends Schema<S1>? //
-//     > on SelectFromBuilder<S, (S, S1)> {
-//   /// Set a left join clause of the builder.
-//   SelectFromBuilder<S, (S, S1, O?)> leftJoin<O extends Schema<O, dynamic>>(
-//     O table, {
-//     required Filter on,
-//   }) {
-//     final result = config.get(#selecting) as SelectableResult;
-//     final o = Table.get(table)! as Table<O>;
-
-//     return SelectFromBuilder(
-//       executor,
-//       config: config.copyWith({
-//         #selecting: SelectableResult<(S, S1, O)>([...result.selected, o]),
-//         #joins: <Join>[
-//           ...config.get(#joins) ?? [],
-//           LeftJoin<O>(Table.get(table)! as Table<O>, on: on),
-//         ],
-//       }),
-//     );
-//   }
-// }

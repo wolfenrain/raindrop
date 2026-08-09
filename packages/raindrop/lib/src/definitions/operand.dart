@@ -56,7 +56,8 @@ mixin SqlOperand<V> implements Future<V> {
     if (input == null) return null;
 
     return switch (transformer) {
-      final ColumnTransformer transformer => transformer.encode(input),
+      final ColumnTransformer<dynamic, dynamic> transformer =>
+        transformer.encode(input),
       _ => input
     };
   }
@@ -66,7 +67,8 @@ mixin SqlOperand<V> implements Future<V> {
     if (input == null) return null;
 
     return switch (transformer) {
-      final ColumnTransformer transformer => transformer.decode(input),
+      final ColumnTransformer<dynamic, dynamic> transformer =>
+        transformer.decode(input),
       _ => input
     } as V?;
   }

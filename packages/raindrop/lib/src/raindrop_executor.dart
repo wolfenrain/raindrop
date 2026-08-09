@@ -77,11 +77,11 @@ This bypasses the current transaction context and could lead to inconsistent beh
 }
 
 R _read<R>(Selectable<R> selectable, List<Object?> rows) {
-  if (selectable case final Schema schema) {
-    return _read(Table.get(schema)!, rows) as R;
+  if (selectable case final Schema<dynamic> schema) {
+    return _read(schema.$, rows) as R;
   }
 
-  if (selectable case final Table table) {
+  if (selectable case final Table<Schema<dynamic>, dynamic> table) {
     final data = <String, dynamic>{
       for (final column in table.columns) column.name: rows.removeAt(0),
     };
@@ -91,10 +91,10 @@ R _read<R>(Selectable<R> selectable, List<Object?> rows) {
       true => null,
       _ => table.create(data)
     } as R;
-  } else if (selectable case final SqlOperand operand) {
+  } else if (selectable case final SqlOperand<dynamic> operand) {
     final value = rows.removeAt(0);
     return operand.decode(value) as R;
-  } else if (selectable case final SelectableResult result) {
+  } else if (selectable case final SelectableResult<dynamic> result) {
     return result.readRecord(rows) as R;
   } else {
     throw UnimplementedError('${selectable.runtimeType}');

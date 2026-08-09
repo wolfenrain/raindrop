@@ -6,4 +6,3 @@ export 'src/core/snapshot.dart';
 export 'src/ddl/ddl_runner.dart';
 export 'src/introspect/schema_locator.dart';
 export 'src/introspect/snapshot_runner.dart';
-export 'src/migration/migration_tracker.dart';

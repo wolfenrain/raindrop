@@ -1,22 +1,9 @@
 import 'package:raindrop/raindrop.dart';
 
+/// [bool] stored as SQL types.
 extension BooleanColumnDefinition<R> on SchemaBuilder<R> {
+  /// A [bool] column over `BOOLEAN`.
   ColumnType<W> boolean<W extends bool?>(String name, Field<R, W> field) {
-    return custom<bool, int, W>(
-      name,
-      field,
-      transformer: const BooleanTransfomer(),
-      sqlType: 'BOOLEAN',
-    );
+    return column<bool, W>(name, field, sqlType: 'BOOLEAN');
   }
-}
-
-class BooleanTransfomer extends ColumnTransformer<bool, int> {
-  const BooleanTransfomer();
-
-  @override
-  int encode(bool input) => input ? 1 : 0;
-
-  @override
-  bool decode(int input) => input == 1;
 }

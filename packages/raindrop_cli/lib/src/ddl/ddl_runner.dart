@@ -169,29 +169,4 @@ class DdlRunner {
       isolate?.kill(priority: Isolate.immediate);
     }
   }
-
-  /// Discovers all dialect packages available in the project.
-  ///
-  /// Returns a list of dialect names (e.g., ['postgres', 'sqlite']).
-  static Future<List<String>> discoverDialects({String? projectPath}) async {
-    final configFile = _findPackageConfig(projectPath);
-    if (configFile == null) {
-      return [];
-    }
-
-    final configContent = await configFile.readAsString();
-    final config = jsonDecode(configContent) as Map<String, dynamic>;
-    final packages = config['packages'] as List<dynamic>;
-
-    final dialects = <String>[];
-    for (final pkg in packages) {
-      final pkgMap = pkg as Map<String, dynamic>;
-      final name = pkgMap['name'] as String;
-      if (name.startsWith('raindrop_') && name != 'raindrop_cli') {
-        dialects.add(name.substring('raindrop_'.length));
-      }
-    }
-
-    return dialects;
-  }
 }

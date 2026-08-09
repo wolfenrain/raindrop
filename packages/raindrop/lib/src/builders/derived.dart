@@ -123,7 +123,7 @@ PreparedDerived<V> prepareDerived<V>(
 /// tests depend on execution order.
 @internal
 String defaultDerivedName(QueryConfig config) {
-  final from = config.get<Table<dynamic, dynamic>>(#from);
+  final from = config.from;
   return from == null ? 'derived' : '${from.name}_d';
 }
 
@@ -141,9 +141,7 @@ Column<R, W> derivedColumn<R, W>(
 ) {
   final source = prepared.sources[index];
   final column = Column<R, W>(
-    // SchemaBuilder types its table as `Table<dynamic, R>`, which is not a
-    // subtype of what Column holds; the instance itself always is.
-    $.table as Table<Schema<dynamic>, dynamic>,
+    $.table,
     prepared.names[index],
     valueOf: read,
     isNullable: null is W,

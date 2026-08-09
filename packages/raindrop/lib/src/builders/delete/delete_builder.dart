@@ -27,12 +27,12 @@ class DeleteAllBuilder<S extends Schema<R>, R, V> extends DeleteBuilder<S, R, V>
 
   @override
   Query<V> compile({bool qualified = false}) => Query<V>(
-        shape: config.get(#from)! as Table,
+        shape: config.from!,
         clauses: {
-          DeleteSlot.from: DeleteFromClause(config.get(#from)! as Table),
-          if (config.get<Filter>(#where) case final where?)
+          DeleteSlot.from: DeleteFromClause(config.from!),
+          if (config.where case final where?)
             DeleteSlot.where: WhereClause(where, singleTable: true),
-          ...?config.get<Map<int, Clause>>(#extraClauses),
+          ...?config.extraClauses,
         },
       );
 }
@@ -47,12 +47,12 @@ class DeleteWhereBuilder<S extends Schema<R>, R, V>
 
   @override
   Query<V> compile({bool qualified = false}) => Query<V>(
-        shape: config.get(#from)! as Table,
+        shape: config.from!,
         clauses: {
-          DeleteSlot.from: DeleteFromClause(config.get(#from)! as Table),
-          if (config.get<Filter>(#where) case final where?)
+          DeleteSlot.from: DeleteFromClause(config.from!),
+          if (config.where case final where?)
             DeleteSlot.where: WhereClause(where, singleTable: true),
-          ...?config.get<Map<int, Clause>>(#extraClauses),
+          ...?config.extraClauses,
         },
       );
 }

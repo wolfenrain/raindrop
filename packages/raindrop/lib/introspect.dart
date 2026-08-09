@@ -25,13 +25,7 @@ Map<String, Object?> buildSnapshot(
   final indexes = <String, Object?>{};
 
   for (final schema in schemas) {
-    final table = Table.get(schema);
-    if (table == null) {
-      throw StateError(
-        'a schema in the list has no table. Pass the value returned by '
-        'table(), not a Schema constructed by hand',
-      );
-    }
+    final table = schema.$;
     // An alias is a view onto another table, never its own definition.
     if (table.alias != null) continue;
     if (table.dialect != dialectName) continue;

@@ -1,22 +1,9 @@
 import 'package:raindrop/raindrop.dart';
 
+/// [DateTime] columns that are stored as SQL based values.
 extension DateTimeColumnDefinition<R> on SchemaBuilder<R> {
+  /// A [DateTime] column over `TIMESTAMP`.
   ColumnType<W> dateTime<W extends DateTime?>(String name, Field<R, W> field) {
-    return custom<DateTime, int, W>(
-      name,
-      field,
-      transformer: const DateTimeTransfomer(),
-      sqlType: 'TIMESTAMP',
-    );
+    return column<DateTime, W>(name, field, sqlType: 'TIMESTAMP');
   }
-}
-
-class DateTimeTransfomer extends ColumnTransformer<DateTime, int> {
-  const DateTimeTransfomer();
-
-  @override
-  int encode(DateTime input) => input.millisecondsSinceEpoch;
-
-  @override
-  DateTime decode(int input) => DateTime.fromMillisecondsSinceEpoch(input);
 }

@@ -28,14 +28,14 @@ class UpdateWhereBuilder<S extends Schema<R>, R, V>
 
   @override
   Query<V> compile({bool qualified = false}) => Query<V>(
-        shape: config.get(#table)! as Table,
+        shape: config.table!,
         clauses: {
           UpdateSlot.verb: const Keyword('UPDATE'),
-          UpdateSlot.table: TableClause(config.get(#table)! as Table),
-          UpdateSlot.set: SetClause(config.get(#set)! as Updateable<dynamic>),
-          if (config.get<Filter>(#where) case final where?)
+          UpdateSlot.table: TableClause(config.table!),
+          UpdateSlot.set: SetClause(config.set!),
+          if (config.where case final where?)
             UpdateSlot.where: WhereClause(where, singleTable: true),
-          ...?config.get<Map<int, Clause>>(#extraClauses),
+          ...?config.extraClauses,
         },
       );
 }

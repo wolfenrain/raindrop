@@ -27,7 +27,7 @@ class Column<R, V extends Object?> with SqlOperand<V> implements Selectable<V> {
   }) : valueOf = valueOf;
 
   /// The table of the column.
-  final Table table;
+  final Table<Schema<dynamic>, dynamic> table;
 
   /// The name of the column.
   final String name;

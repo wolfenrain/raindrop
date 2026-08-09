@@ -16,7 +16,7 @@ S table<S extends Schema<R>, R>(
 
 /// A table whose rows come from [query] rather than from storage.
 ///
-/// Used by the generated `DerivedN` extensions; not meant to be called
+/// Used by the generated `DerivedN` extensions, not meant to be called
 /// directly.
 @internal
 S derivedTable<S extends Schema<R>, R>(
@@ -39,7 +39,6 @@ class Table<S extends Schema<R>, R> implements Selectable<R> {
         indexes = [],
         checks = [] {
     schema = builder(SchemaBuilder<R>(this));
-    Table._schemaToTable[schema as Schema] = this;
   }
 
   /// The name of the table.
@@ -145,19 +144,6 @@ class Table<S extends Schema<R>, R> implements Selectable<R> {
   /// Adds a table-level CHECK constraint to the table.
   void addCheck(Check check) => checks.add(check);
 
-  bool _instanceOfSchema(Schema r) => r is S;
-
   Column<R, dynamic> operator [](String name) =>
       columns.firstWhere((c) => c.name == name);
-
-  /// Get the table by using a schema reference.
-  static Table? get(Schema schema) => _schemaToTable[schema];
-
-  /// Get the table for an actual schema instance.
-  static Table<S, R> getFor<S extends Schema<R>, R>(S s) =>
-      _schemaToTable.values.firstWhere((e) => e._instanceOfSchema(s))
-          as Table<S, R>;
-
-  /// This does not contain aliased schemas.
-  static final Map<Schema, Table> _schemaToTable = {};
 }

@@ -3,27 +3,75 @@ import 'dart:async';
 import 'package:meta/meta.dart';
 import 'package:raindrop/dialect.dart';
 
-/// Simple map that defines a query config.
-typedef QueryConfig = Map<Symbol, Object?>;
+/// Everything a builder has accumulated so far, keyed by symbol.
+extension type const QueryConfig._(Map<Symbol, Object?> _map) {
+  /// A config seeded with [entries].
+  QueryConfig.from(Map<Symbol, Object?> entries) : this._(entries);
 
-/// Provides a clone method for a query config.
-extension CloneConfig on QueryConfig {
-  /// Clone the query config.
-  QueryConfig copyWith([QueryConfig config = const {}]) {
-    return {...this, ...config};
+  /// Clone the config, with [entries] merged over it.
+  QueryConfig copyWith([Map<Symbol, Object?> entries = const {}]) {
+    return QueryConfig._({..._map, ...entries});
   }
 
-  /// Get the value associated by [key] or use the [orElse] value.
-  V? get<V>(Symbol key, {V? orElse}) => (this[key] as V?) ?? orElse;
+  /// Get the value associated by [key].
+  V? get<V>(Symbol key) => _map[key] as V?;
 
-  /// Returns a clone with [clause] merged into the extra-clauses map at
-  /// [weight] (replacing any clause already at that weight).
+  /// Returns a clone with [clause] merged into [extraClauses] at [weight]
+  /// (replacing any clause already at that weight).
   QueryConfig addClause(int weight, Clause clause) => copyWith({
-        #extraClauses: {
-          ...?get<Map<int, Clause>>(#extraClauses),
-          weight: clause,
-        },
+        #extraClauses: {...?extraClauses, weight: clause},
       });
+
+  /// The table a select reads from, and a delete removes from.
+  Table<Schema<dynamic>, dynamic>? get from =>
+      _map[#from] as Table<Schema<dynamic>, dynamic>?;
+
+  /// The table an insert writes into.
+  Table<Schema<dynamic>, dynamic>? get into =>
+      _map[#into] as Table<Schema<dynamic>, dynamic>?;
+
+  /// The table an update mutates.
+  Table<Schema<dynamic>, dynamic>? get table =>
+      _map[#table] as Table<Schema<dynamic>, dynamic>?;
+
+  /// What the select projects.
+  Selectable<dynamic>? get selecting =>
+      _map[#selecting] as Selectable<dynamic>?;
+
+  /// The row filter.
+  Filter? get where => _map[#where] as Filter?;
+
+  /// The group filter.
+  Filter? get having => _map[#having] as Filter?;
+
+  /// What rows are grouped by.
+  Selectable<dynamic>? get groupBy => _map[#groupBy] as Selectable<dynamic>?;
+
+  /// The sort terms, in order.
+  List<OrderBy> get orderBy => _map[#orderBy] as List<OrderBy>? ?? const [];
+
+  /// The registered joins, in order.
+  List<Join<Schema<dynamic>, dynamic>> get joins =>
+      _map[#joins] as List<Join<Schema<dynamic>, dynamic>>? ?? const [];
+
+  /// The assignments an update applies.
+  Updateable<dynamic>? get set => _map[#set] as Updateable<dynamic>?;
+
+  /// The rows an insert carries.
+  List<dynamic>? get values => _map[#values] as List<dynamic>?;
+
+  /// The maximum number of rows to return.
+  int? get limit => _map[#limit] as int?;
+
+  /// How many rows to skip.
+  int? get offset => _map[#offset] as int?;
+
+  /// Whether the select is `SELECT DISTINCT`.
+  bool get distinct => _map[#distinct] as bool? ?? false;
+
+  /// Clauses grafted on beyond the standard slots, keyed by render weight.
+  Map<int, Clause>? get extraClauses =>
+      _map[#extraClauses] as Map<int, Clause>?;
 }
 
 /// {@template query_builder}

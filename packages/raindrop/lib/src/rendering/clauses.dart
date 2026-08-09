@@ -56,7 +56,7 @@ class ExpressionClause extends Clause {
   String _chunk(RenderContext context, Object? chunk) {
     if (chunk case final RawSQL raw) return raw.sql;
 
-    if (chunk case final Column column) {
+    if (chunk case final Column<dynamic, Object?> column) {
       final buffer = StringBuffer();
       if (column.table.alias case final String alias) {
         buffer.write('${context.escapeName(alias)}.');
@@ -158,12 +158,12 @@ class SelectionClause extends Clause {
     final select = this.select;
     final chunks = <String>[];
 
-    if (select case final Schema schema) {
-      return SelectionClause(Table.get(schema)!, singleTable: singleTable)
+    if (select case final Schema<dynamic> schema) {
+      return SelectionClause(schema.$, singleTable: singleTable)
           .render(context);
     }
 
-    if (select case final Table table) {
+    if (select case final Table<Schema<dynamic>, dynamic> table) {
       for (var i = 0; i < table.columns.length; i++) {
         chunks.add(
           SelectionClause(table.columns[i], singleTable: singleTable)
@@ -171,7 +171,7 @@ class SelectionClause extends Clause {
         );
         if (i != table.columns.length - 1) chunks.add(', ');
       }
-    } else if (select case final Column column) {
+    } else if (select case final Column<dynamic, Object?> column) {
       final explicit = switch (column) {
         final ColumnAlias<dynamic, dynamic> aliased => aliased.alias,
         _ => null,
@@ -217,7 +217,7 @@ class TableClause extends Clause {
   const TableClause(this.table);
 
   /// The table to reference.
-  final Table table;
+  final Table<Schema<dynamic>, dynamic> table;
 
   @override
   String render(RenderContext context) {
@@ -255,7 +255,7 @@ class JoinsClause extends Clause {
   const JoinsClause(this.joins);
 
   /// The joins to render.
-  final List<Join> joins;
+  final List<Join<Schema<dynamic>, dynamic>> joins;
 
   @override
   String render(RenderContext context) {
@@ -353,7 +353,7 @@ class GroupByClause extends Clause {
   String render(RenderContext context) {
     final sql = switch (groupBy) {
       final Expression<dynamic> expr => expr.build(),
-      final Column column => SQL([column]),
+      final Column<dynamic, Object?> column => SQL([column]),
       _ => throw UnsupportedError(
           'Unsupported GROUP BY term: ${groupBy.runtimeType}',
         ),
@@ -379,7 +379,7 @@ class OrderByClause extends Clause {
     final rendered = terms.map((term) {
       final sql = switch (term.term) {
         final Expression<dynamic> expr => expr.build(),
-        final Column column => SQL([column]),
+        final Column<dynamic, Object?> column => SQL([column]),
         _ => throw UnsupportedError(
             'Unsupported ORDER BY term: ${term.term.runtimeType}',
           ),
@@ -438,7 +438,7 @@ class InsertBodyClause extends Clause {
   const InsertBodyClause(this.into, this.rows);
 
   /// The table being inserted into.
-  final Table into;
+  final Table<Schema<dynamic>, dynamic> into;
 
   /// The row instances to insert.
   final List<dynamic> rows;
@@ -503,7 +503,7 @@ class FromClause extends Clause {
   const FromClause(this.table);
 
   /// The table being selected from.
-  final Table table;
+  final Table<Schema<dynamic>, dynamic> table;
 
   @override
   String render(RenderContext context) =>
@@ -529,7 +529,7 @@ class DeleteFromClause extends Clause {
   const DeleteFromClause(this.from);
 
   /// The table to delete from.
-  final Table from;
+  final Table<Schema<dynamic>, dynamic> from;
 
   @override
   String render(RenderContext context) =>

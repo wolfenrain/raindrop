@@ -11,7 +11,7 @@ extension InsertReturning<S extends Schema<R>, R>
       executor,
       config: config.addClause(
         InsertSlot.body + 5000,
-        ReturningClause(config.get(#into)! as Table),
+        ReturningClause(config.into!),
       ),
     );
   }
@@ -26,7 +26,7 @@ extension UpdateReturning<S extends Schema<R>, R>
       executor,
       config: config.addClause(
         UpdateSlot.where + 5000,
-        ReturningClause(config.get(#table)! as Table),
+        ReturningClause(config.table!),
       ),
     );
   }
@@ -41,7 +41,7 @@ extension DeleteReturning<S extends Schema<R>, R>
       executor,
       config: config.addClause(
         DeleteSlot.where + 5000,
-        ReturningClause(config.get(#from)! as Table),
+        ReturningClause(config.from!),
       ),
     );
   }

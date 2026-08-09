@@ -44,7 +44,7 @@ class CheckBuilder {
   /// Attach the constraint to [schema]'s table.
   Check on(Schema<dynamic> schema) {
     final constraint = Check(name, predicate);
-    Table.get(schema)!.addCheck(constraint);
+    schema.$.addCheck(constraint);
     return constraint;
   }
 }

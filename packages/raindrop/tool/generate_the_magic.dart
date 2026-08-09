@@ -38,12 +38,15 @@ void main(List<String> arguments) {
     '${script.parent.path}/../lib/src/definitions/derived_schemas.dart',
     amount,
   );
+
+  Process.runSync('melos', ['format:fix']);
 }
 
 void derivedSchemas(String path, int amount) {
   final buffer = StringBuffer()..writeln('''
 // GENERATED CODE - DO NOT EDIT BY HAND.
-// Run `dart run tools/generate_the_magic.dart` to regenerate.
+// Run `dart run tool/generate_the_magic.dart` to regenerate.
+// coverage:ignore-file
 // ignore_for_file: public_member_api_docs, lines_longer_than_80_chars
 import 'package:raindrop/raindrop.dart';
 import 'package:raindrop/src/builders/derived.dart';
@@ -99,7 +102,8 @@ void selectableColumns(String path, int amount) {
   final indices = List.generate(amount, (i) => i);
   final buffer = StringBuffer()..writeln('''
 // GENERATED CODE - DO NOT EDIT BY HAND.
-// Run `dart run tools/generate_the_magic.dart` to regenerate.
+// Run `dart run tool/generate_the_magic.dart` to regenerate.
+// coverage:ignore-file
 // ignore_for_file: public_member_api_docs, lines_longer_than_80_chars
 import 'package:raindrop/raindrop.dart';
 
@@ -109,7 +113,7 @@ import 'package:raindrop/raindrop.dart';
 extension ISUDRaindropExecutor on RaindropExecutor<RaindropDelegate> {
   /// Create an insert builder for inserting entities [into] the database.
   InsertValuesBuilder<Schema<R>, R, void> insert<R>({required Schema<R> into}) {
-    return delegate.insert<R>(this, Table.get(into)! as Table<dynamic, R>);
+    return delegate.insert<R>(this, into.\$);
   }
 
   /// Create a select builder that can filter down on columns if needed.
@@ -119,12 +123,12 @@ extension ISUDRaindropExecutor on RaindropExecutor<RaindropDelegate> {
 
   /// Create an update builder that can update a [table].
   UpdateSettingBuilder<Schema<R>, R, void> update<R>(Schema<R> table) {
-    return delegate.update<R>(this, Table.get(table)! as Table<dynamic, R>);
+    return delegate.update<R>(this, table.\$);
   }
 
   /// Create a delete builder that can delete data [from] the database.
   DeleteAllBuilder<Schema<R>, R, void> delete<R>({required Schema<R> from}) {
-    return delegate.delete<R>(this, Table.get(from)! as Table<dynamic, R>);
+    return delegate.delete<R>(this, from.\$);
   }
 }
 
@@ -166,7 +170,7 @@ ${indices.map((i) => '  final S$i? s$i;').join('\n')}
 extension SelectableColumns on SelectBuilder<(${List.filled(amount, '_Unused').join(', ')})?> {
   /// Create a from builder where the whole table gets selected.
   WholeRowFromBuilder<Schema<R>, R> from<R>(Schema<R> from) {
-    final table = Table.get(from);
+    final table = from.\$;
     return WholeRowFromBuilder(
       executor,
       config: config.copyWith({#selecting: table, #from: table}),
@@ -203,12 +207,12 @@ extension SelectableColumns$i<$typeParams>
     on SelectBuilder<($onTypeInner)?> {
   /// Create a from builder.
   $builder<Schema<R>, R, $resultType> from<R>(Schema<R> from) {
-    final selecting = config[#selecting]! as _Selecting;
+    final selecting = config.selecting! as _Selecting;
     return $builder(
       executor,
       config: config.copyWith({
         #selecting: ${i == 0 ? 'selecting.s0' : 'SelectableResult<$resultType>([${activeIndices.map((j) => 'selecting.s$j!').join(', ')}])'},
-        #from: Table.get(from),
+        #from: from.\$,
       }),
     );
   }
@@ -222,12 +226,13 @@ void indexableColumns(String path, int amount) {
   final columns = List.generate(amount - 1, (i) => i + 1);
   final buffer = StringBuffer()..writeln('''
 // GENERATED CODE - DO NOT EDIT BY HAND.
-// Run `dart run tools/generate_the_magic.dart` to regenerate.
+// Run `dart run tool/generate_the_magic.dart` to regenerate.
+// coverage:ignore-file
 // ignore_for_file: public_member_api_docs, lines_longer_than_80_chars
 import 'package:raindrop/raindrop.dart';
 
 extension IndexBuilderOn on IndexBuilder {
-  /// Create an index on the given colum(s).
+  /// Create an index on the given column(s).
   ///
   /// ```dart
   /// index('composite_idx').on(schema.col1, schema.col2);
@@ -255,7 +260,8 @@ void updateableColumns(String path, int amount) {
   ].join(', ');
   final buffer = StringBuffer()..writeln('''
 // GENERATED CODE - DO NOT EDIT BY HAND.
-// Run `dart run tools/generate_the_magic.dart` to regenerate.
+// Run `dart run tool/generate_the_magic.dart` to regenerate.
+// coverage:ignore-file
 // ignore_for_file: public_member_api_docs, lines_longer_than_80_chars
 import 'package:raindrop/raindrop.dart';
 
@@ -276,7 +282,7 @@ extension UpdateableColumnsOn<S extends Schema<RR>, RR, R> on UpdateSettingBuild
   /// db.update(users).setAll([users.name.to('new'), users.age.to(25)]);
   /// ```
   UpdateWhereBuilder<S, RR, R> setAll(Iterable<Updateable<dynamic>> updates) {
-    final list = List<Updateable>.from(updates);
+    final list = List<Updateable<dynamic>>.from(updates);
     if (list.isEmpty) {
       throw ArgumentError.value(updates, 'updates', 'must not be empty');
     }
@@ -300,7 +306,8 @@ void generateJoin(String path, String type, int amount) {
 
   final buffer = StringBuffer()..writeln('''
 // GENERATED CODE - DO NOT EDIT BY HAND.
-// Run `dart run tools/generate_the_magic.dart` to regenerate.
+// Run `dart run tool/generate_the_magic.dart` to regenerate.
+// coverage:ignore-file
 // ignore_for_file: public_member_api_docs, lines_longer_than_80_chars
 
 import 'package:raindrop/raindrop.dart';
@@ -311,16 +318,16 @@ extension SelectWith${type}Join0<S extends Schema<R>, R> on SelectFromBuilder<S,
     Schema<OR> table, {
     required Filter on,
   }) {
-    final s = config.get(#selecting) as Table<S, R>;
-    final o = Table.get(table)! as Table<dynamic, OR>;
+    final s = config.selecting! as Table<S, R>;
+    final o = table.\$;
 
     return SelectFromBuilder(
       executor,
       config: config.copyWith({
         #selecting: SelectableResult<(R, OR)>([s, o]),
-        #joins: <Join>[
-          ...config.get(#joins) ?? [],
-          ${type}Join<Schema<OR>, OR>(o as Table<Schema<OR>, OR>, on: on),
+        #joins: [
+          ...config.joins,
+          ${type}Join<Schema<OR>, OR>(o, on: on),
         ],
       }),
     );
@@ -339,16 +346,16 @@ extension SelectWith${type}Join$i<S extends Schema<R>, R, ${List.generate(i + 1,
     Schema<OR> table, {
     required Filter on,
   }) {
-    final result = config.get(#selecting) as SelectableResult;
-    final o = Table.get(table)! as Table<dynamic, OR>;
+    final result = config.selecting! as SelectableResult;
+    final o = table.\$;
 
     return SelectFromBuilder(
       executor,
       config: config.copyWith({
         #selecting: SelectableResult<(${types.join(', ')}, OR)>([...result.selected, o]),
-        #joins: <Join>[
-          ...config.get(#joins) ?? [],
-          ${type}Join<Schema<OR>, OR>(o as Table<Schema<OR>, OR>, on: on),
+        #joins: [
+          ...config.joins,
+          ${type}Join<Schema<OR>, OR>(o, on: on),
         ],
       }),
     );

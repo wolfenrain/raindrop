@@ -5,14 +5,14 @@ extension BooleanColumnDefinition<R> on SchemaBuilder<R> {
     return custom<bool, int, W>(
       name,
       field,
-      transformer: const BooleanTransfomer(),
+      transformer: const BooleanTransformer(),
       sqlType: 'INTEGER',
     );
   }
 }
 
-class BooleanTransfomer extends ColumnTransformer<bool, int> {
-  const BooleanTransfomer();
+class BooleanTransformer extends ColumnTransformer<bool, int> {
+  const BooleanTransformer();
 
   @override
   int encode(bool input) => input ? 1 : 0;

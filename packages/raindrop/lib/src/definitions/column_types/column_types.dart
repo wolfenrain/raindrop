@@ -2,7 +2,6 @@ import 'package:meta/meta.dart';
 import 'package:raindrop/raindrop.dart';
 
 export 'boolean.dart';
-export 'double.dart';
 export 'integer.dart';
 export 'text.dart';
 
@@ -147,7 +146,7 @@ extension PrimaryColumnInteger<T extends ColumnType<int?>> on T {
   /// Marks this integer column as the primary key, optionally with
   /// auto-increment.
   T primaryKey({required bool autoIncrement}) {
-    if (this case final column?) {
+    if (this case final column) {
       column
         ..isPrimaryKey = true
         ..autoIncrement = autoIncrement;

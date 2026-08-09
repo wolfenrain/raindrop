@@ -39,14 +39,14 @@ extension ProjectionJoins<S extends Schema<R>, R, V>
   }) =>
       _withJoin(RightJoin<Schema<OR>, OR>(_table(table), on: on));
 
-  Table<Schema<OR>, OR> _table<OR>(Schema<OR> table) =>
-      Table.get(table)! as Table<Schema<OR>, OR>;
+  Table<Schema<OR>, OR> _table<OR>(Schema<OR> table) => table.$;
 
-  ProjectionFromBuilder<S, R, V> _withJoin(Join join) {
+  ProjectionFromBuilder<S, R, V> _withJoin(
+      Join<Schema<dynamic>, dynamic> join) {
     return ProjectionFromBuilder(
       executor,
       config: config.copyWith({
-        #joins: <Join>[...config.get(#joins) ?? [], join],
+        #joins: [...config.joins, join],
       }),
     );
   }

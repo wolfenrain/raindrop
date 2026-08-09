@@ -1,26 +1,29 @@
-import 'dart:typed_data';
-
 import 'package:raindrop/raindrop.dart';
 
+/// [BigInt] columns that are stored as numeric values.
 extension BigIntColumnDefinition<R> on SchemaBuilder<R> {
+  /// A [BigInt] column over `NUMERIC`.
   ColumnType<W> bigInt<W extends BigInt?>(String name, Field<R, W> field) {
-    return custom<BigInt, Uint8List, W>(
+    return custom<BigInt, String, W>(
       name,
       field,
-      transformer: const BigIntTransfomer(),
-      sqlType: 'BIGINT',
+      transformer: const BigIntTransformer(),
+      sqlType: 'NUMERIC',
     );
   }
 }
 
-class BigIntTransfomer extends ColumnTransformer<BigInt, Uint8List> {
-  const BigIntTransfomer();
+/// {@template big_int_transformer}
+/// Carries a [BigInt] as its decimal string, which NUMERIC accepts and
+/// returns exactly.
+/// {@endtemplate}
+class BigIntTransformer extends ColumnTransformer<BigInt, String> {
+  /// {@macro big_int_transformer}
+  const BigIntTransformer();
 
   @override
-  Uint8List encode(BigInt input) => Uint8List.fromList(
-        input.toRadixString(2).split('').map(int.parse).toList(),
-      );
+  String encode(BigInt input) => input.toString();
 
   @override
-  BigInt decode(Uint8List input) => BigInt.parse(input.join());
+  BigInt decode(String input) => BigInt.parse(input);
 }

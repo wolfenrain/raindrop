@@ -5,14 +5,14 @@ extension DateTimeColumnDefinition<R> on SchemaBuilder<R> {
     return custom<DateTime, int, W>(
       name,
       field,
-      transformer: const DateTimeTransfomer(),
+      transformer: const DateTimeTransformer(),
       sqlType: 'INTEGER',
     );
   }
 }
 
-class DateTimeTransfomer extends ColumnTransformer<DateTime, int> {
-  const DateTimeTransfomer();
+class DateTimeTransformer extends ColumnTransformer<DateTime, int> {
+  const DateTimeTransformer();
 
   @override
   int encode(DateTime input) => input.millisecondsSinceEpoch;
