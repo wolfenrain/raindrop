@@ -28,10 +28,13 @@ melos:
       workspaceChangelog: true
 
   scripts:
-    analyze: melos exec -- dart analyze
+    analyze:
+      exec: dart analyze
 
-    format: melos exec -- dart format --output=none --set-exit-if-changed .
-    format:fix: melos exec -- dart format .
+    format:
+      exec: dart format --output=none --set-exit-if-changed .
+    format:fix:
+      exec: dart format .
 
     test:
       description: Runs each package's unit and integration tests.
