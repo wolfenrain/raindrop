@@ -63,7 +63,8 @@ void testDriverContract({
 
       try {
         final failure = errors.first.then(
-          // coverage:ignore-start fires only when the entrypoint fails to load.
+          // Fires only when the entrypoint fails to load.
+          // coverage:ignore-start
           (error) => throw StateError('The DDL entrypoint failed:\n$error'),
           // coverage:ignore-end
         );
