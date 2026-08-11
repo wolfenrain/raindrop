@@ -64,12 +64,12 @@ jobs:
 
     services:
       postgres:
-        image: postgres:16-alpine
+        image: ${{ matrix.package == 'raindrop_postgres' && 'postgres:16-alpine' || '' }}
         env:
           POSTGRES_PASSWORD: test
         ports:
           - 15432:5432
-        options: |
+        options: >-
           --health-cmd pg_isready
           --health-interval 10s
           --health-timeout 5s
