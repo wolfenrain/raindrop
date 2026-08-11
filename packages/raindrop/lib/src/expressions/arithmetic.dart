@@ -12,7 +12,10 @@ enum ArithmeticOperator {
   multiply('*'),
 
   /// `a / b`
-  divide('/');
+  divide('/'),
+
+  /// `a % b`
+  modulo('%');
 
   const ArithmeticOperator(this.sql);
 
@@ -64,4 +67,11 @@ extension ArithmeticOperators<V extends num?> on ColumnOf<V> {
   /// `this / value`
   Arithmetic<V> operator /(ColumnOr<V> value) =>
       Arithmetic<V>(this, ArithmeticOperator.divide, operand(value));
+}
+
+/// Modulo on an integer column: `t.id % 2`.
+extension ModuloOperator<V extends int?> on ColumnOf<V> {
+  /// `this % value`
+  Arithmetic<V> operator %(ColumnOr<V> value) =>
+      Arithmetic<V>(this, ArithmeticOperator.modulo, operand(value));
 }

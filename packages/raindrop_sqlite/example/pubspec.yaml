@@ -10,7 +10,7 @@ dependencies:
     path: ../../raindrop
   raindrop_sqlite:
     path: ../
-  sqlite3: ^2.7.6
+  sqlite3: ^3.5.1
 
 dev_dependencies:
   raindrop_cli:

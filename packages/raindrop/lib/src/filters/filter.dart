@@ -31,7 +31,10 @@ class LogicalFilter extends Filter {
   final bool or;
 }
 
+/// Null-aware variants of the [Filter] combinators.
 extension FilterX<F extends Filter?> on F {
+  /// Provide logical filtering of the AND operation, returning [right]
+  /// unchanged when this filter is null.
   Filter? operator &(Filter? right) {
     final left = this;
     if (left == null) return right;
@@ -39,6 +42,8 @@ extension FilterX<F extends Filter?> on F {
     return left & right;
   }
 
+  /// Provide logical filtering of the OR operation, returning [right]
+  /// unchanged when this filter is null.
   Filter? operator |(Filter? right) {
     final left = this;
     if (left == null) return right;

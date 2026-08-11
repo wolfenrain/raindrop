@@ -1,0 +1,55 @@
+import 'package:raindrop/dialect.dart';
+import 'package:raindrop_sqlite/raindrop_sqlite.dart';
+import 'package:sqlite3/sqlite3.dart';
+import 'package:test/test.dart';
+
+import '../../_support/fixtures.dart';
+
+void main() {
+  late Database database;
+  late Raindrop db;
+
+  setUp(() async {
+    database = sqlite3.openInMemory();
+    db = Raindrop(SQLiteDelegate(database), logger: _SilentLogger());
+    await db.execute(
+      '''
+CREATE TABLE users (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL, "favoriteGame" TEXT NOT NULL, age INTEGER NOT NULL, is_active INTEGER NOT NULL, rating REAL NOT NULL, "deletedAt" INTEGER)''',
+    );
+    await db.execute(
+      '''
+CREATE TABLE pets (id INTEGER PRIMARY KEY AUTOINCREMENT, owner_id INTEGER NOT NULL, name TEXT NOT NULL)''',
+    );
+    await db.insert(into: users).values([
+      User(name: 'Morgan', favoriteGame: 'zelda', age: 30),
+      User(name: 'Alex', favoriteGame: 'tetris', age: 20),
+      User(name: 'Sam', favoriteGame: 'zelda', age: 40),
+    ]);
+    await db.insert(into: pets).values([
+      Pet(name: 'Rex', ownerId: 1),
+      Pet(name: 'Milo', ownerId: 1),
+      Pet(name: 'Smokey', ownerId: 2),
+    ]);
+  });
+
+  tearDown(() => database.close());
+
+  String sqlOf(Object builder) =>
+      SQLiteDialect().translate((builder as ToQuery).compile()).$1;
+
+  group('avg', () {
+    test('is a double even over an int column', () async {
+      final mean = await db.select(avg(users.age)).from(users);
+      expect(mean.single, closeTo(30.0, 0.001));
+    });
+
+    test('renders as AVG', () {
+      expect(sqlOf(db.select(avg(users.age)).from(users)), contains('AVG('));
+    });
+  });
+}
+
+class _SilentLogger implements Logger {
+  @override
+  void query(String query, List<Object?> values) {}
+}

@@ -5,6 +5,7 @@ export 'boolean.dart';
 export 'integer.dart';
 export 'text.dart';
 
+/// Column registration methods for a [SchemaBuilder].
 extension ColumnBuilderProvider<R> on SchemaBuilder<R> {
   /// Register a plain column.
   ///
@@ -66,19 +67,29 @@ ColumnType<W> _column<R, V extends Object, W extends V?>(
   return ColumnType<W>(column as Column<dynamic, W>);
 }
 
+/// Converts column values between the in-memory type [I] and the SQL
+/// storage type [O].
 abstract class ColumnTransformer<I, O> {
+  /// Allows subclasses to have const constructors.
   const ColumnTransformer();
 
+  /// Encodes an in-memory [input] into its SQL storage representation.
   O encode(I input);
 
+  /// Decodes a SQL storage [input] back into its in-memory representation.
   I decode(O input);
 }
 
+/// A possibly-absent [ColumnType], the receiver type for the column
+/// operator extensions.
 typedef ColumnOf<V extends Object?> = ColumnType<V>?;
 
+/// A typed handle to a registered [Column], as returned by the schema
+/// builder's column registration methods.
 extension type ColumnType<V extends Object?>(Column<dynamic, V> _)
     implements Column<dynamic, V> {}
 
+/// Predicate and aggregate operators available on any column.
 extension ColumnOperators<V extends Object?> on ColumnOf<V> {
   /// Make an alias of the column.
   ColumnAlias<dynamic, V> as(String alias) => this!.as(alias);
@@ -115,6 +126,7 @@ extension ColumnOperators<V extends Object?> on ColumnOf<V> {
   Object? operand(ColumnOr<V> value) => operandFor(this!, value);
 
   /// Returns the count of what is being selected.
+  // ignore: use_to_and_as_if_applicable the name mirrors SQL's `COUNT`
   Count<V> count() => Count<V>(this);
 
   /// Row value for column is null.
@@ -124,6 +136,7 @@ extension ColumnOperators<V extends Object?> on ColumnOf<V> {
   SQL isNotNull() => SQL([this, const RawSQL('IS NOT NULL')]);
 }
 
+/// Primary-key marking for a possibly-absent column.
 extension PrimaryColumn<T extends ColumnType<V>, V extends Object?> on T? {
   /// Marks this column as the primary key (no auto-increment).
   T? primaryKey() {
@@ -136,12 +149,14 @@ extension PrimaryColumn<T extends ColumnType<V>, V extends Object?> on T? {
   }
 }
 
+/// Primary-key marking for a known-present column.
 extension PrimaryColumnNonNull<T extends ColumnType<V>, V extends Object?>
     on T {
   /// Marks this column as the primary key (no auto-increment).
   T primaryKey() => PrimaryColumn(this).primaryKey()!;
 }
 
+/// Primary-key marking for integer columns, which support auto-increment.
 extension PrimaryColumnInteger<T extends ColumnType<int?>> on T {
   /// Marks this integer column as the primary key, optionally with
   /// auto-increment.
@@ -170,6 +185,6 @@ extension ReferencesColumn<T extends ColumnType<V>, V extends Object?> on T? {
         onUpdate: onUpdate,
       );
     }
-    return this as T;
+    return this!;
   }
 }

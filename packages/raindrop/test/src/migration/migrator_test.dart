@@ -3,7 +3,245 @@ import 'dart:async';
 import 'package:raindrop/dialect.dart';
 import 'package:test/test.dart';
 
+void main() {
+  group('migrate', () {
+    test(
+      'creates tracking table and does nothing with no migrations',
+      () async {
+        final delegate = _FakeRaindropDelegate(appliedMigrations: []);
+        final db = Raindrop(delegate);
+
+        await migrate(db, []);
+
+        expect(
+          delegate.executedQueries.any(
+            (q) => q.$1.contains('CREATE TABLE IF NOT EXISTS'),
+          ),
+          isTrue,
+        );
+        expect(delegate.transactionCount, equals(0));
+      },
+    );
+
+    test('executes pending migrations in transactions', () async {
+      final delegate = _FakeRaindropDelegate(appliedMigrations: []);
+      final db = Raindrop(delegate);
+
+      await migrate(
+        db,
+        [
+          Migration(
+            '0000_initial',
+            'CREATE TABLE "users" (id INTEGER)',
+          ),
+        ],
+      );
+
+      expect(delegate.transactionCount, equals(1));
+
+      expect(
+        delegate.txDelegate.executedQueries.any(
+          (q) => q.$1.contains('CREATE TABLE "users"'),
+        ),
+        isTrue,
+      );
+
+      expect(
+        delegate.txDelegate.executedQueries.any(
+          (q) => q.$1.contains('INSERT INTO "_raindrop_migrations"'),
+        ),
+        isTrue,
+      );
+    });
+
+    test('skips already-applied migrations', () async {
+      final delegate = _FakeRaindropDelegate(
+        appliedMigrations: [('0000_initial', 'e26f7dbb5b5b246f')],
+      );
+      final db = Raindrop(delegate);
+
+      await migrate(
+        db,
+        [
+          Migration(
+            '0000_initial',
+            'CREATE TABLE "users" (id INTEGER)',
+          ),
+        ],
+      );
+
+      expect(delegate.transactionCount, equals(0));
+    });
+
+    test('throws MigrationChecksumMismatch on modified migration', () async {
+      final delegate = _FakeRaindropDelegate(
+        appliedMigrations: [('0000_initial', 'wrong_checksum_xx')],
+      );
+      final db = Raindrop(delegate);
+
+      await expectLater(
+        () => migrate(
+          db,
+          [
+            Migration(
+              '0000_initial',
+              'CREATE TABLE "users" (id INTEGER)',
+            ),
+          ],
+        ),
+        throwsA(isA<MigrationChecksumMismatch>()),
+      );
+    });
+
+    test(
+      'executes only new migrations when some are already applied',
+      () async {
+        final delegate = _FakeRaindropDelegate(
+          appliedMigrations: [('0000_initial', 'e26f7dbb5b5b246f')],
+        );
+        final db = Raindrop(delegate);
+
+        await migrate(
+          db,
+          [
+            Migration(
+              '0000_initial',
+              'CREATE TABLE "users" (id INTEGER)',
+            ),
+            Migration(
+              '0001_add_name',
+              'ALTER TABLE "users" ADD COLUMN "name" TEXT',
+            ),
+          ],
+        );
+
+        expect(
+          delegate.transactionCount,
+          equals(1),
+          reason: 'only the new migration opens a transaction',
+        );
+
+        expect(
+          delegate.txDelegate.executedQueries.any(
+            (q) => q.$1.contains('ALTER TABLE'),
+          ),
+          isTrue,
+        );
+      },
+    );
+
+    test(
+      'splits multi-statement SQL and executes each separately',
+      () async {
+        final delegate = _FakeRaindropDelegate(appliedMigrations: []);
+        final db = Raindrop(delegate);
+
+        await migrate(
+          db,
+          [
+            Migration(
+              '0000_initial',
+              'CREATE TABLE "a" (id INTEGER);\nCREATE TABLE "b" (id INTEGER)',
+            ),
+          ],
+        );
+
+        expect(
+          delegate.txDelegate.executedQueries,
+          hasLength(3),
+          reason: 'two SQL statements plus one recording INSERT',
+        );
+      },
+    );
+  });
+
+  group('statement splitting', () {
+    Future<List<String>> statementsOf(String sql) async {
+      final delegate = _FakeRaindropDelegate(appliedMigrations: []);
+      await migrate(Raindrop(delegate), [Migration('0000_custom', sql)]);
+      return [
+        for (final query in delegate.txDelegate.executedQueries)
+          if (!query.$1.contains('_raindrop_migrations')) query.$1,
+      ];
+    }
+
+    test('a semicolon inside a string literal does not split', () async {
+      expect(
+        await statementsOf(
+          "INSERT INTO \"teams\" (id, name) VALUES ('t1', 'Acme; Inc');",
+        ),
+        ["INSERT INTO \"teams\" (id, name) VALUES ('t1', 'Acme; Inc')"],
+      );
+    });
+
+    test('a doubled quote is an escape, not a terminator', () async {
+      expect(
+        await statementsOf("INSERT INTO \"t\" (v) VALUES ('it''s; fine');"),
+        ["INSERT INTO \"t\" (v) VALUES ('it''s; fine')"],
+      );
+    });
+
+    test('a semicolon inside a quoted identifier does not split', () async {
+      expect(
+        await statementsOf('CREATE TABLE "od;d" (id INTEGER);'),
+        ['CREATE TABLE "od;d" (id INTEGER)'],
+      );
+    });
+
+    test('a semicolon inside a comment does not split', () async {
+      final statements = await statementsOf(
+        '-- seeds the row, then stops\nINSERT INTO "t" (v) VALUES (1);',
+      );
+      expect(statements, hasLength(1));
+      expect(statements.single, contains('VALUES (1)'));
+    });
+
+    test('a comment-only migration executes nothing', () async {
+      expect(
+        await statementsOf('-- nothing to do yet\n/* also nothing; here */\n'),
+        isEmpty,
+      );
+    });
+
+    test('several statements still split', () async {
+      expect(await statementsOf('''
+INSERT INTO "t" (v) VALUES (1);\nINSERT INTO "t" (v) VALUES (2);'''), [
+        'INSERT INTO "t" (v) VALUES (1)',
+        'INSERT INTO "t" (v) VALUES (2)',
+      ]);
+    });
+
+    test('a trailing semicolon does not add an empty statement', () async {
+      expect(
+        await statementsOf('INSERT INTO "t" (v) VALUES (1);   \n\n'),
+        hasLength(1),
+      );
+    });
+
+    test('a statement without a trailing semicolon still runs', () async {
+      expect(
+          await statementsOf('INSERT INTO "t" (v) VALUES (1)'), hasLength(1));
+    });
+  });
+
+  group('MigrationChecksumMismatch', () {
+    test('toString provides useful information', () {
+      final error = MigrationChecksumMismatch(
+        '0000_test',
+        'abc123',
+        'def456',
+      );
+      expect(error.toString(), contains('0000_test'));
+      expect(error.toString(), contains('abc123'));
+      expect(error.toString(), contains('def456'));
+    });
+  });
+}
+
 class _FakeDialect extends SqlDialect {
+  @override
+  String get name => 'fake';
+
   @override
   String escapeName(String name) => '"$name"';
 
@@ -25,7 +263,7 @@ class _FakeTransactionDelegate extends TransactionDelegate {
     List<Object?> values,
   ) async {
     executedQueries.add((query, values));
-    return const DatabaseResult(
+    return DatabaseResult(
       columns: [],
       rows: [],
       rowsAffected: 0,
@@ -70,7 +308,7 @@ class _FakeRaindropDelegate extends RaindropDelegate {
         lastInsertedRowId: null,
       );
     }
-    return const DatabaseResult(
+    return DatabaseResult(
       columns: [],
       rows: [],
       rowsAffected: 0,
@@ -88,240 +326,4 @@ class _FakeRaindropDelegate extends RaindropDelegate {
       zoneValues: {#delegate: txDelegate},
     );
   }
-}
-
-void main() {
-  group('migrate', () {
-    test(
-      'creates tracking table and does nothing with no migrations',
-      () async {
-        final delegate = _FakeRaindropDelegate(appliedMigrations: []);
-        final db = Raindrop(delegate);
-
-        await migrate(db, []);
-
-        expect(
-          delegate.executedQueries.any(
-            (q) => q.$1.contains('CREATE TABLE IF NOT EXISTS'),
-          ),
-          isTrue,
-        );
-        expect(delegate.transactionCount, equals(0));
-      },
-    );
-
-    test('executes pending migrations in transactions', () async {
-      final delegate = _FakeRaindropDelegate(appliedMigrations: []);
-      final db = Raindrop(delegate);
-
-      await migrate(
-        db,
-        [
-          const Migration(
-            '0000_initial',
-            'CREATE TABLE "users" (id INTEGER)',
-          ),
-        ],
-      );
-
-      expect(delegate.transactionCount, equals(1));
-
-      // Check that the SQL statement was executed in the transaction.
-      expect(
-        delegate.txDelegate.executedQueries.any(
-          (q) => q.$1.contains('CREATE TABLE "users"'),
-        ),
-        isTrue,
-      );
-
-      // Check that the migration was recorded.
-      expect(
-        delegate.txDelegate.executedQueries.any(
-          (q) => q.$1.contains('INSERT INTO "_raindrop_migrations"'),
-        ),
-        isTrue,
-      );
-    });
-
-    test('skips already-applied migrations', () async {
-      // Use the correct checksum for the SQL content.
-      final delegate = _FakeRaindropDelegate(
-        appliedMigrations: [('0000_initial', 'e26f7dbb5b5b246f')],
-      );
-      final db = Raindrop(delegate);
-
-      await migrate(
-        db,
-        [
-          const Migration(
-            '0000_initial',
-            'CREATE TABLE "users" (id INTEGER)',
-          ),
-        ],
-      );
-
-      expect(delegate.transactionCount, equals(0));
-    });
-
-    test('throws MigrationChecksumMismatch on modified migration', () async {
-      final delegate = _FakeRaindropDelegate(
-        appliedMigrations: [('0000_initial', 'wrong_checksum_xx')],
-      );
-      final db = Raindrop(delegate);
-
-      await expectLater(
-        () => migrate(
-          db,
-          [
-            const Migration(
-              '0000_initial',
-              'CREATE TABLE "users" (id INTEGER)',
-            ),
-          ],
-        ),
-        throwsA(isA<MigrationChecksumMismatch>()),
-      );
-    });
-
-    test(
-      'executes only new migrations when some are already applied',
-      () async {
-        final delegate = _FakeRaindropDelegate(
-          appliedMigrations: [('0000_initial', 'e26f7dbb5b5b246f')],
-        );
-        final db = Raindrop(delegate);
-
-        await migrate(
-          db,
-          [
-            const Migration(
-              '0000_initial',
-              'CREATE TABLE "users" (id INTEGER)',
-            ),
-            const Migration(
-              '0001_add_name',
-              'ALTER TABLE "users" ADD COLUMN "name" TEXT',
-            ),
-          ],
-        );
-
-        // Only one transaction for the new migration.
-        expect(delegate.transactionCount, equals(1));
-
-        expect(
-          delegate.txDelegate.executedQueries.any(
-            (q) => q.$1.contains('ALTER TABLE'),
-          ),
-          isTrue,
-        );
-      },
-    );
-
-    test(
-      'splits multi-statement SQL and executes each separately',
-      () async {
-        final delegate = _FakeRaindropDelegate(appliedMigrations: []);
-        final db = Raindrop(delegate);
-
-        await migrate(
-          db,
-          [
-            const Migration(
-              '0000_initial',
-              'CREATE TABLE "a" (id INTEGER);\n'
-                  'CREATE TABLE "b" (id INTEGER)',
-            ),
-          ],
-        );
-
-        // Two SQL statements + one INSERT for recording = 3 calls.
-        expect(delegate.txDelegate.executedQueries, hasLength(3));
-      },
-    );
-  });
-
-  group('statement splitting', () {
-    Future<List<String>> statementsOf(String sql) async {
-      final delegate = _FakeRaindropDelegate(appliedMigrations: []);
-      await migrate(Raindrop(delegate), [Migration('0000_custom', sql)]);
-      return [
-        for (final query in delegate.txDelegate.executedQueries)
-          if (!query.$1.contains('_raindrop_migrations')) query.$1,
-      ];
-    }
-
-    test('a semicolon inside a string literal does not split', () async {
-      expect(
-        await statementsOf(
-          "INSERT INTO \"teams\" (id, name) VALUES ('t1', 'Acme; Inc');",
-        ),
-        ["INSERT INTO \"teams\" (id, name) VALUES ('t1', 'Acme; Inc')"],
-      );
-    });
-
-    test('a doubled quote is an escape, not a terminator', () async {
-      expect(
-        await statementsOf("INSERT INTO \"t\" (v) VALUES ('it''s; fine');"),
-        ["INSERT INTO \"t\" (v) VALUES ('it''s; fine')"],
-      );
-    });
-
-    test('a semicolon inside a quoted identifier does not split', () async {
-      expect(
-        await statementsOf('CREATE TABLE "od;d" (id INTEGER);'),
-        ['CREATE TABLE "od;d" (id INTEGER)'],
-      );
-    });
-
-    test('a semicolon inside a comment does not split', () async {
-      final statements = await statementsOf(
-        '-- seeds the row; then stops\n'
-        'INSERT INTO "t" (v) VALUES (1);',
-      );
-      expect(statements, hasLength(1));
-      expect(statements.single, contains('VALUES (1)'));
-    });
-
-    test('a comment-only migration executes nothing', () async {
-      expect(
-        await statementsOf('-- nothing to do yet\n/* also nothing; here */\n'),
-        isEmpty,
-      );
-    });
-
-    test('several statements still split', () async {
-      expect(
-          await statementsOf('INSERT INTO "t" (v) VALUES (1);\n'
-              'INSERT INTO "t" (v) VALUES (2);'),
-          [
-            'INSERT INTO "t" (v) VALUES (1)',
-            'INSERT INTO "t" (v) VALUES (2)',
-          ]);
-    });
-
-    test('a trailing semicolon does not add an empty statement', () async {
-      expect(
-        await statementsOf('INSERT INTO "t" (v) VALUES (1);   \n\n'),
-        hasLength(1),
-      );
-    });
-
-    test('a statement without a trailing semicolon still runs', () async {
-      expect(
-          await statementsOf('INSERT INTO "t" (v) VALUES (1)'), hasLength(1));
-    });
-  });
-
-  group('MigrationChecksumMismatch', () {
-    test('toString provides useful information', () {
-      const error = MigrationChecksumMismatch(
-        '0000_test',
-        'abc123',
-        'def456',
-      );
-      expect(error.toString(), contains('0000_test'));
-      expect(error.toString(), contains('abc123'));
-      expect(error.toString(), contains('def456'));
-    });
-  });
 }

@@ -34,4 +34,4 @@ class UserSchema extends Schema<User> {
   final ColumnType<DateTime?> deletedAt;
 }
 
-final users = sqliteTable('users', UserSchema.new);
+final UserSchema users = sqliteTable('users', UserSchema.new);

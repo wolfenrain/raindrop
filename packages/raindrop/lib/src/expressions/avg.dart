@@ -18,4 +18,12 @@ class Avg extends Expression<double> {
 
   @override
   SQL build() => SQL.function('AVG', [value]);
+
+  @override
+  double? decode(Object? input) => switch (input) {
+        null => null,
+        final num number => number.toDouble(),
+        final String text => double.parse(text),
+        _ => input as double?,
+      };
 }

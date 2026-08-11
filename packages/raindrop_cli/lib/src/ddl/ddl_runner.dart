@@ -2,28 +2,30 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:isolate';
 
+import 'package:meta/meta.dart';
 import 'package:path/path.dart' as p;
 import 'package:raindrop/ddl.dart';
 
 /// Runs DDL generation in an isolated process by dynamically loading
-/// the appropriate dialect package's DDL generator.
+/// the appropriate driver package's DDL generator.
 class DdlRunner {
-  DdlRunner._();
+  DdlRunner._(); // coverage:ignore-line
 
-  /// Generates SQL DDL from the given operations using the specified dialect.
+  /// Generates SQL DDL from the given operations using the given [driver]
+  /// package.
   ///
   /// This method:
-  /// 1. Resolves the dialect package location from the user's pub cache
+  /// 1. Resolves the driver package location from the user's package config
   /// 2. Spawns an isolate that loads the DDL generator
   /// 3. Sends the operations and receives the generated SQL
   ///
-  /// Throws an [ArgumentError] if the dialect package is not found.
+  /// Throws an [ArgumentError] if the driver package is not found.
   static Future<String> generate(
-    String dialect,
+    String driver,
     List<DiffOperation> operations, {
     String? projectPath,
   }) async {
-    final entryPointUri = await _resolveEntryPoint(dialect, projectPath);
+    final entryPointUri = await _resolveEntryPoint(driver, projectPath);
 
     final configFile = _findPackageConfig(projectPath);
 
@@ -39,28 +41,28 @@ class DdlRunner {
     return response['sql'] as String;
   }
 
-  /// Resolves the entry point URI for a dialect package.
+  /// Resolves the entry point URI for a driver package.
   static Future<Uri> _resolveEntryPoint(
-    String dialect,
+    String driver,
     String? projectPath,
   ) async {
-    final packageUri = await _resolveDialectPackage(dialect, projectPath);
+    final packageUri = await resolveDriverPackage(driver, projectPath);
     if (packageUri == null) {
       throw ArgumentError(
-        'Dialect package "raindrop_$dialect" not found. '
-        'Make sure it is listed in your pubspec.yaml dependencies.',
+        '''
+Driver package "$driver" not found. Make sure the "driver" field in raindrop.yaml names a package listed in your pubspec.yaml dependencies.''',
       );
     }
 
-    return Uri.parse('$packageUri/lib/src/${dialect}_ddl.dart');
+    return Uri.parse('$packageUri/lib/ddl.dart');
   }
 
-  /// Resolves the package URI for the given dialect from package_config.json.
-  static Future<Uri?> _resolveDialectPackage(
-    String dialect,
+  /// Resolves the [driver] package's root URI from package_config.json.
+  @visibleForTesting
+  static Future<Uri?> resolveDriverPackage(
+    String driver,
     String? projectPath,
   ) async {
-    final packageName = 'raindrop_$dialect';
     final configFile = _findPackageConfig(projectPath);
 
     if (configFile == null) {
@@ -71,21 +73,21 @@ class DdlRunner {
 
     final configContent = await configFile.readAsString();
     final config = jsonDecode(configContent) as Map<String, dynamic>;
-    final packages = config['packages'] as List<dynamic>;
+    final packages =
+        (config['packages'] as List<dynamic>).cast<Map<String, dynamic>>();
 
     for (final pkg in packages) {
-      final pkgMap = pkg as Map<String, dynamic>;
-      if (pkgMap['name'] == packageName) {
-        final rootUri = pkgMap['rootUri'] as String;
-        // rootUri can be relative (e.g., "../raindrop_postgres") or absolute
-        if (rootUri.startsWith('file://')) {
-          return Uri.parse(rootUri);
-        } else {
-          // Relative path - resolve against package_config.json location
-          final configDir = p.dirname(configFile.path);
-          final absolutePath = p.normalize(p.join(configDir, rootUri));
-          return Uri.file(absolutePath);
-        }
+      if (pkg['name'] != driver) continue;
+
+      final rootUri = pkg['rootUri'] as String;
+      // rootUri can be relative (e.g., "../raindrop_postgres") or absolute
+      if (rootUri.startsWith('file://')) {
+        return Uri.parse(rootUri);
+      } else {
+        // Relative path - resolve against package_config.json location
+        final configDir = p.dirname(configFile.path);
+        final absolutePath = p.normalize(p.join(configDir, rootUri));
+        return Uri.file(absolutePath);
       }
     }
 

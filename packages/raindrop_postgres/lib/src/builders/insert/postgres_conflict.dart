@@ -50,8 +50,8 @@ class OnConflictClause extends Clause {
         '(${target.map((c) => context.escapeName(c.name)).join(', ')})',
       switch (action) {
         DoNothing() => 'DO NOTHING',
-        DoUpdate(:final assignments) =>
-          'DO UPDATE SET ${UpdateSetClause(UpdateableResult(assignments)).render(context)}',
+        DoUpdate(:final assignments) => '''
+DO UPDATE SET ${UpdateSetClause(UpdateableResult(assignments)).render(context)}''',
       },
     ].join(' ');
   }

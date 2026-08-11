@@ -1,0 +1,1 @@
+SELECT "name" FROM "users" LIMIT 10 OFFSET 5

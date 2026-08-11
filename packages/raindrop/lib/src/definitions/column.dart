@@ -1,7 +1,9 @@
 import 'dart:async';
 
+import 'package:meta/meta.dart';
 import 'package:raindrop/raindrop.dart';
 
+/// A column value of type [V], accepted directly or as a [Future].
 typedef ColumnOr<V> = FutureOr<V>;
 
 /// Row field getter for schema [R].
@@ -12,7 +14,13 @@ typedef ColumnOr<V> = FutureOr<V>;
 /// [Column.isNullable].
 typedef Field<R, W extends Object?> = W Function(R);
 
+/// A single column of a [Table], usable as an operand in queries and as a
+/// selectable.
+///
+/// [R] is the row type of the owning table and [V] the Dart value type of
+/// the column.
 class Column<R, V extends Object?> with SqlOperand<V> implements Selectable<V> {
+  /// Creates a column named [name] on [table].
   Column(
     this.table,
     this.name, {
@@ -24,7 +32,7 @@ class Column<R, V extends Object?> with SqlOperand<V> implements Selectable<V> {
     this.autoIncrement = false,
     this.defaultValue,
     this.foreignKeyReference,
-  }) : valueOf = valueOf;
+  }) : _valueOf = valueOf;
 
   /// The table of the column.
   final Table<Schema<dynamic>, dynamic> table;
@@ -34,12 +42,13 @@ class Column<R, V extends Object?> with SqlOperand<V> implements Selectable<V> {
 
   /// `V? Function(R)`, stored as [Function] so callers can pass in
   /// `V? Function(SpecificR)` without contravariant-cast issues.
-  final Function? valueOf;
+  final Function? _valueOf;
 
-  /// Same as [valueOf] but without any of its type data.
-  ///
-  /// This is useful for internal use mostly.
-  dynamic readValueOf(Object? r) => valueOf!(r as R) as dynamic;
+  /// Reads this column's value from row [r] via the accessor given at
+  /// construction, without any of its type data.
+  @internal
+  // ignore: avoid_dynamic_calls we know the contract of the function
+  dynamic readValueOf(Object? r) => _valueOf!(r as R) as dynamic;
 
   /// A column's transformer for Dart to SQL conversion.
   @override
@@ -66,7 +75,7 @@ class Column<R, V extends Object?> with SqlOperand<V> implements Selectable<V> {
   /// Foreign key reference for this column.
   ForeignKeyReference? foreignKeyReference;
 
-  // TODO: should be on ColumnType
+  // TODO(wolfen): should be on ColumnType
   /// Returns the nullable version of this column.
   Column<R, V?> get nullable => Column(
         table,

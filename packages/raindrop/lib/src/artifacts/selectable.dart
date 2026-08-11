@@ -1,3 +1,5 @@
+// Raw `Selectable`s are intentional: results hold selectables of
+// diverse value types.
 // ignore_for_file: strict_raw_type
 
 /// Interface for making a class selectable.

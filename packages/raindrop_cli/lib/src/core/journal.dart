@@ -3,32 +3,24 @@ import 'dart:io';
 
 /// Represents the migration journal that tracks all applied migrations.
 ///
-/// This follows the drizzle-kit approach of storing migration metadata
-/// in a `_journal.json` file within the meta directory.
+/// Migration metadata is stored in a `_journal.json` file within the meta
+/// directory.
 class MigrationJournal {
+  /// Creates a journal with the given [version], [dialect], and [entries].
   const MigrationJournal({
     required this.version,
     required this.dialect,
     required this.entries,
   });
 
-  /// The journal format version.
-  static const currentVersion = '1';
-
-  /// Journal format version.
-  final String version;
-
-  /// The SQL dialect (e.g., 'postgres', 'sqlite').
-  final String dialect;
-
-  /// List of migration entries.
-  final List<JournalEntry> entries;
-
-  /// Creates an empty journal for the given dialect.
-  factory MigrationJournal.empty(String dialect) {
-    return MigrationJournal(
+  /// Creates an empty journal.
+  ///
+  /// The dialect is unknown until the first snapshot is taken, writing the
+  /// first entry stamps the snapshot's dialect.
+  factory MigrationJournal.empty() {
+    return const MigrationJournal(
       version: currentVersion,
-      dialect: dialect,
+      dialect: '',
       entries: [],
     );
   }
@@ -46,11 +38,23 @@ class MigrationJournal {
     );
   }
 
+  /// The journal format version.
+  static const currentVersion = '1';
+
+  /// Journal format version.
+  final String version;
+
+  /// The SQL dialect (e.g., 'postgres', 'sqlite').
+  final String dialect;
+
+  /// List of migration entries.
+  final List<JournalEntry> entries;
+
   /// Loads journal from file, or creates empty if doesn't exist.
-  static Future<MigrationJournal> load(String path, String dialect) async {
+  static Future<MigrationJournal> load(String path) async {
     final file = File(path);
     if (!file.existsSync()) {
-      return MigrationJournal.empty(dialect);
+      return MigrationJournal.empty();
     }
     final content = await file.readAsString();
     return MigrationJournal.fromJson(content);
@@ -98,6 +102,7 @@ class MigrationJournal {
 
 /// Represents a single entry in the migration journal.
 class JournalEntry {
+  /// Creates an entry for a single generated migration.
   const JournalEntry({
     required this.idx,
     required this.version,
@@ -105,6 +110,17 @@ class JournalEntry {
     required this.tag,
     required this.snapshotId,
   });
+
+  /// Creates an entry from a map.
+  factory JournalEntry.fromMap(Map<String, dynamic> data) {
+    return JournalEntry(
+      idx: data['idx'] as int,
+      version: data['version'] as String,
+      when: data['when'] as int,
+      tag: data['tag'] as String,
+      snapshotId: data['snapshotId'] as String,
+    );
+  }
 
   /// The migration index (0-based).
   final int idx;
@@ -120,17 +136,6 @@ class JournalEntry {
 
   /// The snapshot ID for this migration.
   final String snapshotId;
-
-  /// Creates an entry from a map.
-  factory JournalEntry.fromMap(Map<String, dynamic> data) {
-    return JournalEntry(
-      idx: data['idx'] as int,
-      version: data['version'] as String,
-      when: data['when'] as int,
-      tag: data['tag'] as String,
-      snapshotId: data['snapshotId'] as String,
-    );
-  }
 
   /// Converts the entry to a map.
   Map<String, dynamic> toMap() {

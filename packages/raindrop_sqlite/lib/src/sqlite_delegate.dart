@@ -79,7 +79,7 @@ mixin _DatabaseDelegate on Delegate {
         ),
       );
     } finally {
-      stmt.dispose();
+      stmt.close();
     }
   }
 }

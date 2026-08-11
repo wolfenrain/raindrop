@@ -1,11 +1,17 @@
 name: raindrop
-description: A Very Good Project created by Very Good CLI.
-version: 0.1.0+1
-publish_to: none
+description: A type-safe SQL toolkit for Dart that requires no code generation.
+version: 0.0.1
+repository: https://github.com/wolfenrain/raindrop/tree/main/packages/raindrop
+issue_tracker: https://github.com/wolfenrain/raindrop/issues
+topics:
+  - sql
+  - database
+  - orm
+  - migrations
 resolution: workspace
 
 environment:
-  sdk: ">3.5.0<=4.0.0"
+  sdk: ^3.6.0
 
 dependencies:
   crypto: ^3.0.6
@@ -13,6 +19,5 @@ dependencies:
   path: ^1.9.1
 
 dev_dependencies:
-  mocktail: ^1.0.3
+  raindrop_test: ^0.0.1
   test: ^1.25.2
-  very_good_analysis: ^5.1.0

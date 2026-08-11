@@ -15,4 +15,21 @@ class Sum<V extends num?> extends Expression<V> {
 
   @override
   SQL build() => SQL.function('SUM', [value]);
+
+  @override
+  V? decode(Object? input) => switch (input) {
+        null => null,
+        final V value => value,
+        final num number => _toV(number),
+        final String text => _toV(num.parse(text)),
+        _ => input as V?,
+      };
+
+  /// Converts [number] to whichever numeric type [V] accepts.
+  V _toV(num number) {
+    if (number is V) return number as V;
+    if (0 is V) return number.toInt() as V;
+    if (0.0 is V) return number.toDouble() as V;
+    return number as V;
+  }
 }

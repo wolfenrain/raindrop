@@ -1,3 +1,5 @@
+// Raw `Updateable`s are intentional: results hold updateable columns of
+// diverse value types.
 // ignore_for_file: strict_raw_type
 
 import 'package:raindrop/raindrop.dart';

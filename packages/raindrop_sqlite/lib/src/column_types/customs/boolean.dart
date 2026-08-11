@@ -1,6 +1,8 @@
 import 'package:raindrop/raindrop.dart';
 
+/// Booleans, stored as an INTEGER.
 extension BooleanColumnDefinition<R> on SchemaBuilder<R> {
+  /// A [bool] column: `true` is stored as `1` and `false` as `0`.
   ColumnType<W> boolean<W extends bool?>(String name, Field<R, W> field) {
     return custom<bool, int, W>(
       name,
@@ -11,7 +13,12 @@ extension BooleanColumnDefinition<R> on SchemaBuilder<R> {
   }
 }
 
+/// {@template boolean_transformer}
+/// Encodes a [bool] as an [int], where `true` becomes `1` and `false`
+/// becomes `0`.
+/// {@endtemplate}
 class BooleanTransformer extends ColumnTransformer<bool, int> {
+  /// {@macro boolean_transformer}
   const BooleanTransformer();
 
   @override

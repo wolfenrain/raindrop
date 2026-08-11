@@ -1,9 +1,6 @@
 import 'package:raindrop/ddl.dart';
 import 'package:test/test.dart';
 
-ColumnInfo _column(String name, {String type = 'TEXT'}) =>
-    ColumnInfo(name: name, type: type, isNullable: false);
-
 void main() {
   group('TableDiff', () {
     test('splits adds, drops and alters', () {
@@ -35,7 +32,7 @@ void main() {
         AlterTable(
           oldTable: TableInfo(name: 't', columns: [_column('a')]),
           newTable: TableInfo(name: 't', columns: [_column('b')]),
-          renamedColumns: const {'a': 'b'},
+          renamedColumns: {'a': 'b'},
         ),
       );
 
@@ -51,12 +48,12 @@ void main() {
           oldTable: TableInfo(
             name: 't',
             columns: [_column('a')],
-            checks: const {'kept': '1', 'gone': '2', 'changed': '3'},
+            checks: {'kept': '1', 'gone': '2', 'changed': '3'},
           ),
           newTable: TableInfo(
             name: 't',
             columns: [_column('a')],
-            checks: const {'kept': '1', 'changed': '4', 'added': '5'},
+            checks: {'kept': '1', 'changed': '4', 'added': '5'},
           ),
         ),
       );
@@ -68,16 +65,16 @@ void main() {
     });
 
     test('a changed index is a drop plus a create', () {
-      const before = IndexInfo(name: 'i', tableName: 't', columns: ['a']);
-      const after =
+      final before = IndexInfo(name: 'i', tableName: 't', columns: ['a']);
+      final after =
           IndexInfo(name: 'i', tableName: 't', columns: ['a'], isUnique: true);
 
       final diff = TableDiff.of(
         AlterTable(
           oldTable: TableInfo(name: 't', columns: [_column('a')]),
           newTable: TableInfo(name: 't', columns: [_column('a')]),
-          oldIndexes: const [before],
-          newIndexes: const [after],
+          oldIndexes: [before],
+          newIndexes: [after],
         ),
       );
 
@@ -86,3 +83,6 @@ void main() {
     });
   });
 }
+
+ColumnInfo _column(String name, {String type = 'TEXT'}) =>
+    ColumnInfo(name: name, type: type, isNullable: false);

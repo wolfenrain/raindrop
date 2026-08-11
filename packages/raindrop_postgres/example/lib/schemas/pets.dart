@@ -1,7 +1,7 @@
 import 'package:raindrop/raindrop.dart';
 import 'package:raindrop_postgres/raindrop_postgres.dart';
 
-import 'users.dart';
+import 'package:raindrop_postgres_example/schemas/users.dart';
 
 class Pet {
   const Pet({required this.name, required this.ownerId, this.id});
@@ -38,4 +38,4 @@ class PetSchema extends Schema<Pet> {
   final ColumnType<String> name;
 }
 
-final pets = postgresTable('pets', PetSchema.new);
+final PetSchema pets = postgresTable('pets', PetSchema.new);

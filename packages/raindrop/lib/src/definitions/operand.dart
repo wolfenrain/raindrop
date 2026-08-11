@@ -41,8 +41,8 @@ Object? operandFor<V>(SqlOperand<V> subject, ColumnOr<V> value) =>
 /// holding an operand can convert its values without knowing which kind it is.
 mixin SqlOperand<V> implements Future<V> {
   static Never _notAFuture() => throw UnsupportedError(
-        'This is not a real Future, it only poses as one so it can be used '
-        'where a value is expected.',
+        '''
+This is not a real Future, it only poses as one so it can be used where a value is expected.''',
       );
 
   /// How this operand's values convert to and from their stored form.

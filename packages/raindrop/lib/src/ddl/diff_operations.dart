@@ -193,8 +193,8 @@ class CreateIndex extends DiffOperation {
   final IndexInfo index;
 
   @override
-  String describe() =>
-      'Create ${index.isUnique ? 'unique ' : ''}index "${index.name}" on table "${index.tableName}"';
+  String describe() => '''
+Create ${index.isUnique ? 'unique ' : ''}index "${index.name}" on table "${index.tableName}"''';
 
   @override
   Map<String, dynamic> toMap() {

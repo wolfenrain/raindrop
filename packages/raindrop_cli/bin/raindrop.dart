@@ -7,13 +7,15 @@ Future<void> main(List<String> arguments) async {
   try {
     await runner.run(arguments);
   } on UsageException catch (e) {
-    print(e.message);
-    print('');
-    print(e.usage);
+    stderr
+      ..writeln(e.message)
+      ..writeln()
+      ..writeln(e.usage);
     exit(64);
-  } catch (e, st) {
-    print('Error: $e');
-    print(st);
+  } on Object catch (e, st) {
+    stderr
+      ..writeln('Error: $e')
+      ..writeln(st);
     exit(1);
   }
 }

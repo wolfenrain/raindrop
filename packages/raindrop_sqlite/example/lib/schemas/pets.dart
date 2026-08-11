@@ -1,7 +1,7 @@
 import 'package:raindrop/raindrop.dart';
 import 'package:raindrop_sqlite/raindrop_sqlite.dart';
 
-import 'users.dart';
+import 'package:raindrop_sqlite_example/schemas/users.dart';
 
 class Pet {
   const Pet({required this.name, required this.ownerId, this.id});
@@ -38,7 +38,7 @@ class PetSchema extends Schema<Pet> {
   final ColumnType<String> name;
 }
 
-final pets = sqliteTable(
+final PetSchema pets = sqliteTable(
   'pets',
   PetSchema.new,
   (table) {

@@ -1,17 +1,23 @@
 name: raindrop_postgres
-description: A Very Good Project created by Very Good CLI.
-version: 0.1.0+1
-publish_to: none
+description: The Postgres driver for raindrop, built on top of the postgres package.
+version: 0.0.1
+repository: https://github.com/wolfenrain/raindrop/tree/main/packages/raindrop_postgres
+issue_tracker: https://github.com/wolfenrain/raindrop/issues
+topics:
+  - sql
+  - database
+  - postgres
+  - migrations
 resolution: workspace
 
 environment:
-  sdk: ">3.5.0-0<=4.0.0"
+  sdk: ^3.6.0
 
 dependencies:
   postgres: ">=3.0.0 <4.0.0"
-  raindrop: ^0.1.0
+  raindrop: ^0.0.1
 
 dev_dependencies:
   mocktail: ^1.0.3
+  raindrop_test: ^0.0.1
   test: ^1.25.2
-  very_good_analysis: ^5.1.0

@@ -13,6 +13,9 @@ class PostgresDialect extends SqlDialect {
   const PostgresDialect();
 
   @override
+  String get name => 'postgres';
+
+  @override
   String escapeName(String name) => '"$name"';
 
   @override

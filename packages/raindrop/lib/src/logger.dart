@@ -4,9 +4,10 @@ import 'dart:developer';
 /// {@template logger}
 /// Provides logging capabilities inside Raindrop.
 /// {@endtemplate}
+// ignore: one_member_abstracts an interface for users to implement
 abstract interface class Logger {
   /// {@macro logger}
-  const Logger();
+  const Logger(); // coverage:ignore-line
 
   /// Log a [query] statement and it's [values].
   void query(String query, List<Object?> values);
@@ -22,10 +23,10 @@ class DeveloperLogger implements Logger {
 
   @override
   void query(String query, List<Object?> values) {
-    return log(
-      '$query${values.isNotEmpty ? ' -- [${values.map(json.tryEncode).join(', ')}]' : ''}',
-      name: 'raindrop',
-    );
+    final suffix = values.isNotEmpty
+        ? ' -- [${values.map(json.tryEncode).join(', ')}]'
+        : '';
+    return log('$query$suffix', name: 'raindrop');
   }
 }
 
@@ -44,7 +45,7 @@ extension on JsonCodec {
   dynamic tryEncode(Object? i) {
     try {
       return encode(i);
-    } catch (err) {
+    } on Object {
       return i.toString();
     }
   }

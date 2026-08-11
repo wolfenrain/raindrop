@@ -81,7 +81,8 @@ class Span {
       final value = runZoned(() => callback(span), zoneValues: {Span: span});
       if (value is Future) {
         synchronous = false;
-        return (value..then((_) => span.end(), onError: span.fail)) as T;
+        unawaited(value.then((_) => span.end(), onError: span.fail));
+        return value;
       }
       return value;
     } catch (err, stackTrace) {

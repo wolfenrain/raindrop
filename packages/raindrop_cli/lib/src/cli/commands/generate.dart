@@ -13,37 +13,36 @@ import 'package:raindrop_cli/src/introspect/snapshot_runner.dart';
 
 /// Command to generate a new SQL migration.
 class GenerateCommand extends Command<int> {
+  /// Creates the command, registering its options and flags.
   GenerateCommand() {
-    argParser.addOption(
-      'name',
-      abbr: 'n',
-      help: 'Name for the migration.',
-    );
-    argParser.addFlag(
-      'empty',
-      help: 'Write a migration for by hand.',
-      defaultsTo: false,
-    );
-    argParser.addFlag(
-      'dart-only',
-      help: 'Rewrite the embedded Dart migrations from the journal and stop.',
-      defaultsTo: false,
-    );
-    argParser.addFlag(
-      'dry-run',
-      help: 'Show what would be generated without creating files.',
-      defaultsTo: false,
-    );
-    argParser.addOption(
-      'dart',
-      help: 'Generate a Dart file with embedded migrations at the given path. '
-          'Defaults to {out}/migrations.dart if no path is provided.',
-    );
-    argParser.addOption(
-      'current-snapshot',
-      help: 'Use a pre-built schema snapshot (JSON) as the current state '
-          'instead of running the schema.',
-    );
+    argParser
+      ..addOption(
+        'name',
+        abbr: 'n',
+        help: 'Name for the migration.',
+      )
+      ..addFlag(
+        'empty',
+        help: 'Write a migration for by hand.',
+      )
+      ..addFlag(
+        'dart-only',
+        help: 'Rewrite the embedded Dart migrations from the journal and stop.',
+      )
+      ..addFlag(
+        'dry-run',
+        help: 'Show what would be generated without creating files.',
+      )
+      ..addOption(
+        'dart',
+        help: '''
+Generate a Dart file with embedded migrations at the given path. Defaults to {out}/migrations.dart if no path is provided.''',
+      )
+      ..addOption(
+        'current-snapshot',
+        help: '''
+Use a pre-built schema snapshot (JSON) as the current state instead of running the schema.''',
+      );
   }
 
   @override
@@ -65,10 +64,7 @@ class GenerateCommand extends Command<int> {
       _ => config.dartPath,
     };
 
-    final journal = await MigrationJournal.load(
-      config.journalPath,
-      config.dialect,
-    );
+    final journal = await MigrationJournal.load(config.journalPath);
 
     if (dartOnly) {
       return _emitOnly(config, journal, dartOutputPath);
@@ -76,7 +72,7 @@ class GenerateCommand extends Command<int> {
 
     final migrationName = argResults!['name'] as String?;
     if (migrationName == null || migrationName.trim().isEmpty) {
-      print('Missing --name.');
+      stderr.writeln('Missing --name.');
       return 1;
     }
 
@@ -89,12 +85,12 @@ class GenerateCommand extends Command<int> {
 
     // Built even for --empty, so that pending schema changes can be DETECTED.
     final SchemaSnapshot currentSnapshot;
-    if ((argResults!['current-snapshot'] as String?) case final snapshotArg?) {
+    if (argResults!['current-snapshot'] case final String snapshotArg) {
       final loaded = await SchemaSnapshot.load(
         p.normalize(p.join(config.configDir, snapshotArg)),
       );
       if (loaded == null) {
-        print('Current snapshot not found: $snapshotArg');
+        stderr.writeln('Current snapshot not found: $snapshotArg');
         return 1;
       }
       currentSnapshot = loaded.copyWith(
@@ -104,15 +100,15 @@ class GenerateCommand extends Command<int> {
     } else {
       currentSnapshot = await SnapshotRunner.build(
         schemaPath: config.schemaPath,
-        dialect: config.dialect,
+        driver: config.driver,
         configDir: config.configDir,
         prevId: journal.previousId,
       );
     }
 
     if (!empty && currentSnapshot.tables.isEmpty) {
-      print('No tables found for "${config.dialect}" in schema directory: '
-          '${config.schemaPath}');
+      stderr.writeln('''
+No tables found for "${config.driver}" in schema directory: ${config.schemaPath}''');
       return 1;
     }
 
@@ -120,17 +116,17 @@ class GenerateCommand extends Command<int> {
 
     if (empty) {
       if (operations.isNotEmpty) {
-        print(
+        stderr.writeln(
           'Schema changes are pending, so an empty migration would bury them.\n'
           'Run `raindrop generate` first, then create this one:',
         );
         for (final operation in operations) {
-          print('  - ${operation.describe()}');
+          stderr.writeln('  - ${operation.describe()}');
         }
         return 1;
       }
     } else if (operations.isEmpty) {
-      print('No schema changes detected.');
+      stdout.writeln('No schema changes detected.');
       return 0;
     }
 
@@ -145,21 +141,22 @@ class GenerateCommand extends Command<int> {
     final sql = empty
         ? _emptyTemplate(tag)
         : await DdlRunner.generate(
-            currentSnapshot.dialect,
+            config.driver,
             operations,
             projectPath: findProjectRoot(config.configDir),
           );
 
     if (!empty && sql.trim().isEmpty) {
-      print('Nothing to migrate: no SQL for the current diff.');
+      stdout.writeln('Nothing to migrate: no SQL for the current diff.');
       return 0;
     }
 
     if (dryRun) {
-      print('Would generate migration: $tag.sql');
-      print('');
-      print('SQL:');
-      print(sql);
+      stdout
+        ..writeln('Would generate migration: $tag.sql')
+        ..writeln()
+        ..writeln('SQL:')
+        ..writeln(sql);
       return 0;
     }
 
@@ -191,17 +188,18 @@ class GenerateCommand extends Command<int> {
       await emitDartMigrations(config, updatedJournal, dartOutputPath);
     }
 
-    print('Generated migration: $migrationPath');
+    stdout.writeln('Generated migration: $migrationPath');
     if (dartOutputPath != null) {
-      print('Generated Dart migrations file: $dartOutputPath');
+      stdout.writeln('Generated Dart migrations file: $dartOutputPath');
     }
-    print('');
+    stdout.writeln();
     if (empty) {
-      print('Write the SQL into that file before it is first applied.');
+      stdout
+          .writeln('Write the SQL into that file before it is first applied.');
     } else {
-      print('Changes:');
+      stdout.writeln('Changes:');
       for (final op in operations) {
-        print('  - ${op.describe()}');
+        stdout.writeln('  - ${op.describe()}');
       }
     }
 
@@ -214,12 +212,12 @@ class GenerateCommand extends Command<int> {
     String? dartOutputPath,
   ) async {
     if (dartOutputPath == null) {
-      print(
+      stderr.writeln(
           'No Dart output path. Set "dart:" in raindrop.yaml or pass --dart.');
       return 1;
     }
     if (journal.entries.isEmpty) {
-      print('No migrations in the journal: ${config.journalPath}');
+      stderr.writeln('No migrations in the journal: ${config.journalPath}');
       return 1;
     }
 
@@ -229,13 +227,15 @@ class GenerateCommand extends Command<int> {
           entry.tag,
     ];
     if (missing.isNotEmpty) {
-      print('Missing SQL for journalled migrations: ${missing.join(', ')}');
+      stderr.writeln(
+          'Missing SQL for journalled migrations: ${missing.join(', ')}');
       return 1;
     }
 
     await emitDartMigrations(config, journal, dartOutputPath);
-    print('Generated Dart migrations file: $dartOutputPath');
-    print('Embedded ${journal.entries.length} migration(s).');
+    stdout
+      ..writeln('Generated Dart migrations file: $dartOutputPath')
+      ..writeln('Embedded ${journal.entries.length} migration(s).');
     return 0;
   }
 

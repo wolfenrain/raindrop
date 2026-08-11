@@ -1,8 +1,8 @@
 name: raindrop_workspace
-publush_to: none
+publish_to: none
 
 environment:
-  sdk: ">3.5.0<=4.0.0"
+  sdk: ^3.9.0
 
 workspace:
   - packages/raindrop
@@ -11,3 +11,59 @@ workspace:
   - packages/raindrop_sqlite
   - packages/raindrop_sqlite/example
   - packages/raindrop_cli
+  - packages/raindrop_test
+
+dev_dependencies:
+  coverage: ^1.15.1
+  melos: ^8.2.2
+  very_good_analysis: ^10.3.0
+
+melos:
+  repository: https://github.com/wolfenrain/raindrop
+
+  command:
+    version:
+      branch: main
+      linkToCommits: true
+      workspaceChangelog: true
+
+  scripts:
+    analyze: melos exec -- dart analyze
+
+    format: melos exec -- dart format --output=none --set-exit-if-changed .
+    format:fix: melos exec -- dart format .
+
+    test:
+      description: Runs each package's unit and integration tests.
+      steps:
+        - test:unit
+        - test:integration
+    test:unit:
+      description: Runs each package's unit tests.
+      packageFilters:
+        dirExists: test
+      exec:
+        concurrency: 1
+        command: |
+          rm -rf coverage && dart test --coverage=coverage &&
+          dart run coverage:format_coverage --lcov --check-ignore \
+            --in=coverage --out=coverage/lcov.info --report-on=lib &&
+          grep -rL coverage:ignore-file lib --include='*.dart' |
+          while read -r f; do
+            sed 's|//.*||' "\$f" | tr '\n' ' ' |
+              sed -E 's/(export|import|library|part)[^;]*;//g' |
+              grep -q '[^ ]' || continue;
+            grep -q "SF:.*/\$f\$" coverage/lcov.info ||
+              { echo "no test loads \$f"; exit 1; };
+          done &&
+          awk -F, '
+            /^DA:/ {t++; if (\$2>0) h++}
+            END {p=100*h/t; printf "%.1f%% covered\n", p; exit (p<100)}
+          ' coverage/lcov.info
+    test:integration:
+      description: Runs each package's integration tests.
+      packageFilters:
+        dirExists: integration_test
+      exec:
+        concurrency: 1
+        command: dart test integration_test

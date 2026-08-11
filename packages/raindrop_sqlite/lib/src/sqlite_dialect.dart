@@ -13,6 +13,9 @@ class SQLiteDialect extends SqlDialect {
   const SQLiteDialect();
 
   @override
+  String get name => 'sqlite';
+
+  @override
   String escapeName(String name) => '"$name"';
 
   @override

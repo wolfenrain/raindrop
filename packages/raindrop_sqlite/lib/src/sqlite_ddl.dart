@@ -1,16 +1,12 @@
-import 'dart:isolate';
-
 import 'package:raindrop/ddl.dart';
 import 'package:raindrop_sqlite/src/sqlite_dialect.dart';
-
-void main(List<String> args, SendPort sendPort) => SQLiteDdlGenerator(sendPort);
 
 /// {@template sqlite_ddl_generator}
 /// DDL generator for SQLite.
 /// {@endtemplate}
 class SQLiteDdlGenerator extends DdlGenerator {
   /// {@macro sqlite_ddl_generator}
-  SQLiteDdlGenerator(super.sendPort) : super(dialect: const SQLiteDialect());
+  const SQLiteDdlGenerator() : super(dialect: const SQLiteDialect());
 
   @override
   String generate(List<DiffOperation> operations) {
@@ -23,9 +19,8 @@ class SQLiteDdlGenerator extends DdlGenerator {
         for (final dependent in alter.referencedBy) {
           if (altered.contains(dependent.table.name)) {
             throw UnsupportedError(
-              'Rebuilding "${alter.tableName}" must recreate '
-              '"${dependent.table.name}", which is itself altered in this '
-              'migration. Split the two changes into separate migrations.',
+              '''
+Rebuilding "${alter.tableName}" must recreate "${dependent.table.name}", which is itself altered in this migration. Split the two changes into separate migrations.''',
             );
           }
         }
@@ -62,8 +57,8 @@ class SQLiteDdlGenerator extends DdlGenerator {
     final unique = index.isUnique ? 'UNIQUE ' : '';
     final cols = index.columns.map(escapeName).join(', ');
     final where = index.where != null ? ' WHERE ${index.where}' : '';
-    return 'CREATE ${unique}INDEX ${escapeName(index.name)} '
-        'ON ${escapeName(index.tableName)} ($cols)$where;';
+    return '''
+CREATE ${unique}INDEX ${escapeName(index.name)} ON ${escapeName(index.tableName)} ($cols)$where;''';
   }
 
   @override
@@ -111,9 +106,10 @@ class SQLiteDdlGenerator extends DdlGenerator {
   String _simpleAlter(AlterTable operation, TableDiff diff) {
     final table = escapeName(operation.tableName);
     return [
-      for (final entry in operation.renamedColumns.entries)
-        'ALTER TABLE $table RENAME COLUMN ${escapeName(entry.key)} '
-            'TO ${escapeName(entry.value)};',
+      ...operation.renamedColumns.entries.map(
+        (entry) => '''
+ALTER TABLE $table RENAME COLUMN ${escapeName(entry.key)} TO ${escapeName(entry.value)};''',
+      ),
       for (final column in diff.droppedColumns)
         'ALTER TABLE $table DROP COLUMN ${escapeName(column.name)};',
       for (final column in diff.addedColumns)
@@ -127,10 +123,8 @@ class SQLiteDdlGenerator extends DdlGenerator {
     for (final column in diff.addedColumns) {
       if (!column.isNullable && column.defaultValue == null) {
         throw UnsupportedError(
-          'Adding NOT NULL column "${column.name}" to "${operation.tableName}" '
-          'without a default: existing rows have no value to backfill. Give '
-          'the column a default, or write the migration by hand with '
-          '`generate --empty`.',
+          '''
+Adding NOT NULL column "${column.name}" to "${operation.tableName}" without a default: existing rows have no value to backfill. Give the column a default, or write the migration by hand with `generate --empty`.''',
         );
       }
     }
@@ -161,8 +155,8 @@ class SQLiteDdlGenerator extends DdlGenerator {
     // Rename shadows into place and restore the indexes.
     for (final name in rebuildSet) {
       statements.add(
-        'ALTER TABLE ${escapeName('__new_$name')} RENAME TO '
-        '${escapeName(name)};',
+        '''
+ALTER TABLE ${escapeName('__new_$name')} RENAME TO ${escapeName(name)};''',
       );
     }
     statements.addAll([
@@ -202,8 +196,7 @@ class SQLiteDdlGenerator extends DdlGenerator {
       for (final entry in table.checks.entries)
         'CONSTRAINT ${escapeName(entry.key)} CHECK (${entry.value})',
     ].join(',\n  ');
-    return 'CREATE TABLE ${escapeName('__new_${table.name}')} '
-        '(\n  $defs\n);';
+    return 'CREATE TABLE ${escapeName('__new_${table.name}')} (\n  $defs\n);';
   }
 
   /// Copies the target's rows into its shadow: renamed columns read from
@@ -223,14 +216,14 @@ class SQLiteDdlGenerator extends DdlGenerator {
     final targets = copied.map(escapeName).join(', ');
     final sources =
         copied.map((name) => escapeName(oldNameOf[name] ?? name)).join(', ');
-    return 'INSERT INTO ${escapeName('__new_${operation.tableName}')} '
-        '($targets) SELECT $sources FROM ${escapeName(operation.tableName)};';
+    return '''
+INSERT INTO ${escapeName('__new_${operation.tableName}')} ($targets) SELECT $sources FROM ${escapeName(operation.tableName)};''';
   }
 
   String _copyVerbatim(TableInfo table) {
     final columns = table.columns.map((c) => escapeName(c.name)).join(', ');
-    return 'INSERT INTO ${escapeName('__new_${table.name}')} ($columns) '
-        'SELECT $columns FROM ${escapeName(table.name)};';
+    return '''
+INSERT INTO ${escapeName('__new_${table.name}')} ($columns) SELECT $columns FROM ${escapeName(table.name)};''';
   }
 
   /// Original tables in a safe drop order: a table is dropped only after
@@ -255,9 +248,8 @@ class SQLiteDdlGenerator extends DdlGenerator {
       }).toList();
       if (free.isEmpty) {
         throw UnsupportedError(
-          'Cyclic foreign keys among ${remaining.join(', ')}: no safe order '
-          'to rebuild them. Write the migration by hand with '
-          '`generate --empty`.',
+          '''
+Cyclic foreign keys among ${remaining.join(', ')}: no safe order to rebuild them. Write the migration by hand with `generate --empty`.''',
         );
       }
       order.addAll(free);
@@ -288,9 +280,9 @@ class SQLiteDdlGenerator extends DdlGenerator {
     }
 
     if (column.foreignKey case final fk?) {
-      parts.add(
-        'REFERENCES ${escapeName(fk.referencedTable)}(${escapeName(fk.referencedColumn)})',
-      );
+      final referencedTable = escapeName(fk.referencedTable);
+      final referencedColumn = escapeName(fk.referencedColumn);
+      parts.add('REFERENCES $referencedTable($referencedColumn)');
       if (fk.onDelete != null) parts.add('ON DELETE ${fk.onDelete}');
       if (fk.onUpdate != null) parts.add('ON UPDATE ${fk.onUpdate}');
     }

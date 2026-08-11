@@ -34,4 +34,4 @@ class UserSchema extends Schema<User> {
   final ColumnType<DateTime?> deletedAt;
 }
 
-final users = postgresTable('users', UserSchema.new);
+final UserSchema users = postgresTable('users', UserSchema.new);

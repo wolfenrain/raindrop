@@ -43,7 +43,7 @@ CREATE TABLE IF NOT EXISTS pets (
   owner_id INTEGER NULL
 );''');
 
-  final testUser = User(name: 'testing');
+  const testUser = User(name: 'testing');
 
   final emptyResult = await db.insert(into: users).values([testUser]);
   print('Inserted one but no result: $emptyResult');

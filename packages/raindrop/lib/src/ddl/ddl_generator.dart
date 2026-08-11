@@ -3,17 +3,62 @@ import 'dart:isolate';
 import 'package:raindrop/ddl.dart';
 import 'package:raindrop/dialect.dart';
 
+/// Serves [generator] over the isolate command protocol the CLI speaks.
+///
+/// Sends a command port back over [sendPort], then answers `generate`
+/// messages until the returned [ReceivePort] is closed.
+///
+/// A driver's DDL entrypoint is the only place this belongs:
+///
+/// ```dart
+/// void main(List<String> args, SendPort sendPort) =>
+///     serveDdlGenerator(MyDdlGenerator(), sendPort);
+/// ```
+ReceivePort serveDdlGenerator(DdlGenerator generator, SendPort sendPort) {
+  final receivePort = ReceivePort();
+  sendPort.send(receivePort.sendPort);
+
+  receivePort.listen((message) {
+    if (message is Map<String, dynamic>) {
+      final replyPort = message['replyPort'] as SendPort;
+      final action = message['action'] as String? ?? 'generate';
+
+      try {
+        switch (action) {
+          case 'generate':
+            final sql = generator.generate(
+              (message['operations'] as List<dynamic>)
+                  .map((o) => DiffOperation.fromMap((o as Map).cast()))
+                  .toList(),
+            );
+
+            replyPort.send({'success': true, 'sql': sql});
+          default:
+            replyPort.send(
+              {'success': false, 'error': 'Unknown action: $action'},
+            );
+        }
+      } on Object catch (e, st) {
+        replyPort.send({'success': false, 'error': '$e\n$st'});
+      }
+    }
+  });
+
+  return receivePort;
+}
+
 /// {@template ddl_generator}
 /// Abstract interface for generating DDL statements from diff operations.
 ///
-/// Each database dialect (PostgreSQL, SQLite, etc.) should provide its own
-/// implementation of this interface and define a main method in the file so
-/// it can be dynamically executed by the DDL runtime.
-/// ```
-/// void main(List<String> args, SendPort sendPort) => MyDdlGenerator(sendPort);
+/// Each database dialect provides its own implementation, and its package's
+/// `lib/ddl.dart` defines a main method serving it so the CLI can execute it
+/// dynamically:
+/// ```dart
+/// void main(List<String> args, SendPort sendPort) =>
+///     serveDdlGenerator(MyDdlGenerator(), sendPort);
 ///
 /// class MyDdlGenerator extends DdlGenerator {
-///   MyDdlGenerator(super.sendPort) : super(dialect: const MyDialect());
+///   const MyDdlGenerator() : super(dialect: const MyDialect());
 ///
 ///   ...
 /// }
@@ -21,44 +66,10 @@ import 'package:raindrop/dialect.dart';
 /// {@endtemplate}
 abstract class DdlGenerator {
   /// {@macro ddl_generator}
-  DdlGenerator(SendPort sendPort, {required this.dialect}) {
-    final receivePort = _receivePort = ReceivePort();
-    sendPort.send(receivePort.sendPort);
-
-    receivePort.listen((message) {
-      if (message is Map<String, dynamic>) {
-        final replyPort = message['replyPort'] as SendPort;
-        final action = message['action'] as String? ?? 'generate';
-
-        try {
-          switch (action) {
-            case 'generate':
-              final sql = generate(
-                (message['operations'] as List<dynamic>)
-                    .map((o) => DiffOperation.fromMap((o as Map).cast()))
-                    .toList(),
-              );
-
-              replyPort.send({'success': true, 'sql': sql});
-            default:
-              replyPort.send(
-                {'success': false, 'error': 'Unknown action: $action'},
-              );
-          }
-        } catch (e, st) {
-          replyPort.send({'success': false, 'error': '$e\n$st'});
-        }
-      }
-    });
-  }
+  const DdlGenerator({required this.dialect});
 
   /// The SQL dialect used by this generator.
   final SqlDialect dialect;
-
-  late final ReceivePort _receivePort;
-
-  /// Closes the command port.
-  void dispose() => _receivePort.close();
 
   /// Generates SQL DDL statements from a list of diff operations.
   ///

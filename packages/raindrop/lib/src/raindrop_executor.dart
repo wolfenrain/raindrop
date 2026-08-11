@@ -87,7 +87,7 @@ R _read<R>(Selectable<R> selectable, List<Object?> rows) {
     };
 
     return switch (data.values.whereType<Object>().isEmpty) {
-      // TODO: this could fail if a schema is fully nullable?
+      // TODO(wolfen): this could fail if a schema is fully nullable?
       true => null,
       _ => table.create(data)
     } as R;

@@ -1,5 +1,5 @@
-# Required so the CLI can figure out what dialect u are using.
-dialect: sqlite
+# Required: the driver package the CLI introspects and generates with.
+driver: raindrop_sqlite
 
 # Optional schemas path, used to generate migrations.
 schemas: lib/schemas

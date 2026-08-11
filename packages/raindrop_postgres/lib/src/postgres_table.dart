@@ -1,4 +1,5 @@
 import 'package:raindrop/raindrop.dart';
+import 'package:raindrop_postgres/raindrop_postgres.dart';
 
 /// Creates a PostgreSQL table with the given [name] and [builder].
 ///
@@ -22,5 +23,5 @@ S postgresTable<S extends Schema<R>, R>(
   S Function(SchemaBuilder<R>) builder, [
   void Function(S table)? extra,
 ]) {
-  return table<S, R>(name, builder, dialect: 'postgres', extra: extra);
+  return table<S, R>(name, builder, dialect: dialect, extra: extra);
 }

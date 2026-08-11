@@ -41,8 +41,8 @@ Future<void> emitDartMigrations(
 String sanitizeMigrationName(String name) {
   return name
       .toLowerCase()
-      .replaceAll(RegExp(r'[^a-z0-9_]'), '_')
-      .replaceAll(RegExp(r'_+'), '_');
+      .replaceAll(RegExp('[^a-z0-9_]'), '_')
+      .replaceAll(RegExp('_+'), '_');
 }
 
 /// Walks up from [startDir] to the nearest directory holding a pubspec.yaml,

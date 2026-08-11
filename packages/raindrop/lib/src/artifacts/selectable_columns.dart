@@ -7,7 +7,7 @@ import 'package:raindrop/raindrop.dart';
 /// Extension that provides insert, select, update and delete methods.
 ///
 /// This file is fully generated to allow for resolution logic of types.
-extension ISUDRaindropExecutor on RaindropExecutor<RaindropDelegate> {
+extension ISUDRaindropExecutor on RaindropExecutor<Delegate> {
   /// Create an insert builder for inserting entities [into] the database.
   InsertValuesBuilder<Schema<R>, R, void> insert<R>({required Schema<R> into}) {
     return delegate.insert<R>(this, into.$);
@@ -164,7 +164,7 @@ typedef SelectFunction = SelectingBuilder<S0, S1, S2, S3, S4, S5, S6, S7, S8,
     S18?,
     S19?]);
 
-/// `SELECT DISTINCT`, as an extension on the torn-off [select] itself.
+/// `SELECT DISTINCT`, as an extension on the torn-off `select` itself.
 extension DistinctSelect on SelectFunction {
   /// Select distinct rows:
   ///

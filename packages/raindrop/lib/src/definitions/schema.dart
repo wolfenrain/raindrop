@@ -56,9 +56,7 @@ extension SchemaX<S extends Schema<R>, R> on S {
 /// this builder's table.
 /// {@endtemplate}
 class SchemaBuilder<R> {
-  /// Construct a builder for a specific [table]. Intended only for use by
-  /// [Table] internally; users receive an instance via the schema's
-  /// constructor parameter.
+  /// Construct a builder for a specific [table].
   const SchemaBuilder(this.table);
 
   /// The table being built.

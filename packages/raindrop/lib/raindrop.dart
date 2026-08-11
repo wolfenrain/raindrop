@@ -11,4 +11,5 @@ export 'src/logger.dart';
 export 'src/migration/migration.dart';
 export 'src/migration/migrator.dart';
 export 'src/raindrop.dart';
+export 'src/sql_dialect.dart';
 export 'src/tracer.dart';

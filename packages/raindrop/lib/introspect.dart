@@ -16,11 +16,16 @@ const String _placeholderId = '00000000-0000-0000-0000-000000000000';
 /// [schemas] must be listed explicitly: a table registers itself when its
 /// top-level `final` is first read, and Dart initialises those lazily, so
 /// importing a schema library constructs nothing.
+///
+/// [dialectName] selects which tables count and defaults to the [dialect]'s
+/// own [SqlDialect.name], pass it explicitly only when the tables carry a
+/// different tag than the rendering dialect.
 Map<String, Object?> buildSnapshot(
   List<Schema<dynamic>> schemas, {
   required SqlDialect dialect,
-  required String dialectName,
+  String? dialectName,
 }) {
+  dialectName ??= dialect.name;
   final tables = <String, Object?>{};
   final indexes = <String, Object?>{};
 
@@ -28,7 +33,7 @@ Map<String, Object?> buildSnapshot(
     final table = schema.$;
     // An alias is a view onto another table, never its own definition.
     if (table.alias != null) continue;
-    if (table.dialect != dialectName) continue;
+    if (table.dialect?.name != dialectName) continue;
 
     if (tables.containsKey(table.name)) {
       throw StateError('two tables are both named "${table.name}"');
@@ -81,8 +86,8 @@ Map<String, Object?> _column(
   final sqlType = column.sqlType;
   if (sqlType == null) {
     throw StateError(
-      'column "${table.name}.${column.name}" has no sqlType, so no migration '
-      'can declare it. Column builders must pass one',
+      '''
+column "${table.name}.${column.name}" has no sqlType, so no migration can declare it. Column builders must pass one''',
     );
   }
 

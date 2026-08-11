@@ -47,7 +47,7 @@ void derivedSchemas(String path, int amount) {
 // GENERATED CODE - DO NOT EDIT BY HAND.
 // Run `dart run tool/generate_the_magic.dart` to regenerate.
 // coverage:ignore-file
-// ignore_for_file: public_member_api_docs, lines_longer_than_80_chars
+// ignore_for_file: public_member_api_docs
 import 'package:raindrop/raindrop.dart';
 import 'package:raindrop/src/builders/derived.dart';
 import 'package:raindrop/src/definitions/table.dart';
@@ -110,7 +110,7 @@ import 'package:raindrop/raindrop.dart';
 /// Extension that provides insert, select, update and delete methods.
 ///
 /// This file is fully generated to allow for resolution logic of types.
-extension ISUDRaindropExecutor on RaindropExecutor<RaindropDelegate> {
+extension ISUDRaindropExecutor on RaindropExecutor<Delegate> {
   /// Create an insert builder for inserting entities [into] the database.
   InsertValuesBuilder<Schema<R>, R, void> insert<R>({required Schema<R> into}) {
     return delegate.insert<R>(this, into.\$);
@@ -137,7 +137,7 @@ typedef SelectingBuilder<${indices.map((i) => 'S$i extends Selectable<Object?>?'
 /// The signature of [ISUDRaindropExecutor.select].
 typedef SelectFunction = SelectingBuilder<${indices.map((i) => 'S$i').join(', ')}> Function<${indices.map((i) => 'S$i extends Selectable<Object?>?').join(', ')}>([${indices.map((i) => 'S$i?').join(', ')}]);
 
-/// `SELECT DISTINCT`, as an extension on the torn-off [select] itself.
+/// `SELECT DISTINCT`, as an extension on the torn-off `select` itself.
 extension DistinctSelect on SelectFunction {
   /// Select distinct rows:
   ///
@@ -228,7 +228,7 @@ void indexableColumns(String path, int amount) {
 // GENERATED CODE - DO NOT EDIT BY HAND.
 // Run `dart run tool/generate_the_magic.dart` to regenerate.
 // coverage:ignore-file
-// ignore_for_file: public_member_api_docs, lines_longer_than_80_chars
+// ignore_for_file: public_member_api_docs
 import 'package:raindrop/raindrop.dart';
 
 extension IndexBuilderOn on IndexBuilder {
@@ -262,7 +262,7 @@ void updateableColumns(String path, int amount) {
 // GENERATED CODE - DO NOT EDIT BY HAND.
 // Run `dart run tool/generate_the_magic.dart` to regenerate.
 // coverage:ignore-file
-// ignore_for_file: public_member_api_docs, lines_longer_than_80_chars
+// ignore_for_file: public_member_api_docs
 import 'package:raindrop/raindrop.dart';
 
 extension UpdateableColumnsOn<S extends Schema<RR>, RR, R> on UpdateSettingBuilder<S, RR, R> {
@@ -308,7 +308,7 @@ void generateJoin(String path, String type, int amount) {
 // GENERATED CODE - DO NOT EDIT BY HAND.
 // Run `dart run tool/generate_the_magic.dart` to regenerate.
 // coverage:ignore-file
-// ignore_for_file: public_member_api_docs, lines_longer_than_80_chars
+// ignore_for_file: public_member_api_docs
 
 import 'package:raindrop/raindrop.dart';
 

@@ -2,11 +2,13 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:math';
 
+import 'package:meta/meta.dart';
+
 /// Represents a snapshot of the database schema at a point in time.
 ///
-/// This follows the drizzle-kit approach of storing complete schema state
-/// with unique IDs for tracking lineage.
+/// Stores the complete schema state with unique IDs for tracking lineage.
 class SchemaSnapshot {
+  /// Creates a snapshot of the complete schema state.
   const SchemaSnapshot({
     required this.version,
     required this.dialect,
@@ -15,6 +17,32 @@ class SchemaSnapshot {
     required this.tables,
     this.indexes = const {},
   });
+
+  /// Creates a snapshot from JSON string.
+  factory SchemaSnapshot.fromJson(String json) {
+    final data = jsonDecode(json) as Map<String, dynamic>;
+    return SchemaSnapshot(
+      version: data['version'] as String,
+      dialect: data['dialect'] as String,
+      id: data['id'] as String,
+      prevId: data['prevId'] as String,
+      tables: {
+        for (final entry in (data['tables'] as Map<String, dynamic>).entries)
+          entry.key: TableSnapshot.fromMap(
+            entry.key,
+            entry.value as Map<String, dynamic>,
+          )
+      },
+      indexes: {
+        for (final entry
+            in (data['indexes'] as Map<String, dynamic>? ?? {}).entries)
+          entry.key: IndexSnapshot.fromMap(
+            entry.key,
+            entry.value as Map<String, dynamic>,
+          )
+      },
+    );
+  }
 
   /// The current snapshot format version.
   static const currentVersion = '1';
@@ -50,34 +78,8 @@ class SchemaSnapshot {
     bytes[8] = (bytes[8] & 0x3f) | 0x80;
 
     final hex = bytes.map((b) => b.toRadixString(16).padLeft(2, '0')).join();
-    return '${hex.substring(0, 8)}-${hex.substring(8, 12)}-'
-        '${hex.substring(12, 16)}-${hex.substring(16, 20)}-${hex.substring(20)}';
-  }
-
-  /// Creates a snapshot from JSON string.
-  factory SchemaSnapshot.fromJson(String json) {
-    final data = jsonDecode(json) as Map<String, dynamic>;
-    return SchemaSnapshot(
-      version: data['version'] as String,
-      dialect: data['dialect'] as String,
-      id: data['id'] as String,
-      prevId: data['prevId'] as String,
-      tables: {
-        for (final entry in (data['tables'] as Map<String, dynamic>).entries)
-          entry.key: TableSnapshot.fromMap(
-            entry.key,
-            entry.value as Map<String, dynamic>,
-          )
-      },
-      indexes: {
-        for (final entry
-            in (data['indexes'] as Map<String, dynamic>? ?? {}).entries)
-          entry.key: IndexSnapshot.fromMap(
-            entry.key,
-            entry.value as Map<String, dynamic>,
-          )
-      },
-    );
+    return '''
+${hex.substring(0, 8)}-${hex.substring(8, 12)}-${hex.substring(12, 16)}-${hex.substring(16, 20)}-${hex.substring(20)}''';
   }
 
   /// Loads a snapshot from a file.
@@ -134,20 +136,12 @@ class SchemaSnapshot {
 
 /// Represents a snapshot of a single table.
 class TableSnapshot {
+  /// Creates a snapshot of a single table.
   const TableSnapshot({
     required this.name,
     required this.columns,
     this.checks = const {},
   });
-
-  /// The table name.
-  final String name;
-
-  /// Map of column name to column snapshot.
-  final Map<String, ColumnSnapshot> columns;
-
-  /// Map of constraint name to raw CHECK expression.
-  final Map<String, String> checks;
 
   /// Creates a table snapshot from a map.
   factory TableSnapshot.fromMap(String name, Map<String, dynamic> data) {
@@ -168,6 +162,15 @@ class TableSnapshot {
     );
   }
 
+  /// The table name.
+  final String name;
+
+  /// Map of column name to column snapshot.
+  final Map<String, ColumnSnapshot> columns;
+
+  /// Map of constraint name to raw CHECK expression.
+  final Map<String, String> checks;
+
   /// Converts the table snapshot to a map.
   Map<String, dynamic> toMap() {
     return {
@@ -181,13 +184,25 @@ class TableSnapshot {
 }
 
 /// Represents foreign key reference information in a snapshot.
+@immutable
 class ForeignKeySnapshotRef {
+  /// Creates a snapshot of a foreign key reference.
   const ForeignKeySnapshotRef({
     required this.referencedTable,
     required this.referencedColumn,
     this.onDelete,
     this.onUpdate,
   });
+
+  /// Creates a foreign key reference from a map.
+  factory ForeignKeySnapshotRef.fromMap(Map<String, dynamic> data) {
+    return ForeignKeySnapshotRef(
+      referencedTable: data['referencedTable'] as String,
+      referencedColumn: data['referencedColumn'] as String,
+      onDelete: data['onDelete'] as String?,
+      onUpdate: data['onUpdate'] as String?,
+    );
+  }
 
   /// The name of the referenced table.
   final String referencedTable;
@@ -201,15 +216,7 @@ class ForeignKeySnapshotRef {
   /// The ON UPDATE action (e.g., 'CASCADE', 'SET NULL').
   final String? onUpdate;
 
-  factory ForeignKeySnapshotRef.fromMap(Map<String, dynamic> data) {
-    return ForeignKeySnapshotRef(
-      referencedTable: data['referencedTable'] as String,
-      referencedColumn: data['referencedColumn'] as String,
-      onDelete: data['onDelete'] as String?,
-      onUpdate: data['onUpdate'] as String?,
-    );
-  }
-
+  /// Converts the foreign key reference to a map.
   Map<String, dynamic> toMap() {
     return {
       'referencedTable': referencedTable,
@@ -241,7 +248,9 @@ class ForeignKeySnapshotRef {
 }
 
 /// Represents a snapshot of a single column.
+@immutable
 class ColumnSnapshot {
+  /// Creates a snapshot of a single column.
   const ColumnSnapshot({
     required this.name,
     required this.type,
@@ -251,6 +260,22 @@ class ColumnSnapshot {
     this.defaultValue,
     this.foreignKey,
   });
+
+  /// Creates a column snapshot from a map.
+  factory ColumnSnapshot.fromMap(String name, Map<String, dynamic> data) {
+    return ColumnSnapshot(
+      name: name,
+      type: data['type'] as String,
+      isNullable: data['isNullable'] as bool? ?? false,
+      primaryKey: data['primaryKey'] as bool? ?? false,
+      autoIncrement: data['autoIncrement'] as bool? ?? false,
+      defaultValue: data['default'] as String?,
+      foreignKey: switch (data['foreignKey']) {
+        final Map<String, dynamic> data => ForeignKeySnapshotRef.fromMap(data),
+        _ => null,
+      },
+    );
+  }
 
   /// The column name.
   final String name;
@@ -272,22 +297,6 @@ class ColumnSnapshot {
 
   /// Foreign key reference information.
   final ForeignKeySnapshotRef? foreignKey;
-
-  /// Creates a column snapshot from a map.
-  factory ColumnSnapshot.fromMap(String name, Map<String, dynamic> data) {
-    return ColumnSnapshot(
-      name: name,
-      type: data['type'] as String,
-      isNullable: data['isNullable'] as bool? ?? false,
-      primaryKey: data['primaryKey'] as bool? ?? false,
-      autoIncrement: data['autoIncrement'] as bool? ?? false,
-      defaultValue: data['default'] as String?,
-      foreignKey: switch (data['foreignKey']) {
-        final Map<String, dynamic> data => ForeignKeySnapshotRef.fromMap(data),
-        _ => null,
-      },
-    );
-  }
 
   /// Converts the column snapshot to a map.
   Map<String, dynamic> toMap() {
@@ -330,7 +339,9 @@ class ColumnSnapshot {
 }
 
 /// Represents an index snapshot.
+@immutable
 class IndexSnapshot {
+  /// Creates a snapshot of a single index.
   const IndexSnapshot({
     required this.name,
     required this.tableName,
@@ -338,6 +349,19 @@ class IndexSnapshot {
     this.isUnique = false,
     this.where,
   });
+
+  /// Creates an index snapshot from a map.
+  factory IndexSnapshot.fromMap(String name, Map<String, dynamic> data) {
+    return IndexSnapshot(
+      name: name,
+      tableName: data['tableName'] as String,
+      // Materialize (not a lazy `.cast` view): these end up in DiffOperation
+      // maps sent over an isolate SendPort, which rejects CastList instances.
+      columns: List<String>.from(data['columns'] as List<dynamic>),
+      isUnique: data['isUnique'] as bool? ?? false,
+      where: data['where'] as String?,
+    );
+  }
 
   /// The index name.
   final String name;
@@ -354,18 +378,7 @@ class IndexSnapshot {
   /// Optional partial-index predicate (raw SQL).
   final String? where;
 
-  factory IndexSnapshot.fromMap(String name, Map<String, dynamic> data) {
-    return IndexSnapshot(
-      name: name,
-      tableName: data['tableName'] as String,
-      // Materialize (not a lazy `.cast` view): these end up in DiffOperation
-      // maps sent over an isolate SendPort, which rejects CastList instances.
-      columns: List<String>.from(data['columns'] as List<dynamic>),
-      isUnique: data['isUnique'] as bool? ?? false,
-      where: data['where'] as String?,
-    );
-  }
-
+  /// Converts the index snapshot to a map.
   Map<String, dynamic> toMap() {
     return {
       'name': name,

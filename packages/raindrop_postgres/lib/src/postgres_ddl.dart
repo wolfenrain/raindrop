@@ -1,18 +1,12 @@
-import 'dart:isolate';
-
 import 'package:raindrop/ddl.dart';
 import 'package:raindrop_postgres/raindrop_postgres.dart';
-
-void main(List<String> args, SendPort sendPort) =>
-    PostgresDdlGenerator(sendPort);
 
 /// {@template postgres_ddl_generator}
 /// DDL generator for PostgreSQL.
 /// {@endtemplate}
 class PostgresDdlGenerator extends DdlGenerator {
   /// {@macro postgres_ddl_generator}
-  PostgresDdlGenerator(super.sendPort)
-      : super(dialect: const PostgresDialect());
+  const PostgresDdlGenerator() : super(dialect: const PostgresDialect());
 
   @override
   String createTable(TableInfo table) {
@@ -34,9 +28,10 @@ class PostgresDdlGenerator extends DdlGenerator {
     final diff = TableDiff.of(operation);
     final table = escapeName(operation.tableName);
     final statements = <String>[
-      for (final entry in operation.renamedColumns.entries)
-        'ALTER TABLE $table RENAME COLUMN ${escapeName(entry.key)} '
-            'TO ${escapeName(entry.value)};',
+      ...operation.renamedColumns.entries.map(
+        (entry) => '''
+ALTER TABLE $table RENAME COLUMN ${escapeName(entry.key)} TO ${escapeName(entry.value)};''',
+      ),
       for (final column in diff.droppedColumns)
         'ALTER TABLE $table DROP COLUMN ${escapeName(column.name)};',
       for (final column in diff.addedColumns)
@@ -53,13 +48,14 @@ class PostgresDdlGenerator extends DdlGenerator {
         ...diff.changedChecks.keys,
       })
         'ALTER TABLE $table DROP CONSTRAINT ${escapeName(name)};',
-      for (final entry in {
+      ...{
         ...diff.addedChecks,
         for (final changed in diff.changedChecks.entries)
           changed.key: changed.value.$2,
-      }.entries)
-        'ALTER TABLE $table ADD CONSTRAINT ${escapeName(entry.key)} '
-            'CHECK (${entry.value});',
+      }.entries.map(
+            (entry) => '''
+ALTER TABLE $table ADD CONSTRAINT ${escapeName(entry.key)} CHECK (${entry.value});''',
+          ),
       for (final index in diff.droppedIndexes) dropIndex(index.name),
       for (final index in diff.addedIndexes) createIndex(index),
     ]);
@@ -80,9 +76,8 @@ class PostgresDdlGenerator extends DdlGenerator {
     if (oldColumn.primaryKey != newColumn.primaryKey ||
         oldColumn.autoIncrement != newColumn.autoIncrement) {
       throw UnsupportedError(
-        'Changing the primary key or auto-increment of '
-        '"$tableName"."${newColumn.name}" is not generated automatically. '
-        'Write the migration by hand with `generate --empty`.',
+        '''
+Changing the primary key or auto-increment of "$tableName"."${newColumn.name}" is not generated automatically. Write the migration by hand with `generate --empty`.''',
       );
     }
 
@@ -92,7 +87,8 @@ class PostgresDdlGenerator extends DdlGenerator {
 
     if (oldColumn.type != newColumn.type) {
       statements.add(
-        'ALTER TABLE $table ALTER COLUMN $column TYPE ${getColumnType(newColumn)};',
+        '''
+ALTER TABLE $table ALTER COLUMN $column TYPE ${getColumnType(newColumn)};''',
       );
     }
 
@@ -108,7 +104,8 @@ class PostgresDdlGenerator extends DdlGenerator {
       statements.add(
         newColumn.defaultValue == null
             ? 'ALTER TABLE $table ALTER COLUMN $column DROP DEFAULT;'
-            : 'ALTER TABLE $table ALTER COLUMN $column SET DEFAULT ${newColumn.defaultValue};',
+            : '''
+ALTER TABLE $table ALTER COLUMN $column SET DEFAULT ${newColumn.defaultValue};''',
       );
     }
 
@@ -123,9 +120,8 @@ class PostgresDdlGenerator extends DdlGenerator {
           if (fk.onUpdate != null) ' ON UPDATE ${fk.onUpdate}',
         ].join();
         statements.add(
-          'ALTER TABLE $table ADD CONSTRAINT $constraint FOREIGN KEY '
-          '($column) REFERENCES ${escapeName(fk.referencedTable)}'
-          '(${escapeName(fk.referencedColumn)})$actions;',
+          '''
+ALTER TABLE $table ADD CONSTRAINT $constraint FOREIGN KEY ($column) REFERENCES ${escapeName(fk.referencedTable)}(${escapeName(fk.referencedColumn)})$actions;''',
         );
       }
     }
@@ -138,8 +134,8 @@ class PostgresDdlGenerator extends DdlGenerator {
     final unique = index.isUnique ? 'UNIQUE ' : '';
     final cols = index.columns.map(escapeName).join(', ');
     final where = index.where != null ? ' WHERE ${index.where}' : '';
-    return 'CREATE ${unique}INDEX ${escapeName(index.name)} '
-        'ON ${escapeName(index.tableName)} ($cols)$where;';
+    return '''
+CREATE ${unique}INDEX ${escapeName(index.name)} ON ${escapeName(index.tableName)} ($cols)$where;''';
   }
 
   @override
@@ -176,7 +172,8 @@ class PostgresDdlGenerator extends DdlGenerator {
 
     if (column.foreignKey case final fk?) {
       parts.add(
-        'REFERENCES ${escapeName(fk.referencedTable)}(${escapeName(fk.referencedColumn)})',
+        '''
+REFERENCES ${escapeName(fk.referencedTable)}(${escapeName(fk.referencedColumn)})''',
       );
       if (fk.onDelete != null) parts.add('ON DELETE ${fk.onDelete}');
       if (fk.onUpdate != null) parts.add('ON UPDATE ${fk.onUpdate}');

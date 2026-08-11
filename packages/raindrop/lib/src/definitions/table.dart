@@ -6,7 +6,7 @@ import 'package:raindrop/src/rendering/clause.dart';
 S table<S extends Schema<R>, R>(
   String name,
   S Function(SchemaBuilder<R>) builder, {
-  String? dialect,
+  SqlDialect? dialect,
   void Function(S table)? extra,
 }) {
   final table = Table<S, R>._(name, builder, dialect: dialect);
@@ -47,8 +47,8 @@ class Table<S extends Schema<R>, R> implements Selectable<R> {
   /// Optional alias used when this table is referenced in a join.
   final String? alias;
 
-  /// The SQL dialect for this table (e.g., 'postgres', 'sqlite').
-  final String? dialect;
+  /// The dialect this table belongs to.
+  final SqlDialect? dialect;
 
   /// Returns [alias] or [name].
   String get aliasOrName => alias ?? name;
@@ -103,7 +103,7 @@ class Table<S extends Schema<R>, R> implements Selectable<R> {
     if (instance is! R) {
       throw StateError('Only $R rows can be converted to values');
     }
-    return [...columns.map((c) => c.encode(c.valueOf!(instance)))];
+    return [...columns.map((c) => c.encode(c.readValueOf(instance)))];
   }
 
   /// Add a column by [name] and [field] to the table.
@@ -144,6 +144,9 @@ class Table<S extends Schema<R>, R> implements Selectable<R> {
   /// Adds a table-level CHECK constraint to the table.
   void addCheck(Check check) => checks.add(check);
 
+  /// The column named [name].
+  ///
+  /// Throws a [StateError] if the table has no such column.
   Column<R, dynamic> operator [](String name) =>
       columns.firstWhere((c) => c.name == name);
 }

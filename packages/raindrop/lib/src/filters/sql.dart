@@ -7,6 +7,8 @@ class SQL extends Filter {
   /// {@macro sql}
   SQL(List<Object?> chunks) : chunks = [...chunks];
 
+  /// A SQL function call: `name(chunk, chunk, ...)` with the [chunks] as its
+  /// comma-separated arguments.
   SQL.function(String name, List<Object?> chunks)
       : this([
           RawSQL('$name('),
@@ -38,6 +40,7 @@ class RawSQL {
   String toString() => sql;
 }
 
+/// The common SQL comparison operators, as [RawSQL] constants.
 sealed class Op {
   /// The SQL equals operator.
   static const equals = RawSQL('=');

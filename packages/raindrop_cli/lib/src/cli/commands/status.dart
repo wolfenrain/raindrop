@@ -22,39 +22,38 @@ class StatusCommand extends Command<int> {
     // Load configuration
     final config = await RaindropConfig.loadResolved(globalResults!);
 
-    print('Configuration:');
-    print('  Schema path: ${config.schemaPath}');
-    print('  Output path: ${config.outPath}');
-    print('  Meta path: ${config.metaPath}');
-    print('  Dialect: ${config.dialect}');
-    print('  Dart output: ${config.dartPath ?? 'not configured'}');
-    print('  Migration naming: ${config.migrationNaming.name}');
-    print('');
+    stdout
+      ..writeln('Configuration:')
+      ..writeln('  Schema path: ${config.schemaPath}')
+      ..writeln('  Output path: ${config.outPath}')
+      ..writeln('  Meta path: ${config.metaPath}')
+      ..writeln('  Driver: ${config.driver}')
+      ..writeln('  Dart output: ${config.dartPath ?? 'not configured'}')
+      ..writeln('  Migration naming: ${config.migrationNaming.name}')
+      ..writeln();
 
     // Load the journal
-    final journal = await MigrationJournal.load(
-      config.journalPath,
-      config.dialect,
-    );
+    final journal = await MigrationJournal.load(config.journalPath);
 
     final currentSnapshot = await SnapshotRunner.build(
       schemaPath: config.schemaPath,
-      dialect: config.dialect,
+      driver: config.driver,
       configDir: config.configDir,
       prevId: journal.previousId,
     );
 
-    print('Current schema:');
+    stdout.writeln('Current schema:');
     if (currentSnapshot.tables.isEmpty) {
-      print('  No tables found.');
+      stdout.writeln('  No tables found.');
     } else {
-      print('  Dialect: ${currentSnapshot.dialect}');
-      print('  Tables: ${currentSnapshot.tables.length}');
+      stdout
+        ..writeln('  Dialect: ${currentSnapshot.dialect}')
+        ..writeln('  Tables: ${currentSnapshot.tables.length}');
       for (final table in currentSnapshot.tables.values) {
-        print('    - ${table.name} (${table.columns.length} columns)');
+        stdout.writeln('    - ${table.name} (${table.columns.length} columns)');
       }
     }
-    print('');
+    stdout.writeln();
 
     // Load previous snapshot if it exists
     SchemaSnapshot? previousSnapshot;
@@ -68,33 +67,37 @@ class StatusCommand extends Command<int> {
       final operations = differ.diff(previousSnapshot, currentSnapshot);
 
       if (operations.isEmpty) {
-        print('Schema is up to date with latest snapshot.');
+        stdout.writeln('Schema is up to date with latest snapshot.');
       } else {
-        print('Pending changes:');
+        stdout.writeln('Pending changes:');
         for (final op in operations) {
-          print('  - ${op.describe()}');
+          stdout.writeln('  - ${op.describe()}');
         }
       }
     } else {
-      print(
-          'No snapshots found. Run "raindrop generate" to create initial migration.');
+      stdout.writeln(
+        '''
+No snapshots found. Run "raindrop generate" to create initial migration.''',
+      );
     }
-    print('');
-
-    // Show journal entries
-    print('Migration journal:');
+    stdout
+      ..writeln()
+      // Show journal entries
+      ..writeln('Migration journal:');
     if (journal.entries.isEmpty) {
-      print('  No migrations recorded.');
+      stdout.writeln('  No migrations recorded.');
     } else {
-      print('  Version: ${journal.version}');
-      print('  Dialect: ${journal.dialect}');
-      print('  Entries: ${journal.entries.length}');
+      stdout
+        ..writeln('  Version: ${journal.version}')
+        ..writeln('  Dialect: ${journal.dialect}')
+        ..writeln('  Entries: ${journal.entries.length}');
       for (final entry in journal.entries) {
         final date = DateTime.fromMillisecondsSinceEpoch(entry.when);
-        print('    ${entry.idx}: ${entry.tag} (${date.toIso8601String()})');
+        stdout.writeln(
+            '    ${entry.idx}: ${entry.tag} (${date.toIso8601String()})');
       }
     }
-    print('');
+    stdout.writeln();
 
     // List existing migration files
     final migrationsDir = Directory(config.outPath);
@@ -106,16 +109,16 @@ class StatusCommand extends Command<int> {
           .toList()
         ..sort((a, b) => a.path.compareTo(b.path));
 
-      print('Migration files:');
+      stdout.writeln('Migration files:');
       if (migrations.isEmpty) {
-        print('  No migration files found.');
+        stdout.writeln('  No migration files found.');
       } else {
         for (final migration in migrations) {
-          print('  - ${p.basename(migration.path)}');
+          stdout.writeln('  - ${p.basename(migration.path)}');
         }
       }
     } else {
-      print('Migrations directory does not exist.');
+      stdout.writeln('Migrations directory does not exist.');
     }
 
     return 0;

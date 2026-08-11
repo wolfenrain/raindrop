@@ -26,7 +26,7 @@ extension DerivedWholeRow<S extends Schema<R>, R> on WholeRowFromBuilder<S, R> {
 /// What a projection needs before it can back a derived table: a name for
 /// every output, and the statement that produces them.
 ///
-/// Used by the generated `DerivedN` extensions; not meant to be called
+/// Used by the generated `DerivedN` extensions, not meant to be called
 /// directly.
 @internal
 class PreparedDerived<V> {
@@ -99,8 +99,8 @@ PreparedDerived<V> prepareDerived<V>(
         renamed.add(expression.as(generated));
       case final Selectable<dynamic> other:
         throw UnsupportedError(
-          'A derived table cannot project ${other.runtimeType}. Select '
-          'columns or expressions.',
+          '''
+A derived table cannot project ${other.runtimeType}. Select columns or expressions.''',
         );
     }
   }

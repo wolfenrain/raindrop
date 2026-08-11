@@ -18,6 +18,9 @@ abstract class SqlDialect {
   /// {@macro sql_dialect}
   const SqlDialect();
 
+  /// Identifies the SQL flavor this dialect speaks.
+  String get name;
+
   /// Translate [query] into a SQL statement with its ordered bind values.
   (String, List<Object?>) translate(Query<dynamic> query) {
     return Raindrop.tracer.trace('$runtimeType.translate', (span) {
@@ -175,11 +178,8 @@ abstract class SqlDialect {
     final checksum = escapeName('checksum');
     final appliedAt = escapeName('applied_at');
     await execute(
-      'CREATE TABLE IF NOT EXISTS $table '
-      '($id INTEGER PRIMARY KEY, '
-      '$tag TEXT NOT NULL UNIQUE, '
-      '$checksum TEXT NOT NULL, '
-      '$appliedAt INTEGER NOT NULL)',
+      '''
+CREATE TABLE IF NOT EXISTS $table ($id INTEGER PRIMARY KEY, $tag TEXT NOT NULL UNIQUE, $checksum TEXT NOT NULL, $appliedAt INTEGER NOT NULL)''',
     );
   }
 
@@ -210,8 +210,8 @@ abstract class SqlDialect {
     final checksumCol = escapeName('checksum');
     final appliedAt = escapeName('applied_at');
     await execute(
-      'INSERT INTO $table ($tagCol, $checksumCol, $appliedAt) '
-      'VALUES (${escapeParam(0)}, ${escapeParam(1)}, ${escapeParam(2)})',
+      '''
+INSERT INTO $table ($tagCol, $checksumCol, $appliedAt) VALUES (${escapeParam(0)}, ${escapeParam(1)}, ${escapeParam(2)})''',
       [tag, checksum, DateTime.now().millisecondsSinceEpoch],
     );
   }

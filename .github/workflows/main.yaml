@@ -1,0 +1,100 @@
+name: ci
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  semantic_pull_request:
+    uses: VeryGoodOpenSource/very_good_workflows/.github/workflows/semantic_pull_request.yml@v1
+
+  spell-check:
+    uses: VeryGoodOpenSource/very_good_workflows/.github/workflows/spell_check.yml@v1
+    with:
+      config: cspell.json
+      includes: |
+        **/*.{dart,md,yaml}
+        !.dart_tool/**/*.{dart,yaml}
+      modified_files_only: false
+
+  packages:
+    runs-on: ubuntu-latest
+
+    outputs:
+      packages: ${{ steps.find.outputs.packages }}
+
+    steps:
+      - name: 📚 Git Checkout
+        uses: actions/checkout@v5
+
+      - name: 🎯 Setup Dart
+        uses: dart-lang/setup-dart@v1
+        with:
+          sdk: stable
+
+      - name: 📦 Resolve workspace
+        run: dart pub get
+
+      - name: 🔍 Discover packages
+        id: find
+        run: |
+          packages=$(dart run melos list --no-private --json | jq -c '[.[].name]')
+          echo "packages=$packages" >> "$GITHUB_OUTPUT"
+
+  test:
+    needs: packages
+    name: ${{ matrix.package }}
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        package: ${{ fromJSON(needs.packages.outputs.packages) }}
+
+    env:
+      MELOS_PACKAGES: ${{ matrix.package }}
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_PASSWORD: test
+        ports:
+          - 15432:5432
+        options: |
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - name: 📚 Git Checkout
+        uses: actions/checkout@v5
+
+      - name: 🎯 Setup Dart
+        uses: dart-lang/setup-dart@v1
+        with:
+          sdk: stable
+
+      - name: 📦 Resolve workspace
+        run: dart pub get
+
+      - name: ✨ Check Formatting
+        run: dart run melos run format
+
+      - name: 🕵️ Analyze
+        run: dart run melos run analyze
+
+      - name: 🧪 Unit Tests
+        run: dart run melos run test:unit --no-select
+
+      - name: 🔌 Integration Tests
+        run: dart run melos run test:integration --no-select

@@ -9,30 +9,22 @@ import 'package:raindrop_cli/src/introspect/schema_locator.dart';
 
 /// Builds the current schema snapshot by **running** the project's schema.
 class SnapshotRunner {
-  SnapshotRunner._();
+  SnapshotRunner._(); // coverage:ignore-line
 
   static const _generatedPath = '.dart_tool/raindrop/schema_snapshot_main.dart';
 
   /// Describes the schema under [schemaPath] as it actually behaves.
   ///
-  /// [dialect] selects which tables count, matching how one schema directory
-  /// can hold tables for more than one database.
+  /// [driver] is the driver package whose dialect selects which tables
+  /// count, matching how one schema directory can hold tables for more than
+  /// one database.
   static Future<SchemaSnapshot> build({
     required String schemaPath,
-    required String dialect,
+    required String driver,
     required String configDir,
     String? prevId,
   }) async {
     final schemas = await SchemaLocator().locate(schemaPath);
-    if (schemas.isEmpty) {
-      return SchemaSnapshot(
-        version: SchemaSnapshot.currentVersion,
-        dialect: dialect,
-        id: SchemaSnapshot.generateId(),
-        prevId: prevId ?? SchemaSnapshot.nullUuid,
-        tables: const {},
-      );
-    }
 
     final packageConfig = _findPackageConfig(configDir);
     if (packageConfig == null) {
@@ -45,7 +37,7 @@ class SnapshotRunner {
     final entrypoint = File(p.join(configDir, _generatedPath));
     entrypoint.parent.createSync(recursive: true);
     entrypoint.writeAsStringSync(
-      _entrypointSource(schemas, dialect, packages),
+      _entrypointSource(schemas, driver, packages),
     );
 
     final response = await _runInIsolate(
@@ -64,7 +56,7 @@ class SnapshotRunner {
   /// to `buildSnapshot`, reply.
   static String _entrypointSource(
     List<LocatedSchema> schemas,
-    String dialect,
+    String driver,
     Map<String, String> packages,
   ) {
     final imports = <String, String>{};
@@ -76,11 +68,10 @@ class SnapshotRunner {
       references.add('$alias.${schema.variableName}');
     }
 
-    final dialectPackage = 'raindrop_$dialect';
-    if (!packages.containsKey(dialectPackage)) {
+    if (!packages.containsKey(driver)) {
       throw StateError(
-        'Dialect package "$dialectPackage" not found. Make sure it is listed '
-        'in your pubspec.yaml dependencies.',
+        '''
+Driver package "$driver" not found. Make sure the "driver" field in raindrop.yaml names a package listed in your pubspec.yaml dependencies.''',
       );
     }
 
@@ -89,7 +80,7 @@ class SnapshotRunner {
       ..writeln("import 'dart:isolate';")
       ..writeln()
       ..writeln("import 'package:raindrop/introspect.dart';")
-      ..writeln("import 'package:$dialectPackage/$dialectPackage.dart';");
+      ..writeln("import 'package:$driver/$driver.dart';");
     for (final entry in imports.entries) {
       buffer.writeln("import '${entry.key}' as ${entry.value};");
     }
@@ -106,14 +97,11 @@ class SnapshotRunner {
       ..writeln("        'success': true,")
       ..writeln("        'snapshot': buildSnapshot(")
       ..writeln('          [${references.join(', ')}],')
-      // The driver's own exported const, so this file never has to know a
-      // dialect class's name.
       ..writeln('          dialect: dialect,')
-      ..writeln("          dialectName: '$dialect',")
       ..writeln('        ),')
       ..writeln('      });')
       ..writeln('    } catch (error, stack) {')
-      ..writeln("      reply.send({")
+      ..writeln('      reply.send({')
       ..writeln("        'success': false,")
       ..writeln(r"        'error': '$error\n$stack',")
       ..writeln('      });')
@@ -131,8 +119,8 @@ class SnapshotRunner {
       return 'package:${entry.key}/${p.relative(filePath, from: lib)}';
     }
     throw StateError(
-      'Schema file "$filePath" is not inside a package\'s lib/ directory, so '
-      'it cannot be imported. Move the schema under lib/',
+      '''
+Schema file "$filePath" is not inside a package's lib/ directory, so it cannot be imported. Move the schema under lib/''',
     );
   }
 
@@ -189,9 +177,11 @@ class SnapshotRunner {
 
       // A schema that fails to compile or throws while initialising never
       // sends its port, so race the error channel or this would hang.
+      // coverage:ignore-start
       final failure = errorPort.first.then((error) => throw StateError(
             'The schema could not be loaded:\n$error',
           ));
+      // coverage:ignore-end
       final isolateSendPort =
           await Future.any([receivePort.first, failure]) as SendPort;
 

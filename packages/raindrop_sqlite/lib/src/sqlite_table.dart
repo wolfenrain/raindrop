@@ -1,4 +1,5 @@
 import 'package:raindrop/raindrop.dart';
+import 'package:raindrop_sqlite/raindrop_sqlite.dart';
 
 /// Creates a SQLite table with the given [name] and [builder].
 ///
@@ -22,5 +23,5 @@ S sqliteTable<S extends Schema<R>, R>(
   S Function(SchemaBuilder<R>) builder, [
   void Function(S table)? extra,
 ]) {
-  return table<S, R>(name, builder, dialect: 'sqlite', extra: extra);
+  return table<S, R>(name, builder, dialect: dialect, extra: extra);
 }

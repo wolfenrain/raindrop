@@ -245,8 +245,10 @@ class HavingClause extends Clause {
   final bool singleTable;
 
   @override
-  String render(RenderContext context) =>
-      'HAVING ${FilterClause(filter, singleTable: singleTable).render(context)}';
+  String render(RenderContext context) {
+    return '''
+HAVING ${FilterClause(filter, singleTable: singleTable).render(context)}''';
+  }
 }
 
 /// Renders a list of `JOIN` clauses.
@@ -293,8 +295,10 @@ class UpdateSetClause extends Clause {
     final chunks = <String>[];
     if (updateSet case UpdateableColumn(:final column, :final value)) {
       chunks.add(
-        '${context.escapeName(column.name)} = '
-        '${ExpressionClause(SQL([value]), singleTable: true).render(context)}',
+        '''
+${context.escapeName(column.name)} = ${ExpressionClause(SQL([
+                  value
+                ]), singleTable: true).render(context)}''',
       );
     } else if (updateSet case UpdateableTable(:final table, :final value)) {
       final buffer = StringBuffer();
@@ -303,7 +307,8 @@ class UpdateSetClause extends Clause {
         final columnValue = column.readValueOf(value);
         if (column.isPrimaryKey && columnValue == null) continue;
         buffer.write(
-          '${context.escapeName(column.name)} = ${context.param(column.encode(columnValue))}',
+          '''
+${context.escapeName(column.name)} = ${context.param(column.encode(columnValue))}''',
         );
         if (i != table.columns.length - 1) buffer.write(', ');
       }
@@ -385,8 +390,8 @@ class OrderByClause extends Clause {
           ),
       };
       final direction = term.descending ? 'DESC' : 'ASC';
-      return '${ExpressionClause(sql, singleTable: singleTable).render(context)} '
-          '$direction';
+      final clause = ExpressionClause(sql, singleTable: singleTable);
+      return '${clause.render(context)} $direction';
     });
     return 'ORDER BY ${rendered.join(', ')}';
   }
@@ -414,19 +419,6 @@ class OffsetClause extends Clause {
 
   @override
   String render(RenderContext context) => 'OFFSET $offset';
-}
-
-/// `RETURNING <selection>` for inserts/deletes (whole-row by table).
-class ReturningClause extends Clause {
-  /// Creates a returning clause for a [selectable] (typically the table).
-  const ReturningClause(this.selectable);
-
-  /// What to return.
-  final Selectable<dynamic> selectable;
-
-  @override
-  String render(RenderContext context) =>
-      'RETURNING ${SelectionClause(selectable).render(context)}';
 }
 
 /// The body of an `INSERT`: `INTO <table> (<cols>) VALUES (<...>), ...`.
@@ -465,8 +457,8 @@ class InsertBodyClause extends Clause {
       tuples.add('(${placeholders.join(', ')})');
     }
 
-    return 'INTO ${TableClause(into).render(context)} '
-        '(${sqlColumns.join(', ')}) VALUES ${tuples.join(', ')}';
+    return '''
+INTO ${TableClause(into).render(context)} (${sqlColumns.join(', ')}) VALUES ${tuples.join(', ')}''';
   }
 }
 

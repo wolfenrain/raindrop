@@ -1,9 +1,12 @@
+import 'package:meta/meta.dart';
+
 /// {@template foreign_key_info}
 /// Foreign key information for DDL generation.
 ///
 /// This is a simple data class that holds the information needed to generate
 /// foreign key constraints in DDL statements.
 /// {@endtemplate}
+@immutable
 class ForeignKeyInfo {
   /// {@macro foreign_key_info}
   const ForeignKeyInfo({
@@ -72,6 +75,7 @@ class ForeignKeyInfo {
 /// This is a simple data class that holds the information needed to generate
 /// DDL statements, decoupled from the CLI's snapshot types.
 /// {@endtemplate}
+@immutable
 class ColumnInfo {
   /// {@macro column_info}
   const ColumnInfo({
@@ -257,6 +261,7 @@ class ReferencedBy {
 /// This is a simple data class that holds the information needed to generate
 /// DDL statements for index operations.
 /// {@endtemplate}
+@immutable
 class IndexInfo {
   /// {@macro index_info}
   const IndexInfo({

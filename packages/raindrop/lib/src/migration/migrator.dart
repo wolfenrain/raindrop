@@ -38,9 +38,8 @@ class MigrationChecksumMismatch implements Exception {
   final String actual;
 
   @override
-  String toString() =>
-      'MigrationChecksumMismatch: Migration "$tag" has been modified after '
-      'being applied. Expected checksum "$expected" but got "$actual".';
+  String toString() => '''
+MigrationChecksumMismatch: Migration "$tag" has been modified after being applied. Expected checksum "$expected" but got "$actual".''';
 }
 
 class _Migrator {

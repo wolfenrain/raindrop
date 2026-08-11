@@ -1,5 +1,6 @@
 import 'package:raindrop/raindrop.dart';
 
+/// Pattern-matching and comparison operators for text columns.
 extension StringOperators<V extends String?> on ColumnOf<V> {
   /// String like [value].
   SQL like(ColumnOr<V> value) =>

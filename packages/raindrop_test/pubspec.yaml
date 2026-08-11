@@ -1,0 +1,23 @@
+name: raindrop_test
+description: Testing utilities for raindrop, including golden SQL tests and a fake database delegate.
+version: 0.0.1
+repository: https://github.com/wolfenrain/raindrop/tree/main/packages/raindrop_test
+issue_tracker: https://github.com/wolfenrain/raindrop/issues
+topics:
+  - sql
+  - database
+  - testing
+resolution: workspace
+
+environment:
+  sdk: ^3.6.0
+
+dependencies:
+  meta: ^1.15.0
+  raindrop: ^0.0.1
+  test: ^1.25.2
+  test_api: any
+
+dev_dependencies:
+  raindrop_sqlite: ^0.0.1
+  sqlite3: ">=2.4.0 <4.0.0"

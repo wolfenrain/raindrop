@@ -32,19 +32,20 @@ MigrationNaming _parseMigrationNaming(String? raw) {
     'integer' || null => MigrationNaming.integer,
     'timestamp' => MigrationNaming.timestamp,
     _ => throw StateError(
-        'Invalid "migration_naming" in raindrop.yaml: "$raw". '
-        'Use "integer" or "timestamp".',
+        '''
+Invalid "migration_naming" in raindrop.yaml: "$raw". Use "integer" or "timestamp".''',
       ),
   };
 }
 
 /// Configuration for the raindrop CLI tool.
 class RaindropConfig {
+  /// Creates a configuration from already-resolved absolute paths.
   const RaindropConfig({
     required this.schemaPath,
     required this.outPath,
     required this.configDir,
-    required this.dialect,
+    required this.driver,
     this.dartPath,
     this.migrationNaming = MigrationNaming.integer,
   });
@@ -55,14 +56,18 @@ class RaindropConfig {
   /// Path to the output directory for migrations (absolute path).
   final String outPath;
 
-  /// The SQL dialect to use (postgres or sqlite).
-  final String dialect;
+  /// The driver package name (`raindrop_sqlite`).
+  ///
+  /// The exact package the CLI introspects schemas with and loads the DDL
+  /// generator from.
+  final String driver;
 
   /// Optional path to generate a Dart migrations file (absolute path).
   /// If set, `generate` also produces this Dart file alongside .sql files.
   final String? dartPath;
 
-  /// Prefix style for generated migration SQL filenames (`0000_...` vs epoch `..._`).
+  /// Prefix style for generated migration SQL filenames (`0000_...` vs
+  /// epoch `..._`).
   final MigrationNaming migrationNaming;
 
   /// Directory containing the config file (absolute path).
@@ -92,18 +97,18 @@ class RaindropConfig {
     if (!file.existsSync()) {
       throw StateError(
         'Configuration file not found: $path\n'
-        'Create a raindrop.yaml file with at least a "dialect" field.',
+        'Create a raindrop.yaml file with at least a "driver" field.',
       );
     }
 
     final content = await file.readAsString();
     final yaml = loadYaml(content) as YamlMap?;
 
-    final dialect = yaml?['dialect'] as String?;
-    if (dialect == null) {
+    final driver = yaml?['driver'] as String?;
+    if (driver == null) {
       throw StateError(
-        'Missing required "dialect" field in $path.\n'
-        'Specify the dialect of the package you are using.',
+        'Missing required "driver" field in $path.\n'
+        'Set it to your driver package name (e.g. "driver: raindrop_sqlite").',
       );
     }
 
@@ -126,15 +131,15 @@ class RaindropConfig {
     return RaindropConfig(
       schemaPath: schemaPath,
       outPath: outPath,
-      dialect: dialect,
+      driver: driver,
       configDir: configDir,
       dartPath: dartPath,
       migrationNaming: migrationNaming,
     );
   }
 
-  /// Loads config from [raindrop.yaml] when present; otherwise requires
-  /// `--dialect`, `--schemas`, and `--out` on [global].
+  /// Loads config from `raindrop.yaml` when present, otherwise requires
+  /// `--driver`, `--schemas`, and `--out` on [global].
   ///
   /// When a YAML file exists, any CLI flag that was explicitly passed overrides
   /// the corresponding YAML field (paths are relative to the YAML file's
@@ -145,7 +150,7 @@ class RaindropConfig {
     final file = File(configPath);
     final hasConfig = file.existsSync();
 
-    final dialect = global['dialect'] as String?;
+    final driver = global['driver'] as String?;
     final schemas = global['schemas'] as String?;
     final out = global['out'] as String?;
     final migrationNaming = global['migration-naming'] as String?;
@@ -154,17 +159,17 @@ class RaindropConfig {
     final baseDir = Directory.current.path;
 
     if (!hasConfig) {
-      if (dialect == null || schemas == null || out == null) {
+      if (driver == null || schemas == null || out == null) {
         throw StateError(
           'Configuration file not found: $configPath\n'
-          'Create raindrop.yaml or pass --dialect, --schemas, and --out.',
+          'Create raindrop.yaml or pass --driver, --schemas, and --out.',
         );
       }
 
       return RaindropConfig(
         schemaPath: p.normalize(p.join(baseDir, global['schemas'] as String)),
         outPath: p.normalize(p.join(baseDir, global['out'] as String)),
-        dialect: global['dialect'] as String,
+        driver: global['driver'] as String,
         configDir: baseDir,
         dartPath: dart != null && dart.isNotEmpty
             ? p.normalize(p.join(baseDir, dart))
@@ -180,7 +185,7 @@ class RaindropConfig {
           ? p.normalize(p.join(baseDir, schemas))
           : base.schemaPath,
       outPath: out != null ? p.normalize(p.join(baseDir, out)) : base.outPath,
-      dialect: dialect != null ? dialect : base.dialect,
+      driver: driver ?? base.driver,
       configDir: base.configDir,
       dartPath:
           dart != null ? p.normalize(p.join(baseDir, dart)) : base.dartPath,

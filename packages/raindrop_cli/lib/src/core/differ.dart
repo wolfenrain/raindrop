@@ -228,7 +228,7 @@ class SchemaDiffer {
       autoIncrement: snapshot.autoIncrement,
       defaultValue: snapshot.defaultValue,
       foreignKey: switch (snapshot.foreignKey) {
-        ForeignKeySnapshotRef foreignKey => ForeignKeyInfo(
+        final ForeignKeySnapshotRef foreignKey => ForeignKeyInfo(
             referencedTable: foreignKey.referencedTable,
             referencedColumn: foreignKey.referencedColumn,
             onDelete: foreignKey.onDelete,

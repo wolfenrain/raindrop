@@ -68,13 +68,10 @@ class SchemaLocator {
   bool _isSchema(DartType type) {
     if (type is! InterfaceType) return false;
     for (final candidate in [type, ...type.allSupertypes]) {
-      // The old element model, deprecated but stable.
-      // ignore: deprecated_member_use
       final element = candidate.element;
       if (element.name != 'Schema') continue;
       // Qualified by library, so a project's own class called `Schema` is not
       // mistaken for a table.
-      // ignore: deprecated_member_use
       if (element.library.identifier.startsWith('package:raindrop/')) {
         return true;
       }
