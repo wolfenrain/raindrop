@@ -38,6 +38,20 @@ ALTER TABLE "users" ALTER COLUMN "age" SET DEFAULT 0;
 ALTER TABLE "users" ALTER COLUMN "bio" SET NOT NULL;''');
     });
 
+    test('a column becoming nullable drops its NOT NULL', () {
+      final sql = generator.alterTable(
+        AlterTable(
+          oldTable: TableInfo(name: 'users', columns: [_column('bio')]),
+          newTable: TableInfo(
+            name: 'users',
+            columns: [_column('bio', isNullable: true)],
+          ),
+        ),
+      );
+
+      expect(sql, 'ALTER TABLE "users" ALTER COLUMN "bio" DROP NOT NULL;');
+    });
+
     test('a check change drops and re-adds the constraint', () {
       final sql = generator.alterTable(
         AlterTable(

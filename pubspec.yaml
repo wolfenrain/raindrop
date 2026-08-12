@@ -60,11 +60,11 @@ melos:
               { echo "no test loads \$f"; exit 1; };
           done &&
           awk -F, '
-            /^SF:/ {f=substr(\$0, 4)}
+            /^SF:/ {f=substr(\$0, 4); sub(/.*\/lib\//, "lib/", f)}
             /^DA:/ {t++; if (\$2>0) h++; else miss[f]++}
             END {
               if (h==t) {printf "💯 100%% covered.\n"; exit 0}
-              printf "FAILED: %.1f%% covered (%d/%d lines), 100%% required. Uncovered:\n", 100*h/t, h, t
+              printf "❌ FAILED: %.1f%% covered (%d/%d lines), 100%% required. Uncovered:\n", 100*h/t, h, t
               for (f in miss) printf "  %s (%d lines)\n", f, miss[f]
               exit 1
             }
