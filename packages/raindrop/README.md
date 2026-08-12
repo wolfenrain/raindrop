@@ -3,6 +3,7 @@
 <p align="center">
 <a href="https://pub.dev/packages/raindrop"><img src="https://img.shields.io/pub/v/raindrop.svg" alt="Pub"></a>
 <a href="https://github.com/wolfenrain/raindrop/actions"><img src="https://github.com/wolfenrain/raindrop/actions/workflows/main.yaml/badge.svg" alt="ci"></a>
+<a href="https://github.com/wolfenrain/raindrop/actions"><img src="https://raw.githubusercontent.com/wolfenrain/raindrop/main/coverage.svg" alt="coverage"></a>
 <a href="https://pub.dev/packages/very_good_analysis"><img src="https://img.shields.io/badge/style-very_good_analysis-B22C89.svg" alt="style: very good analysis"></a>
 <a href="https://opensource.org/licenses/MIT"><img src="https://img.shields.io/badge/license-MIT-purple.svg" alt="License: MIT"></a>
 </p>
@@ -15,17 +16,18 @@ no build step to run or keep in sync.
 
 ## Drivers
 
-This package is the core and does not talk to a database on its own so you pick
-a driver:
+`raindrop` is the core package but does not talk to database itself, that is the
+job of a driver:
 
 | Package                                                           | Database | Maintained by |
 | ----------------------------------------------------------------- | -------- | ------------- |
 | [`raindrop_sqlite`](https://pub.dev/packages/raindrop_sqlite)     | SQLite   | raindrop      |
 | [`raindrop_postgres`](https://pub.dev/packages/raindrop_postgres) | Postgres | raindrop      |
 
-Community drivers are welcome and get listed here with their maintainer: the
+Community drivers are welcome: the
 [driver guide](https://github.com/wolfenrain/raindrop/blob/main/CONTRIBUTING.md#new-drivers)
-describes the contract and the test suites that verify it.
+describes the contract and the test suites that verify it. Any driver that
+passes that will be listed here.
 
 ## Getting started
 
