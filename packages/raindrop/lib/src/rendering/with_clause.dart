@@ -94,3 +94,44 @@ extension DeleteYieldingRows<S extends Schema<R>, R>
         config: config.addClause(weight, clause(config.from!)),
       );
 }
+
+/// Adds [limitingRows] to an update builder.
+extension UpdateLimitingRows<S extends Schema<R>, R, V>
+    on UpdateWhereBuilder<S, R, V> {
+  /// Returns a copy of this builder with the clause built by [clause] over the
+  /// statement's target table and row filter, placed at [weight].
+  ///
+  /// The seam for drivers that cannot cap a write with a bare `LIMIT` and have
+  /// to say it another way (a key subquery, `TOP`, ...). Such a clause has to
+  /// restate what the statement already filters on, which is why it is handed
+  /// the filter rather than only the table: the driver owns the SQL text, core
+  /// owns reaching into the config for it.
+  ///
+  /// Pass the statement's own `where` weight to replace the core `WHERE`
+  /// rather than emit a second one.
+  UpdateWhereBuilder<S, R, V> limitingRows(
+    int weight,
+    Clause Function(Table<Schema<dynamic>, dynamic> table, Filter? where)
+        clause,
+  ) =>
+      UpdateWhereBuilder(
+        executor,
+        config: config.addClause(weight, clause(config.table!, config.where)),
+      );
+}
+
+/// Adds [limitingRows] to a delete builder.
+extension DeleteLimitingRows<S extends Schema<R>, R, V>
+    on DeleteWhereBuilder<S, R, V> {
+  /// The delete form of `limitingRows`, see the update variant for the
+  /// contract.
+  DeleteWhereBuilder<S, R, V> limitingRows(
+    int weight,
+    Clause Function(Table<Schema<dynamic>, dynamic> table, Filter? where)
+        clause,
+  ) =>
+      DeleteWhereBuilder(
+        executor,
+        config: config.addClause(weight, clause(config.from!, config.where)),
+      );
+}
