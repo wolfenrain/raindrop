@@ -66,11 +66,27 @@ This is not a real Future, it only poses as one so it can be used where a value 
   V? decode(Object? input) {
     if (input == null) return null;
 
-    return switch (transformer) {
+    // `input` may already be in the app-native shape [V] instead of the
+    // storage-encoded shape a transformer expects — e.g. a JSON create/update
+    // body handing a boolean column a native `bool` rather than the `int`
+    // SQLite stores it as. In that case there is nothing to decode, and
+    // handing it to the transformer would silently turn `true` into `false`.
+    if (input is V) return input as V;
+
+    final decoded = switch (transformer) {
       final ColumnTransformer<dynamic, dynamic> transformer =>
         transformer.decode(input),
       _ => input
-    } as V?;
+    };
+
+    // JSON has no int/double distinction, so a whole-number REAL column value
+    // like `750000` arrives as `int`, not `double`. `<double>[] is List<V>` is
+    // true for both `V == double` and `V == double?` (List is covariant).
+    if (decoded is int && <double>[] is List<V>) {
+      return decoded.toDouble() as V;
+    }
+
+    return decoded as V?;
   }
 
   @override
