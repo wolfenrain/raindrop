@@ -6,36 +6,36 @@ void main(List<String> arguments) {
   final amount = int.tryParse(arguments.firstOrNull ?? '') ?? 20;
 
   selectableColumns(
-    '${script.parent.path}/../lib/src/artifacts/selectable_columns.dart',
+    '${script.parent.path}/../lib/src/generated/selectable_columns.dart',
     amount,
   );
   indexableColumns(
-    '${script.parent.path}/../lib/src/artifacts/index_columns.dart',
+    '${script.parent.path}/../lib/src/generated/index_columns.dart',
     amount,
   );
   updateableColumns(
-    '${script.parent.path}/../lib/src/artifacts/updateable_columns.dart',
+    '${script.parent.path}/../lib/src/generated/updateable_columns.dart',
     amount,
   );
 
   generateJoin(
-    '${script.parent.path}/../lib/src/builders/select/joins/inner_joins.dart',
+    '${script.parent.path}/../lib/src/generated/inner_joins.dart',
     'Inner',
     amount,
   );
   generateJoin(
-    '${script.parent.path}/../lib/src/builders/select/joins/left_joins.dart',
+    '${script.parent.path}/../lib/src/generated/left_joins.dart',
     'Left',
     amount,
   );
   generateJoin(
-    '${script.parent.path}/../lib/src/builders/select/joins/right_joins.dart',
+    '${script.parent.path}/../lib/src/generated/right_joins.dart',
     'Right',
     amount,
   );
 
   derivedSchemas(
-    '${script.parent.path}/../lib/src/definitions/derived_schemas.dart',
+    '${script.parent.path}/../lib/src/generated/derived_schemas.dart',
     amount,
   );
 

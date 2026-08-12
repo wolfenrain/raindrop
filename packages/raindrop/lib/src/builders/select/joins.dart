@@ -1,9 +1,6 @@
 import 'package:raindrop/raindrop.dart';
 
-export 'joins/inner_joins.dart';
-export 'joins/left_joins.dart';
-export 'joins/projection_joins.dart';
-export 'joins/right_joins.dart';
+export 'projection_joins.dart';
 
 /// {@template join}
 /// Abstract class for defining joins.

@@ -10,6 +10,7 @@ export 'length.dart';
 export 'lower.dart';
 export 'max.dart';
 export 'min.dart';
+export 'operand.dart';
 export 'raw.dart';
 export 'subquery.dart';
 export 'sum.dart';
