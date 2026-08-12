@@ -48,6 +48,8 @@ class RaindropConfig {
     required this.driver,
     this.dartPath,
     this.migrationNaming = MigrationNaming.integer,
+    this.schemaPackagePrefix = 'package:raindrop/',
+    this.driverImport,
   });
 
   /// Path to the directory containing schema files (absolute path).
@@ -69,6 +71,19 @@ class RaindropConfig {
   /// Prefix style for generated migration SQL filenames (`0000_...` vs
   /// epoch `..._`).
   final MigrationNaming migrationNaming;
+
+  /// The `package:` prefix raindrop's `Schema` class is declared under.
+  ///
+  /// Only differs from the default when raindrop's source has been
+  /// vendored into another package, which moves the library schemas
+  /// resolve against.
+  final String schemaPackagePrefix;
+
+  /// Import URI for the driver package in the generated entrypoint.
+  ///
+  /// `null` means the driver's own package, which is right unless
+  /// the driver has been vendored under a different package.
+  final String? driverImport;
 
   /// Directory containing the config file (absolute path).
   /// Used for resolving relative paths.
@@ -135,6 +150,9 @@ class RaindropConfig {
       configDir: configDir,
       dartPath: dartPath,
       migrationNaming: migrationNaming,
+      schemaPackagePrefix:
+          yaml?['schema_package_prefix'] as String? ?? 'package:raindrop/',
+      driverImport: yaml?['driver_import'] as String?,
     );
   }
 
@@ -155,6 +173,9 @@ class RaindropConfig {
     final out = global['out'] as String?;
     final migrationNaming = global['migration-naming'] as String?;
     final dart = global['dart'] as String?;
+    final schemaPackagePrefix =
+        global['schema-package-prefix'] as String?;
+    final driverImport = global['driver-import'] as String?;
 
     final baseDir = Directory.current.path;
 
@@ -175,6 +196,8 @@ class RaindropConfig {
             ? p.normalize(p.join(baseDir, dart))
             : null,
         migrationNaming: _parseMigrationNaming(migrationNaming),
+        schemaPackagePrefix: schemaPackagePrefix ?? 'package:raindrop/',
+        driverImport: driverImport,
       );
     }
 
@@ -190,6 +213,9 @@ class RaindropConfig {
       dartPath:
           dart != null ? p.normalize(p.join(baseDir, dart)) : base.dartPath,
       migrationNaming: _parseMigrationNaming(migrationNaming),
+      schemaPackagePrefix:
+          schemaPackagePrefix ?? base.schemaPackagePrefix,
+      driverImport: driverImport ?? base.driverImport,
     );
   }
 }

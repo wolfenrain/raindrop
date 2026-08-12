@@ -56,6 +56,16 @@ Migration filename prefix style: integer (default) or timestamp. Overrides raind
         'dart',
         help: '''
 Optional path for generated Dart migrations embedding (relative resolution matches --schemas). Overrides raindrop.yaml "dart:" when passed.''',
+      )
+      ..addOption(
+        'schema-package-prefix',
+        help: '''
+The "package:" prefix raindrop's own Schema class is declared under (default "package:raindrop/"). Only needed when raindrop's source is vendored into another package, which changes the library schemas resolve against.''',
+      )
+      ..addOption(
+        'driver-import',
+        help: '''
+Import URI for the driver package in the generated introspection entrypoint (default "package:<driver>/<driver>.dart"). Only needed when the driver is vendored under a different package.''',
       );
 
     addCommand(GenerateCommand());

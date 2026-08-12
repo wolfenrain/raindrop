@@ -102,6 +102,8 @@ Use a pre-built schema snapshot (JSON) as the current state instead of running t
         schemaPath: config.schemaPath,
         driver: config.driver,
         configDir: config.configDir,
+        schemaPackagePrefix: config.schemaPackagePrefix,
+        driverImport: config.driverImport,
         prevId: journal.previousId,
       );
     }

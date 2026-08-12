@@ -20,6 +20,16 @@ class LocatedSchema {
 
 /// Finds the schemas a project declares, so they can be referenced by name.
 class SchemaLocator {
+  /// Creates a [SchemaLocator].
+  const SchemaLocator({this.schemaPackagePrefix = 'package:raindrop/'});
+
+  /// The `package:` prefix the `Schema` class is declared under.
+  ///
+  /// A project that vendors raindrop's source into its own package
+  /// declares `Schema` under that package instead, so without this its
+  /// schemas are not recognised as schemas at all.
+  final String schemaPackagePrefix;
+
   /// Every schema declared under [directoryPath], in a stable order.
   Future<List<LocatedSchema>> locate(String directoryPath) async {
     final directory = Directory(directoryPath);
@@ -64,7 +74,7 @@ class SchemaLocator {
     return located;
   }
 
-  /// Whether [type] is a `Schema` from `package:raindrop`.
+  /// Whether [type] is a `Schema` from [schemaPackagePrefix].
   bool _isSchema(DartType type) {
     if (type is! InterfaceType) return false;
     for (final candidate in [type, ...type.allSupertypes]) {
@@ -72,7 +82,7 @@ class SchemaLocator {
       if (element.name != 'Schema') continue;
       // Qualified by library, so a project's own class called `Schema` is not
       // mistaken for a table.
-      if (element.library.identifier.startsWith('package:raindrop/')) {
+      if (element.library.identifier.startsWith(schemaPackagePrefix)) {
         return true;
       }
     }
