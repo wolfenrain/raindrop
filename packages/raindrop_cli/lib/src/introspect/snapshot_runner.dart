@@ -1,9 +1,9 @@
 import 'dart:convert';
 import 'dart:io';
-import 'dart:isolate';
 
 import 'package:path/path.dart' as p;
 
+import 'package:raindrop_cli/src/core/entrypoint_runner.dart';
 import 'package:raindrop_cli/src/core/snapshot.dart';
 import 'package:raindrop_cli/src/introspect/schema_locator.dart';
 
@@ -40,10 +40,18 @@ class SnapshotRunner {
       _entrypointSource(schemas, driver, packages),
     );
 
-    final response = await _runInIsolate(
+    final response = await EntrypointRunner.run(
       entrypoint.uri,
+      const {},
+      projectPath: configDir,
       packageConfig: packageConfig.uri,
     );
+
+    if (response['success'] != true) {
+      throw StateError(
+        'Building the schema snapshot failed:\n${response['error']}',
+      );
+    }
 
     final document = (response['snapshot']! as Map).cast<String, Object?>();
     return SchemaSnapshot.fromJson(jsonEncode(document)).copyWith(
@@ -156,50 +164,6 @@ Schema file "$filePath" is not inside a package's lib/ directory, so it cannot b
       final parent = current.parent;
       if (parent.path == current.path) return null;
       current = parent;
-    }
-  }
-
-  static Future<Map<String, Object?>> _runInIsolate(
-    Uri entryPointUri, {
-    required Uri packageConfig,
-  }) async {
-    final receivePort = ReceivePort();
-    final errorPort = ReceivePort();
-    Isolate? isolate;
-    try {
-      isolate = await Isolate.spawnUri(
-        entryPointUri,
-        const [],
-        receivePort.sendPort,
-        onError: errorPort.sendPort,
-        packageConfig: packageConfig,
-      );
-
-      // A schema that fails to compile or throws while initialising never
-      // sends its port, so race the error channel or this would hang.
-      // coverage:ignore-start
-      final failure = errorPort.first.then((error) => throw StateError(
-            'The schema could not be loaded:\n$error',
-          ));
-      // coverage:ignore-end
-      final isolateSendPort =
-          await Future.any([receivePort.first, failure]) as SendPort;
-
-      final responsePort = ReceivePort();
-      isolateSendPort.send({'replyPort': responsePort.sendPort});
-      final response = await Future.any([responsePort.first, failure])
-          as Map<Object?, Object?>;
-      responsePort.close();
-
-      if (response['success'] != true) {
-        throw StateError('Building the schema snapshot failed:\n'
-            '${response['error']}');
-      }
-      return response.cast<String, Object?>();
-    } finally {
-      receivePort.close();
-      errorPort.close();
-      isolate?.kill(priority: Isolate.immediate);
     }
   }
 }

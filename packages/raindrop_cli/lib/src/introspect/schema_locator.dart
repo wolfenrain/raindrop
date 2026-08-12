@@ -4,7 +4,10 @@ import 'package:analyzer/dart/analysis/analysis_context_collection.dart';
 import 'package:analyzer/dart/analysis/results.dart';
 import 'package:analyzer/dart/ast/ast.dart';
 import 'package:analyzer/dart/element/type.dart';
+import 'package:meta/meta.dart';
 import 'package:path/path.dart' as p;
+
+import 'package:raindrop_cli/src/core/entrypoint_runner.dart';
 
 /// A table declaration, as a name the generated entrypoint can reference.
 class LocatedSchema {
@@ -36,6 +39,15 @@ class SchemaLocator {
       ..sort();
     if (dartFiles.isEmpty) return const [];
 
+    // The analyzer resolves types properly, but it has to read the Dart
+    // SDK off disk to do it, and an AOT-compiled CLI has no SDK to point
+    // at -- AnalysisContextCollection throws while loading
+    // allowed_experiments.json. So when this process is not the Dart VM,
+    // fall back to reading the declarations out of the source.
+    if (!EntrypointRunner.isDartVm) {
+      return locateWithoutAnalyzer(dartFiles);
+    }
+
     final collection = AnalysisContextCollection(
       includedPaths: [p.absolute(directoryPath)],
     );
@@ -59,6 +71,33 @@ class SchemaLocator {
             ),
           );
         }
+      }
+    }
+    return located;
+  }
+
+  /// Every table declaration in [dartFiles], read straight from the source.
+  ///
+  /// Used only when the analyzer is unavailable (see [locate]). Matches the
+  /// declaration form every table uses -- `final <name> = <driver>Table(...)`
+  /// -- rather than every top-level variable, because each name found here is
+  /// emitted into the generated entrypoint and a non-table would not compile.
+  @visibleForTesting
+  List<LocatedSchema> locateWithoutAnalyzer(List<String> dartFiles) {
+    final declaration = RegExp(
+      r'^\s*(?:final|const)\s+(?:\w[\w<>,\s]*\s+)?(\w+)\s*=\s*\w*[Tt]able\s*\(',
+      multiLine: true,
+    );
+
+    final located = <LocatedSchema>[];
+    for (final filePath in dartFiles) {
+      final content = File(filePath).readAsStringSync();
+      for (final match in declaration.allMatches(content)) {
+        final name = match.group(1);
+        if (name == null || name.isEmpty) continue;
+        located.add(
+          LocatedSchema(filePath: filePath, variableName: name),
+        );
       }
     }
     return located;
