@@ -63,4 +63,17 @@ abstract class Delegate {
       config: QueryConfig.from({#from: from}),
     );
   }
+
+  /// Streams the results of a read-only [query], re-emitting whenever data the
+  /// query depends on changes.
+  ///
+  /// Only delegates that can observe writes support this — [ResqliteDelegate]
+  /// in `raindrop_sqlite` is the one that does. The default throws rather than
+  /// returning an empty or never-closing stream, so an unsupported delegate
+  /// fails loudly at the call site instead of silently never emitting.
+  Stream<DatabaseResult> streamQuery(String query, List<Object?> values) {
+    throw UnsupportedError(
+      '$runtimeType does not support live query streams.',
+    );
+  }
 }
