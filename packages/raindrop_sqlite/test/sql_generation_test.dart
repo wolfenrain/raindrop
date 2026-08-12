@@ -241,6 +241,10 @@ void main() {
             .limit(5),
       )
       ..test(
+        'with limit and no filter',
+        (db) => db.update(users).set(users.name.to('Renamed')).limit(5),
+      )
+      ..test(
         'set to coalesce expression',
         (db) => db
             .update(users)
