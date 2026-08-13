@@ -196,4 +196,84 @@ CREATE TABLE scores (game TEXT NOT NULL, player TEXT NOT NULL, points INTEGER NO
       expect(changed.single.favoriteGame, 'changed');
     });
   });
+
+  group('choosing which form to render', () {
+    SQLiteDialect dialectOf(SQLiteDelegate delegate) =>
+        delegate.dialect as SQLiteDialect;
+
+    test('the probe agrees with what this library actually parses', () {
+      final probed = SQLiteDelegate.probeForLimitSupport(database);
+
+      database.execute('CREATE TABLE probe (id INTEGER PRIMARY KEY)');
+      var parses = true;
+      try {
+        database.execute('DELETE FROM probe LIMIT 0');
+      } on SqliteException {
+        parses = false;
+      }
+
+      expect(
+        probed,
+        parses,
+        reason: 'the compile-option answer and the parser must not disagree. '
+            'A wrong no only costs a subquery; a wrong yes is a syntax error '
+            'the caller meets when the statement runs.',
+      );
+    });
+
+    test('an unasked delegate takes the probe answer', () {
+      expect(
+        dialectOf(SQLiteDelegate(database)).supportsUpdateDeleteLimit,
+        SQLiteDelegate.probeForLimitSupport(database),
+      );
+    });
+
+    test('an explicit answer overrides the probe', () {
+      expect(
+        dialectOf(
+          SQLiteDelegate(database, supportsUpdateDeleteLimit: true),
+        ).supportsUpdateDeleteLimit,
+        isTrue,
+      );
+      expect(
+        dialectOf(
+          SQLiteDelegate(database, supportsUpdateDeleteLimit: false),
+        ).supportsUpdateDeleteLimit,
+        isFalse,
+      );
+    });
+
+    test(
+      'a bare LIMIT forced onto a library that rejects it fails at execution',
+      () async {
+        // Why the default is not simply true, kept as a live demonstration
+        // rather than a claim in a doc comment.
+        final forced = Raindrop(
+          SQLiteDelegate(database, supportsUpdateDeleteLimit: true),
+          logger: SilentLogger(),
+        );
+
+        await expectLater(
+          forced.delete(from: users).where(users.age.greaterThan(0)).limit(1),
+          throwsA(isA<SqliteException>()),
+        );
+        expect(countOf('users'), 3);
+      },
+      skip: SQLiteDelegate.probeForLimitSupport(sqlite3.openInMemory())
+          ? 'this library parses a bare UPDATE/DELETE ... LIMIT, so there is '
+              'nothing here to reject'
+          : null,
+    );
+
+    test('forcing the subquery form runs whatever the library is', () async {
+      final safe = Raindrop(
+        SQLiteDelegate(database, supportsUpdateDeleteLimit: false),
+        logger: SilentLogger(),
+      );
+
+      await safe.delete(from: users).where(users.age.greaterThan(0)).limit(1);
+
+      expect(countOf('users'), 2);
+    });
+  });
 }

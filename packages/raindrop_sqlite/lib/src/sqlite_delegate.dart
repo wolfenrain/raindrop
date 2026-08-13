@@ -7,7 +7,42 @@ import 'package:sqlite3/common.dart';
 /// {@endtemplate}
 class SQLiteDelegate extends RaindropDelegate with _DatabaseDelegate {
   /// {@macro sqlite_delegate}
-  SQLiteDelegate(this._database) : super(dialect: const SQLiteDialect());
+  ///
+  /// [supportsUpdateDeleteLimit] says whether [database] parses a `LIMIT` hung
+  /// directly off an `UPDATE` or a `DELETE`, which decides how a capped write
+  /// is rendered. Left unset, the library is asked — see [probeForLimitSupport]
+  /// for what that costs and when it can answer wrong.
+  SQLiteDelegate(CommonDatabase database, {bool? supportsUpdateDeleteLimit})
+      : _database = database,
+        super(
+          dialect: SQLiteDialect(
+            supportsUpdateDeleteLimit: supportsUpdateDeleteLimit ??
+                probeForLimitSupport(database),
+          ),
+        );
+
+  /// Whether [database] was compiled with `SQLITE_ENABLE_UPDATE_DELETE_LIMIT`.
+  ///
+  /// Asks the library itself rather than guessing from the platform, because
+  /// the answer is a property of the build and not of the OS: the binaries
+  /// `package:sqlite3` ships say no, macOS's system library says yes.
+  ///
+  /// Read-only and touches no schema — one scalar query against a compile-time
+  /// flag. Any failure answers false, including the build that omitted the
+  /// diagnostic function itself: that direction renders the subquery, which is
+  /// slower but parses everywhere, whereas a wrong yes is a syntax error the
+  /// caller only meets when the statement runs.
+  static bool probeForLimitSupport(CommonDatabase database) {
+    try {
+      final result = database.select(
+        "SELECT sqlite_compileoption_used('SQLITE_ENABLE_UPDATE_DELETE_LIMIT')"
+        ' AS used',
+      );
+      return result.first['used'] == 1;
+    } on Object {
+      return false;
+    }
+  }
 
   @override
   final CommonDatabase _database;

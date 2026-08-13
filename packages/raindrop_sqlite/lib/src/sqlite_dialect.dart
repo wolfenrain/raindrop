@@ -10,7 +10,21 @@ const dialect = SQLiteDialect();
 /// {@endtemplate}
 class SQLiteDialect extends SqlDialect {
   /// {@macro sqlite_dialect}
-  const SQLiteDialect();
+  const SQLiteDialect({this.supportsUpdateDeleteLimit = false});
+
+  /// Whether the library being talked to parses a `LIMIT` hung directly off an
+  /// `UPDATE` or a `DELETE`.
+  ///
+  /// True only for builds compiled with `SQLITE_ENABLE_UPDATE_DELETE_LIMIT`,
+  /// which is off in the stock amalgamation and in the binaries
+  /// `package:sqlite3` ships. When false, a capped write is rendered as a key
+  /// subquery instead, which every build parses — see `LimitedWriteClause`.
+  ///
+  /// Defaults to false because that form runs everywhere: a dialect built
+  /// without a database in hand cannot ask, and guessing wrong in this
+  /// direction is a syntax error at execution time.
+  /// `SQLiteDelegate` has a database, so it probes rather than assumes.
+  final bool supportsUpdateDeleteLimit;
 
   @override
   String get name => 'sqlite';
