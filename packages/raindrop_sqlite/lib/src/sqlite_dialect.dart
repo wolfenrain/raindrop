@@ -20,10 +20,11 @@ class SQLiteDialect extends SqlDialect {
   /// `package:sqlite3` ships. When false, a capped write is rendered as a key
   /// subquery instead, which every build parses — see `LimitedWriteClause`.
   ///
-  /// Defaults to false because that form runs everywhere: a dialect built
-  /// without a database in hand cannot ask, and guessing wrong in this
-  /// direction is a syntax error at execution time.
-  /// `SQLiteDelegate` has a database, so it probes rather than assumes.
+  /// Defaults to false because that form runs everywhere, and because it is
+  /// the cheap direction to be wrong in: a needless subquery costs a plan,
+  /// while a wrong yes is a syntax error at execution time. Saying yes is the
+  /// caller's move — see `SQLiteDelegate.probeForLimitSupport` for asking the
+  /// library instead of guessing.
   final bool supportsUpdateDeleteLimit;
 
   @override

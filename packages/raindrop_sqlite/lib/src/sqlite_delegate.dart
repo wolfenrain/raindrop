@@ -10,18 +10,36 @@ class SQLiteDelegate extends RaindropDelegate with _DatabaseDelegate {
   ///
   /// [supportsUpdateDeleteLimit] says whether [database] parses a `LIMIT` hung
   /// directly off an `UPDATE` or a `DELETE`, which decides how a capped write
-  /// is rendered. Left unset, the library is asked — see [probeForLimitSupport]
-  /// for what that costs and when it can answer wrong.
-  SQLiteDelegate(CommonDatabase database, {bool? supportsUpdateDeleteLimit})
-      : _database = database,
+  /// is rendered. It defaults to false — the key subquery, which every build
+  /// parses — so an existing caller keeps the SQL it already had and nothing
+  /// is run against their database to work that out.
+  ///
+  /// A caller who would rather not pay for the subquery says so, either from
+  /// what they know about their own build or by asking it:
+  ///
+  /// ```dart
+  /// SQLiteDelegate(db, supportsUpdateDeleteLimit: true);
+  /// SQLiteDelegate(
+  ///   db,
+  ///   supportsUpdateDeleteLimit: SQLiteDelegate.probeForLimitSupport(db),
+  /// );
+  /// ```
+  SQLiteDelegate(
+    CommonDatabase database, {
+    bool supportsUpdateDeleteLimit = false,
+  })  : _database = database,
         super(
           dialect: SQLiteDialect(
-            supportsUpdateDeleteLimit: supportsUpdateDeleteLimit ??
-                probeForLimitSupport(database),
+            supportsUpdateDeleteLimit: supportsUpdateDeleteLimit,
           ),
         );
 
   /// Whether [database] was compiled with `SQLITE_ENABLE_UPDATE_DELETE_LIMIT`.
+  ///
+  /// Opt-in, for a caller who wants the cheaper `LIMIT` form without hardcoding
+  /// a guess: pass the result as the constructor's `supportsUpdateDeleteLimit`.
+  /// Nothing calls this on its own, so a delegate never queries a database the
+  /// caller did not ask it to.
   ///
   /// Asks the library itself rather than guessing from the platform, because
   /// the answer is a property of the build and not of the OS: the binaries

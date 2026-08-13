@@ -221,25 +221,35 @@ CREATE TABLE scores (game TEXT NOT NULL, player TEXT NOT NULL, points INTEGER NO
       );
     });
 
-    test('an unasked delegate takes the probe answer', () {
+    test('an unasked delegate renders the subquery, whatever the library', () {
+      // The probe is opt-in: constructing a delegate must not consult the
+      // library, and must not quietly change the SQL an existing caller gets.
       expect(
         dialectOf(SQLiteDelegate(database)).supportsUpdateDeleteLimit,
+        isFalse,
+      );
+    });
+
+    test('opting into the probe takes its answer', () {
+      expect(
+        dialectOf(
+          SQLiteDelegate(
+            database,
+            supportsUpdateDeleteLimit:
+                SQLiteDelegate.probeForLimitSupport(database),
+          ),
+        ).supportsUpdateDeleteLimit,
         SQLiteDelegate.probeForLimitSupport(database),
       );
     });
 
-    test('an explicit answer overrides the probe', () {
+    test('an explicit yes is taken as given', () {
+      // The false case is the default, covered above.
       expect(
         dialectOf(
           SQLiteDelegate(database, supportsUpdateDeleteLimit: true),
         ).supportsUpdateDeleteLimit,
         isTrue,
-      );
-      expect(
-        dialectOf(
-          SQLiteDelegate(database, supportsUpdateDeleteLimit: false),
-        ).supportsUpdateDeleteLimit,
-        isFalse,
       );
     });
 
@@ -265,15 +275,5 @@ CREATE TABLE scores (game TEXT NOT NULL, player TEXT NOT NULL, points INTEGER NO
           : null,
     );
 
-    test('forcing the subquery form runs whatever the library is', () async {
-      final safe = Raindrop(
-        SQLiteDelegate(database, supportsUpdateDeleteLimit: false),
-        logger: SilentLogger(),
-      );
-
-      await safe.delete(from: users).where(users.age.greaterThan(0)).limit(1);
-
-      expect(countOf('users'), 2);
-    });
   });
 }
