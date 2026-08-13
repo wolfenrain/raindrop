@@ -3,10 +3,6 @@ import 'package:raindrop/raindrop.dart';
 /// Timestamps, stored as an INTEGER.
 extension DateTimeColumnDefinition<R> on SchemaBuilder<R> {
   /// A [DateTime] column, stored as milliseconds since the Unix epoch.
-  /// [defaultValue] is a [DateTime] like any other value for this column,
-  /// not a raw SQL string -- it is encoded through [DateTimeTransformer] the
-  /// same way a written value is, so the default cannot disagree with the
-  /// column's storage format.
   ColumnType<W> dateTime<W extends DateTime?>(
     String name,
     Field<R, W> field, {
