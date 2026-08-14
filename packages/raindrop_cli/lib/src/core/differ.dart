@@ -79,10 +79,18 @@ class SchemaDiffer {
       old.checks.length == new_.checks.length &&
       old.checks.entries.every((e) => new_.checks[e.key] == e.value);
 
-  bool _sameIndexes(List<IndexInfo> old, List<IndexInfo> new_) =>
-      old.length == new_.length &&
-      [for (var i = 0; i < old.length; i++) old[i] == new_[i]]
-          .every((same) => same);
+  /// Matched by NAME, never by position.
+  ///
+  /// [TableDiff] pairs indexes by name, so a positional comparison here can
+  /// call a table changed that it then finds nothing to change in: the same
+  /// index set in a different snapshot order emits an [AlterTable] whose diff
+  /// is empty, and the dialect renders no SQL for it. That reaches the caller
+  /// as `Alter table "x" () produced no SQL` on a schema nobody touched.
+  bool _sameIndexes(List<IndexInfo> old, List<IndexInfo> new_) {
+    if (old.length != new_.length) return false;
+    final byName = {for (final index in new_) index.name: index};
+    return old.every((index) => byName[index.name] == index);
+  }
 
   /// The indexes of [tableName], in snapshot order.
   List<IndexInfo> _tableIndexes(

@@ -172,6 +172,43 @@ void main() {
       expect(diff.alteredColumns, isEmpty);
     });
 
+    test('the same indexes in a different snapshot order emit nothing', () {
+      // Two indexes on one table, reordered. Nothing changed, so nothing may
+      // be emitted: an AlterTable here carries an EMPTY TableDiff, which the
+      // dialect renders as no SQL at all and DdlGenerator then throws on --
+      // `Alter table "subscriptions" () produced no SQL`, on a schema nobody
+      // touched. Reported by Picto, 2026-08-14.
+      IndexSnapshot index(String name, String column) => IndexSnapshot(
+            name: name,
+            tableName: 'subscriptions',
+            columns: [column],
+          );
+      final byUser = index('subscriptions_user_id', 'user_id');
+      final byStatus = index('subscriptions_status', 'status');
+
+      final tables = {
+        'subscriptions': _table('subscriptions', [
+          _column('id', primaryKey: true),
+          _column('user_id'),
+          _column('status'),
+        ]),
+      };
+
+      expect(
+        differ.diff(
+          _snapshot(
+            tables,
+            indexes: {byUser.name: byUser, byStatus.name: byStatus},
+          ),
+          _snapshot(
+            tables,
+            indexes: {byStatus.name: byStatus, byUser.name: byUser},
+          ),
+        ),
+        isEmpty,
+      );
+    });
+
     test('an orphan index is dropped on its own', () {
       final operations = differ.diff(
         _snapshot(
