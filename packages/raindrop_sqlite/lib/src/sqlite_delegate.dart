@@ -69,7 +69,6 @@ class _TransactionDelegate extends TransactionDelegate with _DatabaseDelegate {
     Future<T> Function(TransactionDelegate delegate) transaction,
   ) async {
     final savePoint = 'sp_$depth';
-    // this. for the same shadowing reason as in SQLiteDelegate.transaction.
     final tx = _TransactionDelegate(_database, this.dialect, depth + 1);
     _database.execute('SAVEPOINT $savePoint', []);
 
