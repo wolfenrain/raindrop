@@ -154,6 +154,33 @@ CREATE TABLE scores (game TEXT NOT NULL, player TEXT NOT NULL, points INTEGER NO
       expect(countOf('events'), 2);
       expect(countOf('events', "kind = 'a'"), 1);
     });
+
+    test('the rowid fallback fails loudly on a WITHOUT ROWID table', () async {
+      // No rowid to fall back to here, so the write must error: a quoted
+      // "rowid" would instead match every row via the double-quoted-string
+      // misfeature — see LimitedWriteClause.
+      if (SQLiteDelegate.probeForLimitSupport(database)) {
+        markTestSkipped(
+          'this library parses a bare DELETE ... LIMIT, so the rowid '
+          'fallback never renders',
+        );
+        return;
+      }
+
+      await db.execute(
+        'CREATE TABLE events (kind TEXT NOT NULL PRIMARY KEY) WITHOUT ROWID',
+      );
+      await db.insert(into: events).values([
+        Event(kind: 'a'),
+        Event(kind: 'b'),
+      ]);
+
+      await expectLater(
+        db.delete(from: events).where(events.kind.equals('a')).limit(1),
+        throwsA(isA<SqliteException>()),
+      );
+      expect(countOf('events'), 2);
+    });
   });
 
   group('a capped update', () {
@@ -221,59 +248,21 @@ CREATE TABLE scores (game TEXT NOT NULL, player TEXT NOT NULL, points INTEGER NO
       );
     });
 
-    test('an unasked delegate renders the subquery, whatever the library', () {
-      // The probe is opt-in: constructing a delegate must not consult the
-      // library, and must not quietly change the SQL an existing caller gets.
+    test('a delegate probes its library once and keeps the answer', () {
       expect(
         dialectOf(SQLiteDelegate(database)).supportsUpdateDeleteLimit,
-        isFalse,
-      );
-    });
-
-    test('opting into the probe takes its answer', () {
-      expect(
-        dialectOf(
-          SQLiteDelegate(
-            database,
-            supportsUpdateDeleteLimit:
-                SQLiteDelegate.probeForLimitSupport(database),
-          ),
-        ).supportsUpdateDeleteLimit,
         SQLiteDelegate.probeForLimitSupport(database),
       );
     });
 
-    test('an explicit yes is taken as given', () {
-      // The false case is the default, covered above.
-      expect(
-        dialectOf(
-          SQLiteDelegate(database, supportsUpdateDeleteLimit: true),
-        ).supportsUpdateDeleteLimit,
-        isTrue,
-      );
+    test('a transaction carries the probed dialect, not the default', () async {
+      // Pins the shadowing fix in SQLiteDelegate.transaction: a bare
+      // `dialect` there resolves to the barrel's top-level constant.
+      final delegate = SQLiteDelegate(database);
+
+      await delegate.transaction((tx) async {
+        expect(identical(tx.dialect, delegate.dialect), isTrue);
+      });
     });
-
-    test(
-      'a bare LIMIT forced onto a library that rejects it fails at execution',
-      () async {
-        // Why the default is not simply true, kept as a live demonstration
-        // rather than a claim in a doc comment.
-        final forced = Raindrop(
-          SQLiteDelegate(database, supportsUpdateDeleteLimit: true),
-          logger: SilentLogger(),
-        );
-
-        await expectLater(
-          forced.delete(from: users).where(users.age.greaterThan(0)).limit(1),
-          throwsA(isA<SqliteException>()),
-        );
-        expect(countOf('users'), 3);
-      },
-      skip: SQLiteDelegate.probeForLimitSupport(sqlite3.openInMemory())
-          ? 'this library parses a bare UPDATE/DELETE ... LIMIT, so there is '
-              'nothing here to reject'
-          : null,
-    );
-
   });
 }

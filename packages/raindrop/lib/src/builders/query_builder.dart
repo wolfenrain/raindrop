@@ -16,10 +16,14 @@ extension type const QueryConfig._(Map<Symbol, Object?> _map) {
   /// Get the value associated by [key].
   V? get<V>(Symbol key) => _map[key] as V?;
 
-  /// Returns a clone with [clause] merged into [extraClauses] at [weight]
+  /// Returns a clone with [build] merged into [extras] at [weight]
   /// (replacing any clause already at that weight).
-  QueryConfig addClause(int weight, Clause clause) => copyWith({
-        #extraClauses: {...?extraClauses, weight: clause},
+  QueryConfig addClause(
+    int weight,
+    Clause Function(QueryConfig config) build,
+  ) =>
+      copyWith({
+        #extras: {...?extras, weight: build},
       });
 
   /// The table a select reads from, and a delete removes from.
@@ -69,9 +73,15 @@ extension type const QueryConfig._(Map<Symbol, Object?> _map) {
   /// Whether the select is `SELECT DISTINCT`.
   bool get distinct => _map[#distinct] as bool? ?? false;
 
-  /// Clauses grafted on beyond the standard slots, keyed by render weight.
-  Map<int, Clause>? get extraClauses =>
-      _map[#extraClauses] as Map<int, Clause>?;
+  /// Clause factories grafted on beyond the standard slots, keyed by render
+  /// weight and built at compile time from the config as it finally stands.
+  Map<int, Clause Function(QueryConfig)>? get extras =>
+      _map[#extras] as Map<int, Clause Function(QueryConfig)>?;
+
+  /// The [extras], built against this config. Compiles spread this after
+  /// their core clauses.
+  Map<int, Clause> buildExtras() => (extras ?? const {})
+      .map((weight, build) => MapEntry(weight, build(this)));
 }
 
 /// {@template query_builder}

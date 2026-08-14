@@ -20,7 +20,11 @@ import 'package:raindrop/dialect.dart';
 /// }
 ///
 /// // Place it just after the INSERT verb (see the *Slot weights):
-/// builder.withClause(InsertSlot.verb + 500, const _OrIgnore());
+/// builder.withClause(
+///   InsertSlot.verb + 500,
+///   (_) => const _OrIgnore(),
+///   InsertValuesBuilder.new,
+/// );
 /// ```
 /// {@endtemplate}
 // ignore: one_member_abstracts dialects subclass it to add their own clauses
@@ -64,7 +68,11 @@ class Query<V> {
 /// [Clause] subclass:
 ///
 /// ```dart
-/// builder.withClause(InsertSlot.verb + 500, const Keyword('OR IGNORE'))
+/// builder.withClause(
+///   InsertSlot.verb + 500,
+///   (_) => const Keyword('OR IGNORE'),
+///   InsertValuesBuilder.new,
+/// )
 /// ```
 class Keyword extends Clause {
   /// Creates a literal-text clause that renders [text].

@@ -76,7 +76,8 @@ extension PostgresOnConflictExtension<S extends Schema<R>, R>
     // Between the body (2000) and any trailing RETURNING (body + 5000).
     return withClause(
       InsertSlot.body + 1000,
-      OnConflictClause(target: target, action: action),
+      (_) => OnConflictClause(target: target, action: action),
+      InsertWithValuesBuilder.new,
     );
   }
 }

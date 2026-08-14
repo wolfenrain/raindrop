@@ -8,6 +8,9 @@ extension SQLiteInsertOrIgnore on RaindropExecutor<Delegate> {
   InsertValuesBuilder<Schema<R>, R, void> insertOrIgnore<R>({
     required Schema<R> into,
   }) =>
-      insert<R>(into: into)
-          .withClause(InsertSlot.verb + 500, const Keyword('OR IGNORE'));
+      insert<R>(into: into).withClause(
+        InsertSlot.verb + 500,
+        (_) => const Keyword('OR IGNORE'),
+        InsertValuesBuilder.new,
+      );
 }

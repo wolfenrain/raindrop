@@ -7,54 +7,27 @@ import 'package:sqlite3/common.dart';
 /// {@endtemplate}
 class SQLiteDelegate extends RaindropDelegate with _DatabaseDelegate {
   /// {@macro sqlite_delegate}
-  ///
-  /// [supportsUpdateDeleteLimit] says whether [database] parses a `LIMIT` hung
-  /// directly off an `UPDATE` or a `DELETE`, which decides how a capped write
-  /// is rendered. It defaults to false — the key subquery, which every build
-  /// parses — so an existing caller keeps the SQL it already had and nothing
-  /// is run against their database to work that out.
-  ///
-  /// A caller who would rather not pay for the subquery says so, either from
-  /// what they know about their own build or by asking it:
-  ///
-  /// ```dart
-  /// SQLiteDelegate(db, supportsUpdateDeleteLimit: true);
-  /// SQLiteDelegate(
-  ///   db,
-  ///   supportsUpdateDeleteLimit: SQLiteDelegate.probeForLimitSupport(db),
-  /// );
-  /// ```
-  SQLiteDelegate(
-    CommonDatabase database, {
-    bool supportsUpdateDeleteLimit = false,
-  })  : _database = database,
+
+  SQLiteDelegate(CommonDatabase database)
+      : _database = database,
         super(
           dialect: SQLiteDialect(
-            supportsUpdateDeleteLimit: supportsUpdateDeleteLimit,
+            supportsUpdateDeleteLimit: probeForLimitSupport(database),
           ),
         );
 
-  /// Whether [database] was compiled with `SQLITE_ENABLE_UPDATE_DELETE_LIMIT`.
-  ///
-  /// Opt-in, for a caller who wants the cheaper `LIMIT` form without hardcoding
-  /// a guess: pass the result as the constructor's `supportsUpdateDeleteLimit`.
-  /// Nothing calls this on its own, so a delegate never queries a database the
-  /// caller did not ask it to.
-  ///
-  /// Asks the library itself rather than guessing from the platform, because
-  /// the answer is a property of the build and not of the OS: the binaries
-  /// `package:sqlite3` ships say no, macOS's system library says yes.
-  ///
-  /// Read-only and touches no schema — one scalar query against a compile-time
-  /// flag. Any failure answers false, including the build that omitted the
-  /// diagnostic function itself: that direction renders the subquery, which is
-  /// slower but parses everywhere, whereas a wrong yes is a syntax error the
-  /// caller only meets when the statement runs.
-  static bool probeForLimitSupport(CommonDatabase database) {
+  /// Whether [database] was compiled with `SQLITE_ENABLE_UPDATE_DELETE_LIMIT`,
+  /// which decides how a capped write renders, see `LimitedWriteClause`.
+  static bool probeForLimitSupport(CommonDatabase database) =>
+      _hasCompileOption(database, 'SQLITE_ENABLE_UPDATE_DELETE_LIMIT');
+
+  /// Whether [database] was compiled with [name]. Any failure answers false,
+  /// including the build that omitted the diagnostic function itself.
+  static bool _hasCompileOption(CommonDatabase database, String name) {
     try {
       final result = database.select(
-        "SELECT sqlite_compileoption_used('SQLITE_ENABLE_UPDATE_DELETE_LIMIT')"
-        ' AS used',
+        'SELECT sqlite_compileoption_used(?) AS used',
+        [name],
       );
       return result.first['used'] == 1;
     } on Object {
@@ -69,7 +42,9 @@ class SQLiteDelegate extends RaindropDelegate with _DatabaseDelegate {
   Future<T> transaction<T>(
     Future<T> Function(TransactionDelegate delegate) transaction,
   ) async {
-    final tx = _TransactionDelegate(_database, dialect);
+    // this. because the barrel's top-level `dialect` constant shadows the
+    // inherited member here, and that one never carries the probed flag.
+    final tx = _TransactionDelegate(_database, this.dialect);
     _database.execute('BEGIN', []);
 
     try {
@@ -94,7 +69,8 @@ class _TransactionDelegate extends TransactionDelegate with _DatabaseDelegate {
     Future<T> Function(TransactionDelegate delegate) transaction,
   ) async {
     final savePoint = 'sp_$depth';
-    final tx = _TransactionDelegate(_database, dialect, depth + 1);
+    // this. for the same shadowing reason as in SQLiteDelegate.transaction.
+    final tx = _TransactionDelegate(_database, this.dialect, depth + 1);
     _database.execute('SAVEPOINT $savePoint', []);
 
     try {

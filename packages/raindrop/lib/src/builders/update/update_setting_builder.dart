@@ -35,7 +35,7 @@ class UpdateWhereBuilder<S extends Schema<R>, R, V>
           UpdateSlot.set: SetClause(config.set!),
           if (config.where case final where?)
             UpdateSlot.where: WhereClause(where, singleTable: true),
-          ...?config.extraClauses,
+          ...config.buildExtras(),
         },
       );
 }
