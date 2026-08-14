@@ -357,10 +357,6 @@ void main() {
       );
   });
 
-  // The same three writes against a library compiled with
-  // SQLITE_ENABLE_UPDATE_DELETE_LIMIT, which parses the cheaper bare form. The
-  // groups above cover the default, where the subquery is the only form that
-  // parses -- so the pair of fixtures is what the flag is *for*.
   group('LIMIT-enabled build', () {
     GoldenTester(
       dialect: const SQLiteDialect(supportsUpdateDeleteLimit: true),
