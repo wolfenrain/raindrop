@@ -87,8 +87,6 @@ CREATE TABLE users (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL, "f
     });
 
     test('caps only the rows the filter already matched', () async {
-      // Two users are over 29 (Morgan and Sam); Alex must survive regardless
-      // of which of the two the cap happens to pick.
       await db.delete(from: users).where(users.age.greaterThan(29)).limit(1);
 
       final names = database
@@ -136,7 +134,6 @@ CREATE TABLE scores (game TEXT NOT NULL, player TEXT NOT NULL, points INTEGER NO
       await db.delete(from: scores).where(scores.game.equals('zelda')).limit(1);
 
       expect(countOf('scores'), 2);
-      // The 'doom' row was never a candidate.
       expect(countOf('scores', "game = 'doom'"), 1);
     });
 
@@ -156,9 +153,6 @@ CREATE TABLE scores (game TEXT NOT NULL, player TEXT NOT NULL, points INTEGER NO
     });
 
     test('the rowid fallback fails loudly on a WITHOUT ROWID table', () async {
-      // No rowid to fall back to here, so the write must error: a quoted
-      // "rowid" would instead match every row via the double-quoted-string
-      // misfeature — see LimitedWriteClause.
       if (SQLiteDelegate.probeForLimitSupport(database)) {
         markTestSkipped(
           'this library parses a bare DELETE ... LIMIT, so the rowid '
@@ -201,7 +195,6 @@ CREATE TABLE scores (game TEXT NOT NULL, player TEXT NOT NULL, points INTEGER NO
           .where(users.age.greaterThan(29))
           .limit(1);
 
-      // Alex (28) was never a candidate, so tetris must be untouched.
       expect(
           countOf('users', "name = 'Alex' AND \"favoriteGame\" = 'tetris'"), 1);
     });
@@ -256,8 +249,6 @@ CREATE TABLE scores (game TEXT NOT NULL, player TEXT NOT NULL, points INTEGER NO
     });
 
     test('a transaction carries the probed dialect, not the default', () async {
-      // Pins the shadowing fix in SQLiteDelegate.transaction: a bare
-      // `dialect` there resolves to the barrel's top-level constant.
       final delegate = SQLiteDelegate(database);
 
       await delegate.transaction((tx) async {
