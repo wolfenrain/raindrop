@@ -42,8 +42,6 @@ class SQLiteDelegate extends RaindropDelegate with _DatabaseDelegate {
   Future<T> transaction<T>(
     Future<T> Function(TransactionDelegate delegate) transaction,
   ) async {
-    // this. because the barrel's top-level `dialect` constant shadows the
-    // inherited member here, and that one never carries the probed flag.
     final tx = _TransactionDelegate(_database, this.dialect);
     _database.execute('BEGIN', []);
 
