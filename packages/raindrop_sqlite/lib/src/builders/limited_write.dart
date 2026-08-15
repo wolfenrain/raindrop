@@ -42,7 +42,10 @@ class LimitedWriteClause extends Clause {
 
     final dialect = context.dialect;
     if (dialect case final SQLiteDialect d when d.supportsUpdateDeleteLimit) {
-      return where.isEmpty ? cap : '$where $cap';
+      // The cap travels on [LimitedWriteTailClause] instead: SQLite parses
+      // `LIMIT` only after `RETURNING`, and this clause sits at the
+      // statement's `where` weight, ahead of it.
+      return where;
     }
 
     final primaryKeys = [
@@ -56,5 +59,26 @@ class LimitedWriteClause extends Clause {
     return 'WHERE $target IN (SELECT ${key.join(', ')} '
         'FROM ${TableClause(table).render(context)}'
         '${where.isEmpty ? '' : ' $where'} $cap)';
+  }
+}
+
+/// The `LIMIT <n>` of a bare capped write, emitted after any `RETURNING`.
+///
+/// Renders nothing when [LimitedWriteClause] took the key-subquery form,
+/// which already carries its own cap.
+class LimitedWriteTailClause extends Clause {
+  /// Creates the trailing cap of a write limited to [limit] rows.
+  const LimitedWriteTailClause(this.limit);
+
+  /// The most rows the write may affect.
+  final int limit;
+
+  @override
+  String render(RenderContext context) {
+    final dialect = context.dialect;
+    if (dialect case final SQLiteDialect d when d.supportsUpdateDeleteLimit) {
+      return LimitClause(limit).render(context);
+    }
+    return '';
   }
 }

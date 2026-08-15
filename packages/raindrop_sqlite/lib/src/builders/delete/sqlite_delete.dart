@@ -13,5 +13,11 @@ extension SQLiteDeleteLimit<S extends Schema<R>, R, V>
           limit: limit,
         ),
         DeleteLimitedBuilder.new,
+      ).withClause(
+        // Past `RETURNING` at `where + 5000`: SQLite parses the bare
+        // `LIMIT` only there.
+        DeleteSlot.where + 10000,
+        (config) => LimitedWriteTailClause(limit),
+        DeleteLimitedBuilder.new,
       );
 }
