@@ -17,22 +17,31 @@ class ReturningClause extends Clause {
 extension PostgresInsertReturning<S extends Schema<R>, R>
     on InsertWithValuesBuilder<S, R, void> {
   /// Append `RETURNING <all columns>`, so the insert yields the stored rows.
-  InsertWithValuesBuilder<S, R, R> returning() =>
-      yieldingRows(InsertSlot.body + 5000, ReturningClause.new);
+  InsertWithValuesBuilder<S, R, R> returning() => withClause(
+        InsertSlot.body + 5000,
+        (config) => ReturningClause(config.into!),
+        InsertWithValuesBuilder.new,
+      );
 }
 
 /// Adds `.returning()` to an update.
 extension PostgresUpdateReturning<S extends Schema<R>, R>
     on UpdateWhereBuilder<S, R, void> {
   /// Append `RETURNING <all columns>`, so the update yields the changed rows.
-  UpdateWhereBuilder<S, R, R> returning() =>
-      yieldingRows(UpdateSlot.where + 5000, ReturningClause.new);
+  UpdateWhereBuilder<S, R, R> returning() => withClause(
+        UpdateSlot.where + 5000,
+        (config) => ReturningClause(config.table!),
+        UpdateWhereBuilder.new,
+      );
 }
 
 /// Adds `.returning()` to a delete.
 extension PostgresDeleteReturning<S extends Schema<R>, R>
     on DeleteWhereBuilder<S, R, void> {
   /// Append `RETURNING <all columns>`, so the delete yields the removed rows.
-  DeleteWhereBuilder<S, R, R> returning() =>
-      yieldingRows(DeleteSlot.where + 5000, ReturningClause.new);
+  DeleteWhereBuilder<S, R, R> returning() => withClause(
+        DeleteSlot.where + 5000,
+        (config) => ReturningClause(config.from!),
+        DeleteWhereBuilder.new,
+      );
 }

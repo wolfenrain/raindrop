@@ -10,7 +10,13 @@ const dialect = SQLiteDialect();
 /// {@endtemplate}
 class SQLiteDialect extends SqlDialect {
   /// {@macro sqlite_dialect}
-  const SQLiteDialect();
+  const SQLiteDialect({this.supportsUpdateDeleteLimit = false});
+
+  /// Whether the library parses a `LIMIT` hung directly off an `UPDATE` or a
+  /// `DELETE`.
+  ///
+  /// `SQLiteDelegate` fills this in by probing its database
+  final bool supportsUpdateDeleteLimit;
 
   @override
   String get name => 'sqlite';

@@ -7,7 +7,33 @@ import 'package:sqlite3/common.dart';
 /// {@endtemplate}
 class SQLiteDelegate extends RaindropDelegate with _DatabaseDelegate {
   /// {@macro sqlite_delegate}
-  SQLiteDelegate(this._database) : super(dialect: const SQLiteDialect());
+
+  SQLiteDelegate(CommonDatabase database)
+      : _database = database,
+        super(
+          dialect: SQLiteDialect(
+            supportsUpdateDeleteLimit: probeForLimitSupport(database),
+          ),
+        );
+
+  /// Whether [database] was compiled with `SQLITE_ENABLE_UPDATE_DELETE_LIMIT`,
+  /// which decides how a capped write renders, see `LimitedWriteClause`.
+  static bool probeForLimitSupport(CommonDatabase database) =>
+      _hasCompileOption(database, 'SQLITE_ENABLE_UPDATE_DELETE_LIMIT');
+
+  /// Whether [database] was compiled with [name]. Any failure answers false,
+  /// including the build that omitted the diagnostic function itself.
+  static bool _hasCompileOption(CommonDatabase database, String name) {
+    try {
+      final result = database.select(
+        'SELECT sqlite_compileoption_used(?) AS used',
+        [name],
+      );
+      return result.first['used'] == 1;
+    } on Object {
+      return false;
+    }
+  }
 
   @override
   final CommonDatabase _database;
@@ -16,7 +42,7 @@ class SQLiteDelegate extends RaindropDelegate with _DatabaseDelegate {
   Future<T> transaction<T>(
     Future<T> Function(TransactionDelegate delegate) transaction,
   ) async {
-    final tx = _TransactionDelegate(_database, dialect);
+    final tx = _TransactionDelegate(_database, this.dialect);
     _database.execute('BEGIN', []);
 
     try {
@@ -41,7 +67,7 @@ class _TransactionDelegate extends TransactionDelegate with _DatabaseDelegate {
     Future<T> Function(TransactionDelegate delegate) transaction,
   ) async {
     final savePoint = 'sp_$depth';
-    final tx = _TransactionDelegate(_database, dialect, depth + 1);
+    final tx = _TransactionDelegate(_database, this.dialect, depth + 1);
     _database.execute('SAVEPOINT $savePoint', []);
 
     try {

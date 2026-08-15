@@ -101,7 +101,7 @@ class SelectFromBuilder<S extends Schema<R>, R, V> extends QueryBuilder<S, V>
           SelectSlot.limit: LimitClause(limit),
         if (config.offset case final offset?)
           SelectSlot.offset: OffsetClause(offset),
-        ...?config.extraClauses,
+        ...config.buildExtras(),
       },
     );
   }
