@@ -173,11 +173,6 @@ void main() {
     });
 
     test('the same indexes in a different snapshot order emit nothing', () {
-      // Two indexes on one table, reordered. Nothing changed, so nothing may
-      // be emitted: an AlterTable here carries an EMPTY TableDiff, which the
-      // dialect renders as no SQL at all and DdlGenerator then throws on --
-      // `Alter table "subscriptions" () produced no SQL`, on a schema nobody
-      // touched. Reported by Picto, 2026-08-14.
       IndexSnapshot index(String name, String column) => IndexSnapshot(
             name: name,
             tableName: 'subscriptions',
@@ -207,6 +202,65 @@ void main() {
         ),
         isEmpty,
       );
+    });
+
+    test('dropping one index and adding another is still a change', () {
+      IndexSnapshot index(String name, String column) => IndexSnapshot(
+            name: name,
+            tableName: 'subscriptions',
+            columns: [column],
+          );
+      final byUser = index('subscriptions_user_id', 'user_id');
+      final byStatus = index('subscriptions_status', 'status');
+      final byPlan = index('subscriptions_plan', 'plan');
+
+      final tables = {
+        'subscriptions': _table('subscriptions', [
+          _column('id', primaryKey: true),
+          _column('user_id'),
+          _column('status'),
+          _column('plan'),
+        ]),
+      };
+
+      final operations = differ.diff(
+        _snapshot(
+          tables,
+          indexes: {byUser.name: byUser, byStatus.name: byStatus},
+        ),
+        _snapshot(
+          tables,
+          indexes: {byUser.name: byUser, byPlan.name: byPlan},
+        ),
+      );
+
+      final diff = TableDiff.of(operations.single as AlterTable);
+      expect(diff.droppedIndexes.single.name, 'subscriptions_status');
+      expect(diff.addedIndexes.single.name, 'subscriptions_plan');
+    });
+
+    test('redefining an index under the same name drops it and adds it', () {
+      final tables = {
+        'subscriptions': _table('subscriptions', [
+          _column('id', primaryKey: true),
+          _column('user_id'),
+          _column('status'),
+        ]),
+      };
+      IndexSnapshot index(String column) => IndexSnapshot(
+            name: 'subscriptions_lookup',
+            tableName: 'subscriptions',
+            columns: [column],
+          );
+
+      final operations = differ.diff(
+        _snapshot(tables, indexes: {'subscriptions_lookup': index('user_id')}),
+        _snapshot(tables, indexes: {'subscriptions_lookup': index('status')}),
+      );
+
+      final diff = TableDiff.of(operations.single as AlterTable);
+      expect(diff.droppedIndexes.single.columns, ['user_id']);
+      expect(diff.addedIndexes.single.columns, ['status']);
     });
 
     test('an orphan index is dropped on its own', () {
