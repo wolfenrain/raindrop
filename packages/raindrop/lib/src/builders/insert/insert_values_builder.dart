@@ -33,7 +33,7 @@ class InsertWithValuesBuilder<S extends Schema<R>, R, V>
         clauses: {
           InsertSlot.verb: const Keyword('INSERT'),
           InsertSlot.body: InsertBodyClause(config.into!, config.values!),
-          ...?config.extraClauses,
+          ...config.buildExtras(),
         },
       );
 }

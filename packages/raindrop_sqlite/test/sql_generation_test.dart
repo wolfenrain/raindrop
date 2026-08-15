@@ -241,6 +241,10 @@ void main() {
             .limit(5),
       )
       ..test(
+        'with limit and no filter',
+        (db) => db.update(users).set(users.name.to('Renamed')).limit(5),
+      )
+      ..test(
         'set to coalesce expression',
         (db) => db
             .update(users)
@@ -348,6 +352,29 @@ void main() {
       )
       ..test(
         'with limit',
+        (db) =>
+            db.delete(from: users).where(users.age.greaterThan(0)).limit(10),
+      );
+  });
+
+  group('LIMIT-enabled build', () {
+    GoldenTester(
+      dialect: const SQLiteDialect(supportsUpdateDeleteLimit: true),
+    )
+      ..test(
+        'update with limit',
+        (db) => db
+            .update(users)
+            .set(users.name.to('Renamed'))
+            .where(users.age.greaterThan(18))
+            .limit(5),
+      )
+      ..test(
+        'update with limit and no filter',
+        (db) => db.update(users).set(users.name.to('Renamed')).limit(5),
+      )
+      ..test(
+        'delete with limit',
         (db) =>
             db.delete(from: users).where(users.age.greaterThan(0)).limit(10),
       );

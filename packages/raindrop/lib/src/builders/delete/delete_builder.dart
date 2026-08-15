@@ -32,7 +32,7 @@ class DeleteAllBuilder<S extends Schema<R>, R, V> extends DeleteBuilder<S, R, V>
           DeleteSlot.from: DeleteFromClause(config.from!),
           if (config.where case final where?)
             DeleteSlot.where: WhereClause(where, singleTable: true),
-          ...?config.extraClauses,
+          ...config.buildExtras(),
         },
       );
 }
@@ -52,7 +52,7 @@ class DeleteWhereBuilder<S extends Schema<R>, R, V>
           DeleteSlot.from: DeleteFromClause(config.from!),
           if (config.where case final where?)
             DeleteSlot.where: WhereClause(where, singleTable: true),
-          ...?config.extraClauses,
+          ...config.buildExtras(),
         },
       );
 }

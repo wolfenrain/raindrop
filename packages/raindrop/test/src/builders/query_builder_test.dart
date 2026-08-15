@@ -41,7 +41,7 @@ void main() {
       expect(config.limit, 5);
       expect(config.offset, 2);
       expect(config.distinct, isTrue);
-      expect(config.extraClauses, isNull);
+      expect(config.extras, isNull);
       expect(config.get<int>(#limit), 5);
     });
 
@@ -64,13 +64,13 @@ void main() {
     });
 
     test('addClause merges and replaces at the same weight', () {
-      final one = QueryConfig.from({}).addClause(10, Keyword('ONE'));
-      final two = one.addClause(10, Keyword('TWO'));
-      final three = two.addClause(20, Keyword('THREE'));
+      final one = QueryConfig.from({}).addClause(10, (_) => Keyword('ONE'));
+      final two = one.addClause(10, (_) => Keyword('TWO'));
+      final three = two.addClause(20, (_) => Keyword('THREE'));
 
-      expect((one.extraClauses![10]! as Keyword).text, 'ONE');
-      expect((two.extraClauses![10]! as Keyword).text, 'TWO');
-      expect(three.extraClauses, hasLength(2));
+      expect((one.buildExtras()[10]! as Keyword).text, 'ONE');
+      expect((two.buildExtras()[10]! as Keyword).text, 'TWO');
+      expect(three.buildExtras(), hasLength(2));
     });
   });
 

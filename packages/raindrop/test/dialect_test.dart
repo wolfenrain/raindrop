@@ -13,10 +13,11 @@ void main() {
 
   group('withClause', () {
     test('slots a clause into a select statement', () {
-      final builder = db
-          .select()
-          .from(rows)
-          .withClause(SelectSlot.offset + 500, Keyword('-- trailing'));
+      final builder = db.select().from(rows).withClause(
+            SelectSlot.offset + 500,
+            (_) => Keyword('-- trailing'),
+            SelectFromBuilder.new,
+          );
 
       expect(translate(builder), endsWith('-- trailing'));
     });
@@ -24,7 +25,11 @@ void main() {
     test('slots a clause into a pre-values insert statement', () {
       final builder = db
           .insert(into: rows)
-          .withClause(InsertSlot.verb + 500, Keyword('OR IGNORE'))
+          .withClause<InsertValuesBuilder<_RowSchema, _Row, void>>(
+            InsertSlot.verb + 500,
+            (_) => Keyword('OR IGNORE'),
+            InsertValuesBuilder.new,
+          )
           .values([_Row(name: 'a')]);
 
       expect(translate(builder), contains('INSERT OR IGNORE'));
@@ -34,26 +39,30 @@ void main() {
       final builder =
           db.insert(into: rows).values([_Row(name: 'a')]).withClause(
         InsertSlot.verb + 500,
-        Keyword('OR REPLACE'),
+        (_) => Keyword('OR REPLACE'),
+        InsertWithValuesBuilder.new,
       );
 
       expect(translate(builder), contains('INSERT OR REPLACE'));
     });
 
     test('slots a clause into an update statement', () {
-      final builder = db
-          .update(rows)
-          .set(rows.name.to('b'))
-          .withClause(UpdateSlot.where + 500, Keyword('-- trailing'));
+      final builder = db.update(rows).set(rows.name.to('b')).withClause(
+            UpdateSlot.where + 500,
+            (_) => Keyword('-- trailing'),
+            UpdateWhereBuilder.new,
+          );
 
       expect(translate(builder), endsWith('-- trailing'));
     });
 
     test('slots a clause into a delete statement', () {
-      final builder = db
-          .delete(from: rows)
-          .where(rows.name.equals('a'))
-          .withClause(DeleteSlot.where + 500, Keyword('-- trailing'));
+      final builder =
+          db.delete(from: rows).where(rows.name.equals('a')).withClause(
+                DeleteSlot.where + 500,
+                (_) => Keyword('-- trailing'),
+                DeleteWhereBuilder.new,
+              );
 
       expect(translate(builder), endsWith('-- trailing'));
     });
