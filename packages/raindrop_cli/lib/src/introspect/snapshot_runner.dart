@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:isolate';
 
+import 'package:meta/meta.dart';
 import 'package:path/path.dart' as p;
 
 import 'package:raindrop_cli/src/core/snapshot.dart';
@@ -63,7 +64,7 @@ class SnapshotRunner {
     final references = <String>[];
 
     for (final schema in schemas) {
-      final uri = _packageUri(schema.filePath, packages);
+      final uri = packageUri(schema.filePath, packages);
       final alias = imports.putIfAbsent(uri, () => 's${imports.length}');
       references.add('$alias.${schema.variableName}');
     }
@@ -112,11 +113,19 @@ Driver package "$driver" not found. Make sure the "driver" field in raindrop.yam
   }
 
   /// Rewrites an absolute path under a package's `lib/` as a `package:` URI.
-  static String _packageUri(String filePath, Map<String, String> packages) {
+  ///
+  @visibleForTesting
+  static String packageUri(
+    String filePath,
+    Map<String, String> packages, {
+    p.Context? context,
+  }) {
+    final path = context ?? p.context;
     for (final entry in packages.entries) {
-      final lib = p.join(entry.value, 'lib');
-      if (!p.isWithin(lib, filePath)) continue;
-      return 'package:${entry.key}/${p.relative(filePath, from: lib)}';
+      final lib = path.join(entry.value, 'lib');
+      if (!path.isWithin(lib, filePath)) continue;
+      final relative = path.relative(filePath, from: lib);
+      return 'package:${entry.key}/${p.url.joinAll(path.split(relative))}';
     }
     throw StateError(
       '''
