@@ -1,0 +1,30 @@
+name: Publish packages
+
+on:
+  workflow_dispatch:
+
+jobs:
+  publish-packages:
+    name: Publish packages
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write
+      id-token: write # Required for authentication using OIDC
+
+    steps:
+      - name: 📚 Git Checkout
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: 🎯 Setup Dart
+        uses: dart-lang/setup-dart@v1
+        with:
+          sdk: stable
+
+      - name: 📢 Publish
+        uses: bluefireteam/melos-action@v3
+        with:
+          publish: true
+          create-release: true
