@@ -28,6 +28,8 @@
     "autoincrement",
     "bytea",
     "checksummed",
+    "compileoption",
+    "decoratable",
     "fkey",
     "goldens",
     "ILIKE",
