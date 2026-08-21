@@ -53,13 +53,17 @@ jobs:
 
   build:
     needs: packages
-    name: ${{ matrix.package }}
-    runs-on: ubuntu-latest
+    name: ${{ matrix.package }} (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
 
     strategy:
       fail-fast: false
       matrix:
         package: ${{ fromJSON(needs.packages.outputs.packages) }}
+        os: [ubuntu-latest]
+        include:
+          - { package: raindrop_cli, os: windows-latest }
+          - { package: raindrop_cli, os: macos-latest }
 
     env:
       MELOS_PACKAGES: ${{ matrix.package }}

@@ -47,28 +47,7 @@ melos:
         dirExists: test
       exec:
         concurrency: 1
-        command: |
-          rm -rf coverage && dart test --coverage=coverage &&
-          dart run coverage:format_coverage --lcov --check-ignore \
-            --in=coverage --out=coverage/lcov.info --report-on=lib &&
-          grep -rL coverage:ignore-file lib --include='*.dart' |
-          while read -r f; do
-            sed 's|//.*||' "\$f" | tr '\n' ' ' |
-              sed -E 's/(export|import|library|part)[^;]*;//g' |
-              grep -q '[^ ]' || continue;
-            grep -q "SF:.*/\$f\$" coverage/lcov.info ||
-              { echo "no test loads \$f"; exit 1; };
-          done &&
-          awk -F, '
-            /^SF:/ {f=substr(\$0, 4); sub(/.*\/lib\//, "lib/", f)}
-            /^DA:/ {t++; if (\$2>0) h++; else miss[f]++}
-            END {
-              if (h==t) {printf "💯 100%% covered.\n"; exit 0}
-              printf "❌ FAILED: %.1f%% covered (%d/%d lines), 100%% required. Uncovered:\n", 100*h/t, h, t
-              for (f in miss) printf "  %s (%d lines)\n", f, miss[f]
-              exit 1
-            }
-          ' coverage/lcov.info
+        command: dart ../../tool/coverage.dart
     test:integration:
       description: Runs each package's integration tests.
       packageFilters:
