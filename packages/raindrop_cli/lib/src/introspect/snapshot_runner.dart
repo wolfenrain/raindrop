@@ -114,14 +114,6 @@ Driver package "$driver" not found. Make sure the "driver" field in raindrop.yam
 
   /// Rewrites an absolute path under a package's `lib/` as a `package:` URI.
   ///
-  /// [context] is the filesystem style [filePath] and [packages] are written
-  /// in, and defaults to this platform's. Locating the owning package is a
-  /// filesystem operation, but what comes out is a URI, and `package:` URIs
-  /// are always `/`-separated whatever the host: on Windows the relative part
-  /// arrives as `src\schemas\items.dart`, which interpolated straight in
-  /// produced `package:pkg/src\schemas\items.dart` and an import the CFE read
-  /// as `lib/srcschemasitems.dart`. So the segments are re-joined in URL
-  /// style rather than pasted in.
   @visibleForTesting
   static String packageUri(
     String filePath,
