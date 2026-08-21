@@ -10,11 +10,6 @@ void main() {
     final posix = p.Context(style: p.Style.posix);
 
     test('separates a nested schema with / on Windows', () {
-      // A `package:` URI is always /-separated. p.relative resolves in the
-      // platform context, so on Windows this arrives as
-      // `src\schemas\items.dart` -- pasted straight into the URI the CFE read
-      // the import as `lib/srcschemasitems.dart`, and generating a snapshot
-      // for any project whose schemas sit below lib/ failed on Windows.
       expect(
         SnapshotRunner.packageUri(
           r'C:\proj\shop\lib\src\schemas\items.dart',
