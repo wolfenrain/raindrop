@@ -56,6 +56,10 @@ void main() {
         (db) => db.select().from(users).where(users.age.greaterThan(18)),
       )
       ..test(
+        'with between filter',
+        (db) => db.select().from(users).where(users.age.between(18, and: 65)),
+      )
+      ..test(
         'where compares against an expression',
         (db) => db.select().from(users).where(
               users.name.equals(Coalesce(users.favoriteGame, 'none')),

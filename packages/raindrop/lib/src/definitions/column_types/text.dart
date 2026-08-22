@@ -20,4 +20,14 @@ extension StringOperators<V extends String?> on ColumnOf<V> {
   /// Lexicographic ordering.
   SQL lessThanOrEqual(ColumnOr<V> value) =>
       SQL([this, Op.lessThanOrEqual, operand(value)]);
+
+  /// Row value of column is within the inclusive [low] to [and] range,
+  /// lexicographically.
+  SQL between(ColumnOr<V> low, {required ColumnOr<V> and}) => SQL([
+        this,
+        const RawSQL('BETWEEN'),
+        operand(low),
+        const RawSQL('AND'),
+        operand(and),
+      ]);
 }

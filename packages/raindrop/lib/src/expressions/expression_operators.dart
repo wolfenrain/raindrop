@@ -63,6 +63,15 @@ extension NumericExpressionOperators<V extends num?> on Expression<V> {
   /// Value of this expression is less than or equal to [value].
   SQL lessThanOrEqual(ColumnOr<V> value) =>
       SQL([this, Op.lessThanOrEqual, operand(value)]);
+
+  /// Value of this expression is within the inclusive [low] to [and] range.
+  SQL between(ColumnOr<V> low, {required ColumnOr<V> and}) => SQL([
+        this,
+        const RawSQL('BETWEEN'),
+        operand(low),
+        const RawSQL('AND'),
+        operand(and),
+      ]);
 }
 
 /// Text comparisons for an expression over a string.
@@ -85,4 +94,14 @@ extension StringExpressionOperators<V extends String?> on Expression<V> {
   /// Lexicographic ordering.
   SQL lessThanOrEqual(ColumnOr<V> value) =>
       SQL([this, Op.lessThanOrEqual, operand(value)]);
+
+  /// Value of this expression is within the inclusive [low] to [and] range,
+  /// lexicographically.
+  SQL between(ColumnOr<V> low, {required ColumnOr<V> and}) => SQL([
+        this,
+        const RawSQL('BETWEEN'),
+        operand(low),
+        const RawSQL('AND'),
+        operand(and),
+      ]);
 }
