@@ -6,6 +6,7 @@ void main() {
   final probe = postgresTable('probe', UserSchema.new);
   testDriverContract(
     packageName: 'raindrop_postgres',
+    dialect: dialect,
     createDdlGenerator: PostgresDdlGenerator.new,
     probe: probe,
   );

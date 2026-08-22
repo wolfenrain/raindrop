@@ -5,22 +5,13 @@ import 'package:raindrop_test/conformance.dart';
 import 'package:sqlite3/sqlite3.dart';
 
 void main() {
-  final harness = _SQLiteHarness();
-
   testDriverConformance(
-    harness,
+    _SQLiteHarness(),
     returning: ReturningSupport(
       insert: (builder) => builder.returning(),
       update: (builder) => builder.returning(),
       delete: (builder) => builder.returning(),
     ),
-  );
-  final probe = sqliteTable('probe', UserSchema.new);
-  testDriverContract(
-    packageName: 'raindrop_sqlite',
-    dialect: dialect,
-    createDdlGenerator: harness.createDdlGenerator,
-    probe: probe,
   );
 }
 
@@ -34,7 +25,7 @@ class _SQLiteHarness extends DriverTestHarness {
   }
 
   @override
-  DdlGenerator createDdlGenerator() => SQLiteDdlGenerator();
+  DdlGenerator createDdlGenerator() => const SQLiteDdlGenerator();
 
   @override
   Future<void> close(RaindropDelegate delegate) async {

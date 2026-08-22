@@ -12,7 +12,7 @@
           "type": "INTEGER",
           "primaryKey": true,
           "isNullable": true,
-          "autoincrement": true
+          "autoIncrement": true
         },
         "owner_id": {
           "name": "owner_id",
@@ -41,7 +41,7 @@
           "type": "INTEGER",
           "primaryKey": true,
           "isNullable": true,
-          "autoincrement": true
+          "autoIncrement": true
         },
         "name": {
           "name": "name",

@@ -1,8 +1,8 @@
 {
   "version": "1",
   "dialect": "sqlite",
-  "id": "30914f74-a90a-45bd-a5b2-e7e967e15138",
-  "prevId": "00000000-0000-0000-0000-000000000000",
+  "id": "71c8827e-dba3-4910-a12d-2dd4b384bb86",
+  "prevId": "71c6f60f-111d-4a98-94c4-9d6fd68f97a4",
   "tables": {
     "pets": {
       "name": "pets",
@@ -49,8 +49,8 @@
           "primaryKey": false,
           "isNullable": false
         },
-        "deleted_at": {
-          "name": "deleted_at",
+        "deletedAt": {
+          "name": "deletedAt",
           "type": "INTEGER",
           "primaryKey": false,
           "isNullable": true
@@ -63,10 +63,10 @@
       "name": "pets_owner",
       "tableName": "pets",
       "columns": [
+        "owner_id",
         "id"
       ],
       "isUnique": false
     }
-  },
-  "foreignKeys": {}
+  }
 }

@@ -18,4 +18,7 @@ CREATE TABLE "users" (
 CREATE INDEX "pets_owner" ON "pets" ("id");'''),
   const Migration('0001_test', '''
 ALTER TABLE "users" RENAME COLUMN "deleted_at" TO "deletedAt";'''),
+  const Migration('0002_pets_owner_index', '''
+DROP INDEX "pets_owner";
+CREATE INDEX "pets_owner" ON "pets" ("owner_id", "id");'''),
 ];

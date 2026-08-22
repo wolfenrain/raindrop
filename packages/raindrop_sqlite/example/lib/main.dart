@@ -3,7 +3,6 @@ import 'dart:io';
 import 'package:raindrop/raindrop.dart';
 import 'package:raindrop_sqlite/raindrop_sqlite.dart';
 import 'package:raindrop_sqlite_example/database/migrations.dart';
-// import 'schemas/items.dart';
 import 'package:raindrop_sqlite_example/schemas/pets.dart';
 import 'package:raindrop_sqlite_example/schemas/users.dart';
 import 'package:sqlite3/sqlite3.dart';

@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:postgres/postgres.dart';
 import 'package:raindrop/raindrop.dart';
 import 'package:raindrop_postgres/ddl.dart';
@@ -16,12 +18,14 @@ void main() {
 }
 
 Future<Connection> _open() {
+  final env = Platform.environment;
   return Connection.open(
     Endpoint(
-      host: 'localhost',
-      database: 'postgres',
-      username: 'postgres',
-      password: 'postgres',
+      host: env['RAINDROP_PG_HOST'] ?? 'localhost',
+      port: int.parse(env['RAINDROP_PG_PORT'] ?? '5432'),
+      database: env['RAINDROP_PG_DATABASE'] ?? 'postgres',
+      username: env['RAINDROP_PG_USER'] ?? 'postgres',
+      password: env['RAINDROP_PG_PASSWORD'] ?? 'postgres',
     ),
     settings: const ConnectionSettings(
       sslMode: SslMode.disable,
