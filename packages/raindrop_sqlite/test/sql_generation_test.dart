@@ -108,6 +108,24 @@ void main() {
             .groupBy(users.favoriteGame, users.age),
       )
       ..test(
+        'with a case expression',
+        (db) => db
+            .select(
+              caseWhen(users.age.greaterThan(65), then: 'senior')
+                  .when(users.age.greaterThan(17), then: 'adult')
+                  .orElse('minor'),
+            )
+            .from(users),
+      )
+      ..test(
+        'with a case expression without an else',
+        (db) => db
+            .select(
+              caseWhen(users.isActive.isTrue(), then: users.name),
+            )
+            .from(users),
+      )
+      ..test(
         'with limit',
         (db) => db.select().from(users).limit(10),
       )

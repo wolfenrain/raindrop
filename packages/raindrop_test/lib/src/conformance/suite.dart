@@ -249,6 +249,29 @@ void testDriverConformance(
         expect(await db.select(avg(users.age)).from(users), [30.25]);
       });
 
+      conformanceTest('evaluates case expressions', () async {
+        await seed();
+
+        expect(
+          await db
+              .select(
+                caseWhen(users.age.greaterThan(40), then: 'senior')
+                    .when(users.age.greaterThan(29), then: 'adult')
+                    .orElse('young'),
+              )
+              .from(users)
+              .orderBy({users.id: Order.asc}),
+          ['adult', 'young', 'senior'],
+        );
+        expect(
+          await db
+              .select(caseWhen(users.nickname.isNotNull(), then: users.name))
+              .from(users)
+              .orderBy({users.id: Order.asc}),
+          ['Morgan', null, null],
+        );
+      });
+
       conformanceTest('groups by multiple terms', () async {
         await seed();
         await db.insert(into: users).values([

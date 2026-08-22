@@ -79,6 +79,10 @@ class ExpressionClause extends Clause {
       return clause.render(context);
     }
 
+    if (chunk case final Filter filter) {
+      return FilterClause(filter, singleTable: singleTable).render(context);
+    }
+
     return context.param(chunk);
   }
 

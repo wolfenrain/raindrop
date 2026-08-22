@@ -1,6 +1,7 @@
 export 'abs.dart';
 export 'arithmetic.dart';
 export 'avg.dart';
+export 'case_when.dart';
 export 'coalesce.dart';
 export 'count.dart';
 export 'distinct.dart';
