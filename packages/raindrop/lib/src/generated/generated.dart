@@ -5,6 +5,7 @@
 library;
 
 export 'derived_schemas.dart';
+export 'group_by_terms.dart';
 export 'index_columns.dart';
 export 'inner_joins.dart';
 export 'left_joins.dart';

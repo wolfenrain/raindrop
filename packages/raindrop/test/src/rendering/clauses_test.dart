@@ -255,25 +255,32 @@ a single-element list chunk holding a subquery loses the tuple parentheses''',
 
   group('GroupByClause', () {
     test('groups by a column', () {
-      expect(sql(GroupByClause(users.name)), 'GROUP BY "name"');
+      expect(sql(GroupByClause([users.name])), 'GROUP BY "name"');
     });
 
-    test('qualifies the column when not single-table', () {
+    test('groups by multiple terms, in order', () {
       expect(
-        sql(GroupByClause(users.name, singleTable: false)),
+        sql(GroupByClause([users.name, users.age])),
+        'GROUP BY "name", "age"',
+      );
+    });
+
+    test('qualifies the columns when not single-table', () {
+      expect(
+        sql(GroupByClause([users.name], singleTable: false)),
         'GROUP BY "users"."name"',
       );
     });
 
     test('groups by an expression', () {
       expect(
-        sql(GroupByClause(length(users.name))),
+        sql(GroupByClause([length(users.name)])),
         'GROUP BY LENGTH("name")',
       );
     });
 
     test('an unsupported term is rejected', () {
-      expect(() => sql(GroupByClause(users.$)), throwsUnsupportedError);
+      expect(() => sql(GroupByClause([users.$])), throwsUnsupportedError);
     });
   });
 

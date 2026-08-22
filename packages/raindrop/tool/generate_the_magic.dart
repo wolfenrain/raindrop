@@ -39,6 +39,11 @@ void main(List<String> arguments) {
     amount,
   );
 
+  groupByTerms(
+    '${script.parent.path}/../lib/src/generated/group_by_terms.dart',
+    amount,
+  );
+
   Process.runSync('melos', ['format:fix']);
 }
 
@@ -217,6 +222,52 @@ extension SelectableColumns$i<$typeParams>
     );
   }
 }''');
+  }
+
+  return File(path).writeAsStringSync(buffer.toString());
+}
+
+void groupByTerms(String path, int amount) {
+  final rest = List.generate(amount - 1, (i) => i + 1);
+  final params =
+      '''Selectable<dynamic> g0, [${rest.map((i) => 'Selectable<dynamic>? g$i').join(', ')}]''';
+  final terms = 'final terms = [g0, ${rest.map((i) => 'g$i').join(', ')}];';
+
+  final buffer = StringBuffer()..writeln('''
+// GENERATED CODE - DO NOT EDIT BY HAND.
+// Run `dart run tool/generate_the_magic.dart` to regenerate.
+// coverage:ignore-file
+// ignore_for_file: public_member_api_docs
+import 'package:raindrop/raindrop.dart';
+''');
+
+  final builders = {
+    'SelectGroupBy<S extends Schema<R>, R, V>': 'SelectFromBuilder<S, R, V>',
+    'WholeRowGroupBy<S extends Schema<R>, R>': 'WholeRowFromBuilder<S, R>',
+    'ProjectionGroupBy<S extends Schema<R>, R, V>':
+        'ProjectionFromBuilder<S, R, V>',
+    'SingleProjectionGroupBy<S extends Schema<R>, R, V>':
+        'SingleProjectionFromBuilder<S, R, V>',
+  };
+
+  for (final MapEntry(key: extension, value: builder) in builders.entries) {
+    buffer.writeln('''
+extension $extension on $builder {
+  /// Set the `GROUP BY` terms, in order:
+  ///
+  /// ```dart
+  /// .groupBy(users.country, users.city)
+  /// // GROUP BY "country", "city"
+  /// ```
+  $builder groupBy($params) {
+    $terms
+    return ${builder.substring(0, builder.indexOf('<'))}(
+      executor,
+      config: config.copyWith({#groupBy: [...terms.nonNulls]}),
+    );
+  }
+}
+''');
   }
 
   return File(path).writeAsStringSync(buffer.toString());
