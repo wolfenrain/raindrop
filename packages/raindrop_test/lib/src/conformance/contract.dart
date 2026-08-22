@@ -9,9 +9,10 @@ import 'package:test/test.dart';
 
 /// Verifies the CLI-facing contract of the driver package [packageName].
 ///
-/// Where `[estDriverConformance` proves runtime behavior against a real
+/// Where `testDriverConformance` proves runtime behavior against a real
 /// database, this suite proves the package *layout* the CLI relies on:
 ///
+/// * the main library exports a `dialect` constant, passed as [dialect].
 /// * the driver's table function tags tables with its dialect's `name`,
 ///   which is what snapshot building filters on.
 /// * `lib/ddl.dart` exists and its `main` serves the DDL generator over the
@@ -21,6 +22,7 @@ import 'package:test/test.dart';
 /// ```dart
 /// testDriverContract(
 ///   packageName: 'raindrop_sqlite',
+///   dialect: dialect,
 ///   createDdlGenerator: SQLiteHarness().createDdlGenerator,
 ///   probe: sqliteTable('probe', UserSchema.new),
 /// );
@@ -28,10 +30,16 @@ import 'package:test/test.dart';
 @isTestGroup
 void testDriverContract({
   required String packageName,
+  required SqlDialect dialect,
   required DdlGenerator Function() createDdlGenerator,
   required Schema<dynamic> probe,
 }) {
   group('driver contract', () {
+    test('the exported dialect constant is the one tables are tagged with', () {
+      expect(dialect.name, createDdlGenerator().dialect.name);
+      expect(probe.$.dialect?.name, dialect.name);
+    });
+
     test('the table function tags tables with the dialect name', () {
       expect(probe.$.dialect?.name, createDdlGenerator().dialect.name);
     });

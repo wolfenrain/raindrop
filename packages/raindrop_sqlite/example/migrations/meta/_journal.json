@@ -15,6 +15,13 @@
       "when": 1772044698539,
       "tag": "0001_test",
       "snapshotId": "71c6f60f-111d-4a98-94c4-9d6fd68f97a4"
+    },
+    {
+      "idx": 2,
+      "version": "1",
+      "when": 1787406539000,
+      "tag": "0002_pets_owner_index",
+      "snapshotId": "71c8827e-dba3-4910-a12d-2dd4b384bb86"
     }
   ]
 }

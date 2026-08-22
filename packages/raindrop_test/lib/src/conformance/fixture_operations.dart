@@ -33,6 +33,11 @@ TableInfo _tableInfo(Map<String, Object?> table) {
           primaryKey: column['primaryKey'] as bool? ?? false,
           autoIncrement: column['autoIncrement'] as bool? ?? false,
           defaultValue: column['default'] as String?,
+          foreignKey: switch (column['foreignKey']) {
+            final Map<String, Object?> reference =>
+              ForeignKeyInfo.fromMap(reference),
+            _ => null,
+          },
         ),
     ],
   );

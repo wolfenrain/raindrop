@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:postgres/postgres.dart';
@@ -11,12 +12,14 @@ void main() {
 
   setUpAll(() async {
     try {
+      final env = Platform.environment;
       connection = await Connection.open(
         Endpoint(
-          host: 'localhost',
-          database: 'postgres',
-          username: 'postgres',
-          password: 'postgres',
+          host: env['RAINDROP_PG_HOST'] ?? 'localhost',
+          port: int.parse(env['RAINDROP_PG_PORT'] ?? '5432'),
+          database: env['RAINDROP_PG_DATABASE'] ?? 'postgres',
+          username: env['RAINDROP_PG_USER'] ?? 'postgres',
+          password: env['RAINDROP_PG_PASSWORD'] ?? 'postgres',
         ),
         settings: const ConnectionSettings(
           sslMode: SslMode.disable,

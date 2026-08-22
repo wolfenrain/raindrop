@@ -110,6 +110,10 @@ docker run -d --rm --name raindrop-pg-test \
   -e POSTGRES_PASSWORD=postgres -p 5432:5432 postgres:16-alpine
 ```
 
+When your Postgres runs elsewhere, override any part of the endpoint through
+the `RAINDROP_PG_HOST`, `RAINDROP_PG_PORT`, `RAINDROP_PG_DATABASE`,
+`RAINDROP_PG_USER` and `RAINDROP_PG_PASSWORD` environment variables.
+
 ### Configuring CI for a package
 
 Every package has a `ci.yaml` in its root that declares where and against what

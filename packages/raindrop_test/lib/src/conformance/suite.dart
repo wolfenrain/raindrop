@@ -9,8 +9,9 @@ import 'package:test/test.dart';
 /// Runs the shared driver conformance suite against [harness].
 ///
 /// The suite verifies the behavior every raindrop driver must provide like
-/// CRUD round-trips, filters, joins, aggregates and transaction semantics,
-/// plus RETURNING when the driver declares support by passing [returning].
+/// CRUD round-trips, filters, joins, aggregates, transaction semantics and
+/// schema changes rendered by the driver's own `DdlGenerator`, plus
+/// RETURNING when the driver declares support by passing [returning].
 ///
 /// Every test gets a fresh, empty pair of fixture tables, created through
 /// the driver's own `DdlGenerator` from the conformance schemas.
@@ -250,13 +251,72 @@ void testDriverConformance(
 
       conformanceTest('evaluates scalar expressions', () async {
         await db.insert(into: users).values([
-          User(name: 'Morgan', favoriteGame: 'zelda', age: 30),
+          User(name: 'Morgan', favoriteGame: 'zelda', age: 30, nickname: ' M '),
         ]);
 
         expect(await db.select(upper(users.name)).from(users), ['MORGAN']);
+        expect(await db.select(lower(users.name)).from(users), ['morgan']);
+        expect(await db.select(trim(users.nickname)).from(users), ['M']);
         expect(await db.select(length(users.name)).from(users), [6]);
         expect(await db.select(users.age + 1).from(users), [31]);
         expect(await db.select(users.age % 7).from(users), [2]);
+        expect(await db.select(abs(users.age - 60)).from(users), [30]);
+      });
+
+      conformanceTest('aggregates min and max', () async {
+        await seed();
+
+        expect(
+          await db.select(min(users.age), max(users.age)).from(users),
+          [(28, 41)],
+        );
+      });
+
+      conformanceTest('falls back with coalesce', () async {
+        await seed();
+
+        expect(
+          await db
+              .select(coalesce(users.nickname, 'none'))
+              .from(users)
+              .orderBy({users.id: Order.asc}),
+          ['Momo', 'none', 'none'],
+        );
+      });
+
+      conformanceTest('filters with a subquery', () async {
+        await seed();
+
+        expect(
+          await db.select(users.name).from(users).where(
+                users.id.inQuery(db.select(pets.ownerId).from(pets)),
+              ),
+          ['Morgan'],
+        );
+        expect(
+          await db.select(users.name).from(users).where(
+                not(
+                  exists(
+                    db.select().from(pets).where(
+                          users.id.equals(pets.ownerId),
+                        ),
+                  ),
+                ),
+              ),
+          unorderedEquals(['Alex', 'Sam']),
+        );
+      });
+
+      conformanceTest('selects from a derived table', () async {
+        await seed();
+
+        final counts = db
+            .select(pets.ownerId, pets.id.count())
+            .from(pets)
+            .groupBy(pets.ownerId)
+            .derived();
+
+        expect(await db.select(max(counts.$2)).from(counts), [2]);
       });
     });
 
@@ -285,6 +345,20 @@ void testDriverConformance(
               .groupBy(users.id)
               .orderBy({users.name: Order.asc}),
           [('Alex', 0), ('Morgan', 2), ('Sam', 0)],
+        );
+      });
+
+      conformanceTest('right join keeps unmatched rows', () async {
+        await seed();
+
+        expect(
+          await db
+              .select(count(pets.id), users.name)
+              .from(pets)
+              .rightJoin(users, on: users.id.equals(pets.ownerId))
+              .groupBy(users.id)
+              .orderBy({users.name: Order.asc}),
+          [(0, 'Alex'), (2, 'Morgan'), (0, 'Sam')],
         );
       });
     });
@@ -460,6 +534,85 @@ void testDriverConformance(
         expect(await db.select(users.name).from(users), ['Kept']);
       });
     });
+
+    group('schema changes', () {
+      conformanceTest('an added column stores and reads back', () async {
+        final usersTable = fixtureCreateTableOperations(db.delegate.dialect)
+            .firstWhere((operation) => operation.table.name == 'users')
+            .table;
+        await _execute(
+          db,
+          harness.createDdlGenerator().generate([
+            AlterTable(
+              oldTable: usersTable,
+              newTable: TableInfo(
+                name: usersTable.name,
+                columns: [
+                  ...usersTable.columns,
+                  const ColumnInfo(
+                    name: 'motto',
+                    type: 'TEXT',
+                    isNullable: true,
+                  ),
+                ],
+              ),
+            ),
+          ]),
+        );
+
+        final dialect = db.delegate.dialect;
+        String name(String value) => dialect.escapeName(value);
+        await db.execute(
+          'INSERT INTO ${name('users')} '
+          '(${name('name')}, ${name('favoriteGame')}, ${name('age')}, '
+          '${name('motto')}) '
+          'VALUES (${dialect.escapeParam(0)}, ${dialect.escapeParam(1)}, '
+          '${dialect.escapeParam(2)}, ${dialect.escapeParam(3)})',
+          ['Morgan', 'zelda', 30, 'carpe diem'],
+        );
+        expect(
+          await db.select(raw<String?>(name('motto'))).from(users),
+          ['carpe diem'],
+        );
+      });
+
+      conformanceTest('a created unique index enforces until dropped',
+          () async {
+        const index = IndexInfo(
+          name: 'users_name_unique',
+          tableName: 'users',
+          columns: ['name'],
+          isUnique: true,
+        );
+        Future<void> insertMorgan() => db.insert(into: users).values([
+              User(name: 'Morgan', favoriteGame: 'zelda', age: 30),
+            ]);
+        final generator = harness.createDdlGenerator();
+
+        await _execute(
+            db, generator.generate([const CreateIndex(index: index)]));
+        await insertMorgan();
+        await expectLater(insertMorgan(), throwsA(isA<Exception>()));
+
+        await _execute(
+          db,
+          generator.generate(
+            [const DropIndex('users_name_unique', tableName: 'users')],
+          ),
+        );
+        await insertMorgan();
+        expect(await db.select().from(users), hasLength(2));
+      });
+
+      conformanceTest('a dropped table is gone', () async {
+        await _execute(
+          db,
+          harness.createDdlGenerator().generate([const DropTable('pets')]),
+        );
+
+        await expectLater(db.select().from(pets), throwsA(isA<Exception>()));
+      });
+    });
   });
 }
 
@@ -469,9 +622,12 @@ Future<void> _createFixtureTables(Raindrop db, DdlGenerator generator) async {
     await db.execute('DROP TABLE IF EXISTS ${dialect.escapeName(name)}');
   }
 
-  final sql = generator.generate(fixtureCreateTableOperations(dialect));
+  await _execute(db, generator.generate(fixtureCreateTableOperations(dialect)));
+}
 
-  for (final statement in dialect.splitStatements(sql)) {
+/// Executes every statement of [sql] through [db], split by its dialect.
+Future<void> _execute(Raindrop db, String sql) async {
+  for (final statement in db.delegate.dialect.splitStatements(sql)) {
     await db.execute(statement);
   }
 }

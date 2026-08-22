@@ -94,7 +94,9 @@ class PetSchema extends Schema<Pet> {
   /// Creates the schema.
   PetSchema(super.$)
       : id = $.integer('id', (s) => s.id).primaryKey(autoIncrement: true),
-        ownerId = $.integer('owner_id', (s) => s.ownerId),
+        ownerId = $
+            .integer('owner_id', (s) => s.ownerId)
+            .references(() => users.id, onDelete: ReferentialAction.cascade),
         name = $.text('name', (s) => s.name);
 
   @override
