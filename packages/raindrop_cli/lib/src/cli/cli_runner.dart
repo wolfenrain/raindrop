@@ -4,6 +4,7 @@ import 'package:args/command_runner.dart';
 
 import 'package:raindrop_cli/src/cli/commands/generate.dart';
 import 'package:raindrop_cli/src/cli/commands/status.dart';
+import 'package:raindrop_cli/src/version.dart';
 
 export 'package:args/command_runner.dart' show UsageException;
 
@@ -67,7 +68,7 @@ Optional path for generated Dart migrations embedding (relative resolution match
     final results = parse(args);
 
     if (results['version'] as bool) {
-      stdout.writeln('raindrop_cli version 0.1.0');
+      stdout.writeln('raindrop_cli version $packageVersion');
       return 0;
     }
 

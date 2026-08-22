@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:path/path.dart' as p;
 import 'package:raindrop_cli/src/cli/cli_runner.dart';
 import 'package:raindrop_cli/src/ddl/ddl_runner.dart';
+import 'package:raindrop_cli/src/version.dart';
 import 'package:test/test.dart';
 
 void main() {
@@ -187,6 +188,11 @@ class BlankDdlGenerator extends DdlGenerator {
 
   test('--version exits cleanly', () async {
     expect(await CliRunner().run(['--version']), 0);
+  });
+
+  test('packageVersion matches the pubspec', () {
+    final pubspec = File('pubspec.yaml').readAsStringSync();
+    expect(pubspec, contains('version: $packageVersion'));
   });
 
   test('generate requires a name', () async {
