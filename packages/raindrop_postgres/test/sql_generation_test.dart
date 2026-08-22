@@ -112,29 +112,38 @@ void main() {
       ..test(
         'on conflict do nothing',
         (db) => db.insert(into: users).values([
-          User(name: 'Morgan', favoriteGame: 'zelda', age: 30),
-        ]).onConflict([users.name], DoNothing()),
+          User(name: 'Morgan', favoriteGame: 'zelda', age: 30)
+        ]).onConflict([users.name]).doNothing(),
       )
       ..test(
         'on conflict without a target',
-        (db) => db.insert(into: users).values([
-          User(name: 'Morgan', favoriteGame: 'zelda', age: 30),
-        ]).onConflict([], DoNothing()),
+        (db) => db
+            .insert(into: users)
+            .values([User(name: 'Morgan', favoriteGame: 'zelda', age: 30)])
+            .onConflict()
+            .doNothing(),
       )
       ..test(
         'on conflict do update',
         (db) => db.insert(into: users).values([
-          User(name: 'Morgan', favoriteGame: 'zelda', age: 30),
-        ]).onConflict(
-          [users.name],
-          DoUpdate([users.favoriteGame.to('tetris'), users.age.to(31)]),
+          User(name: 'Morgan', favoriteGame: 'zelda', age: 30)
+        ]).onConflict([users.name]).doUpdate(
+            [users.favoriteGame.to('tetris'), users.age.to(31)]),
+      )
+      ..test(
+        'on conflict do update from excluded',
+        (db) => db.insert(into: users).values([
+          User(name: 'Morgan', favoriteGame: 'zelda', age: 30)
+        ]).onConflict([users.name]).doUpdate(
+          [users.age.to(excluded(users.age))],
+          where: users.age.lessThan(excluded(users.age)),
         ),
       )
       ..test(
         'on conflict do update with returning',
         (db) => db.insert(into: users).values([
-          User(name: 'Morgan', favoriteGame: 'zelda', age: 30),
-        ]).onConflict([users.name], DoUpdate([users.age.to(31)])).returning(),
+          User(name: 'Morgan', favoriteGame: 'zelda', age: 30)
+        ]).onConflict([users.name]).doUpdate([users.age.to(31)]).returning(),
       );
   });
 

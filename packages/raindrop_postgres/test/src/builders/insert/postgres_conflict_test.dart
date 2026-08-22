@@ -6,20 +6,20 @@ void main() {
   final user = _User(email: 'a@b.c', name: 'first');
 
   group('onConflict', () {
-    test('DoNothing renders its conflict target', () {
+    test('doNothing renders its conflict target', () {
       final (sql, values) = _render(
         _db
             .insert(into: _users)
-            .values([user]).onConflict([_users.email], DoNothing()),
+            .values([user]).onConflict([_users.email]).doNothing(),
       );
 
       expect(sql, endsWith('ON CONFLICT ("email") DO NOTHING'));
       expect(values, ['a@b.c', 'first']);
     });
 
-    test('an empty target renders a bare ON CONFLICT', () {
+    test('a bare onConflict renders without a target', () {
       final (sql, _) = _render(
-        _db.insert(into: _users).values([user]).onConflict([], DoNothing()),
+        _db.insert(into: _users).values([user]).onConflict().doNothing(),
       );
 
       expect(sql, endsWith('ON CONFLICT DO NOTHING'));
@@ -27,21 +27,18 @@ void main() {
 
     test('a multi-column target renders comma separated', () {
       final (sql, _) = _render(
-        _db.insert(into: _users).values([user]).onConflict(
-          [_users.email, _users.name],
-          DoNothing(),
-        ),
+        _db
+            .insert(into: _users)
+            .values([user]).onConflict([_users.email, _users.name]).doNothing(),
       );
 
       expect(sql, endsWith('ON CONFLICT ("email", "name") DO NOTHING'));
     });
 
-    test('DoUpdate renders assignments and binds their values', () {
+    test('doUpdate renders assignments and binds their values', () {
       final (sql, values) = _render(
         _db.insert(into: _users).values([user]).onConflict(
-          [_users.email],
-          DoUpdate([_users.name.to('updated')]),
-        ),
+            [_users.email]).doUpdate([_users.name.to('updated')]),
       );
 
       expect(
@@ -51,23 +48,83 @@ void main() {
       expect(values, ['a@b.c', 'first', 'updated']);
     });
 
-    test('DoUpdate renders multiple assignments comma separated', () {
+    test('doUpdate renders multiple assignments comma separated', () {
       final (sql, values) = _render(
         _db.insert(into: _users).values([user]).onConflict(
           [_users.email],
-          DoUpdate([_users.name.to('updated'), _users.email.to('b@c.d')]),
-        ),
+        ).doUpdate([_users.name.to('updated'), _users.email.to('b@c.d')]),
       );
 
       expect(sql, endsWith(r'DO UPDATE SET "name" = $3, "email" = $4'));
       expect(values, ['a@b.c', 'first', 'updated', 'b@c.d']);
     });
 
+    test('excluded references the row that failed to insert', () {
+      final (sql, values) = _render(
+        _db.insert(into: _users).values([user]).onConflict(
+            [_users.email]).doUpdate([_users.name.to(excluded(_users.name))]),
+      );
+
+      expect(sql, endsWith('DO UPDATE SET "name" = "excluded"."name"'));
+      expect(values, ['a@b.c', 'first']);
+    });
+
+    test('where narrows the target and the update', () {
+      final (sql, _) = _render(
+        _db
+            .insert(into: _users)
+            .values([user])
+            .onConflict([_users.email])
+            .where(_users.id.isNotNull())
+            .doUpdate(
+              [_users.name.to(excluded(_users.name))],
+              where: _users.name.notEquals('locked'),
+            ),
+      );
+
+      expect(
+        sql,
+        endsWith(
+          'ON CONFLICT ("email") WHERE "id" IS NOT NULL '
+          r'DO UPDATE SET "name" = "excluded"."name" WHERE "name" != $3',
+        ),
+      );
+    });
+
+    test('excluded carries the column transformer', () {
+      expect(excluded(_users.name).transformer, isNull);
+    });
+
+    test('doUpdate without a target is rejected', () {
+      expect(
+        () => _db
+            .insert(into: _users)
+            .values([user])
+            .onConflict()
+            .doUpdate([_users.name.to('updated')]),
+        throwsStateError,
+      );
+    });
+
+    test('where without a target is rejected', () {
+      expect(
+        () => _db
+            .insert(into: _users)
+            .values([user])
+            .onConflict()
+            .where(_users.id.isNotNull()),
+        throwsStateError,
+      );
+    });
+
     test('the clause sits between the insert body and RETURNING', () {
       final (sql, _) = _render(
         _db
             .insert(into: _users)
-            .values([user]).onConflict([_users.email], DoNothing()).returning(),
+            .values([user])
+            .onConflict([_users.email])
+            .doNothing()
+            .returning(),
       );
 
       expect(

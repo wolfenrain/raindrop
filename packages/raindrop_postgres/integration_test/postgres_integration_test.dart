@@ -175,9 +175,7 @@ CREATE TABLE accounts (id SERIAL PRIMARY KEY, email TEXT NOT NULL UNIQUE, balanc
       if (connection == null) return markTestSkipped('no Postgres');
       await db.insert(into: _accounts).values([account('dup@x.y')]);
       await db.insert(into: _accounts).values([account('dup@x.y')]).onConflict(
-        [_accounts.$['email']],
-        const DoNothing(),
-      );
+          [_accounts.$['email']]).doNothing();
 
       expect(await db.select(_accounts.email).from(_accounts), ['dup@x.y']);
     });
@@ -186,9 +184,7 @@ CREATE TABLE accounts (id SERIAL PRIMARY KEY, email TEXT NOT NULL UNIQUE, balanc
       if (connection == null) return markTestSkipped('no Postgres');
       await db.insert(into: _accounts).values([account('dup@x.y')]);
       await db.insert(into: _accounts).values([account('dup@x.y')]).onConflict(
-        [_accounts.$['email']],
-        DoUpdate([_accounts.active.to(false)]),
-      );
+          [_accounts.$['email']]).doUpdate([_accounts.active.to(false)]);
 
       final row = await db.select().from(_accounts).single;
       expect(row.active, isFalse);

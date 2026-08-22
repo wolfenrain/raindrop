@@ -36,7 +36,7 @@ class _ExcludedRef extends Clause {
       '${context.escapeName('excluded')}.${context.escapeName(column.name)}';
 }
 
-/// Adds `onConflict(...)` to a Postgres insert, opening an upsert clause that
+/// Adds `onConflict(...)` to a SQLite insert, opening an upsert clause that
 /// reads in SQL order:
 ///
 /// ```dart
@@ -46,7 +46,7 @@ class _ExcludedRef extends Clause {
 ///
 /// db.insert(into: users).values([u]).onConflict().doNothing();
 /// ```
-extension PostgresOnConflictExtension<S extends Schema<R>, R>
+extension SQLiteOnConflictExtension<S extends Schema<R>, R>
     on InsertWithValuesBuilder<S, R, void> {
   /// Open an `ON CONFLICT [(target)]` clause.
   ///
@@ -122,7 +122,7 @@ class OnConflictBuilder<S extends Schema<R>, R> {
   }
 }
 
-/// An `ON CONFLICT [(target)] [WHERE ...] DO ...` clause of a Postgres insert.
+/// An `ON CONFLICT [(target)] [WHERE ...] DO ...` clause of a SQLite insert.
 class OnConflictClause extends Clause {
   /// Creates a conflict clause for the given [target] and [action].
   const OnConflictClause({
