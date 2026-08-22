@@ -3,6 +3,7 @@ import 'dart:io';
 import 'dart:math';
 
 import 'package:meta/meta.dart';
+import 'package:raindrop_cli/src/core/format.dart';
 
 /// Represents a snapshot of the database schema at a point in time.
 ///
@@ -20,9 +21,20 @@ class SchemaSnapshot {
 
   /// Creates a snapshot from JSON string.
   factory SchemaSnapshot.fromJson(String json) {
-    final data = jsonDecode(json) as Map<String, dynamic>;
+    final data = checkKeys(
+      jsonDecode(json) as Map<String, dynamic>,
+      context: 'the snapshot',
+      requiredKeys: const {'version', 'dialect', 'id', 'prevId', 'tables'},
+      optionalKeys: const {'indexes'},
+    );
+    final version = data['version'] as String;
+    if (version != currentVersion) {
+      throw FormatException(
+        'Snapshot version "$version" is not the supported "$currentVersion".',
+      );
+    }
     return SchemaSnapshot(
-      version: data['version'] as String,
+      version: version,
       dialect: data['dialect'] as String,
       id: data['id'] as String,
       prevId: data['prevId'] as String,
@@ -145,6 +157,12 @@ class TableSnapshot {
 
   /// Creates a table snapshot from a map.
   factory TableSnapshot.fromMap(String name, Map<String, dynamic> data) {
+    checkKeys(
+      data,
+      context: 'table "$name"',
+      requiredKeys: const {'name', 'columns'},
+      optionalKeys: const {'checks'},
+    );
     final columnsData = data['columns'] as Map<String, dynamic>;
     return TableSnapshot(
       name: name,
@@ -196,6 +214,12 @@ class ForeignKeySnapshotRef {
 
   /// Creates a foreign key reference from a map.
   factory ForeignKeySnapshotRef.fromMap(Map<String, dynamic> data) {
+    checkKeys(
+      data,
+      context: 'a foreign key reference',
+      requiredKeys: const {'referencedTable', 'referencedColumn'},
+      optionalKeys: const {'onDelete', 'onUpdate'},
+    );
     return ForeignKeySnapshotRef(
       referencedTable: data['referencedTable'] as String,
       referencedColumn: data['referencedColumn'] as String,
@@ -263,11 +287,17 @@ class ColumnSnapshot {
 
   /// Creates a column snapshot from a map.
   factory ColumnSnapshot.fromMap(String name, Map<String, dynamic> data) {
+    checkKeys(
+      data,
+      context: 'column "$name"',
+      requiredKeys: const {'name', 'type', 'primaryKey', 'isNullable'},
+      optionalKeys: const {'autoIncrement', 'default', 'foreignKey'},
+    );
     return ColumnSnapshot(
       name: name,
       type: data['type'] as String,
-      isNullable: data['isNullable'] as bool? ?? false,
-      primaryKey: data['primaryKey'] as bool? ?? false,
+      isNullable: data['isNullable'] as bool,
+      primaryKey: data['primaryKey'] as bool,
       autoIncrement: data['autoIncrement'] as bool? ?? false,
       defaultValue: data['default'] as String?,
       foreignKey: switch (data['foreignKey']) {
@@ -352,6 +382,12 @@ class IndexSnapshot {
 
   /// Creates an index snapshot from a map.
   factory IndexSnapshot.fromMap(String name, Map<String, dynamic> data) {
+    checkKeys(
+      data,
+      context: 'index "$name"',
+      requiredKeys: const {'name', 'tableName', 'columns', 'isUnique'},
+      optionalKeys: const {'where'},
+    );
     return IndexSnapshot(
       name: name,
       tableName: data['tableName'] as String,

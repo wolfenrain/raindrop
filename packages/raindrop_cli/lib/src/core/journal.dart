@@ -1,6 +1,8 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:raindrop_cli/src/core/format.dart';
+
 /// Represents the migration journal that tracks all applied migrations.
 ///
 /// Migration metadata is stored in a `_journal.json` file within the meta
@@ -27,9 +29,19 @@ class MigrationJournal {
 
   /// Creates a journal from JSON string.
   factory MigrationJournal.fromJson(String json) {
-    final data = jsonDecode(json) as Map<String, dynamic>;
+    final data = checkKeys(
+      jsonDecode(json) as Map<String, dynamic>,
+      context: 'the journal',
+      requiredKeys: const {'version', 'dialect', 'entries'},
+    );
+    final version = data['version'] as String;
+    if (version != currentVersion) {
+      throw FormatException(
+        'Journal version "$version" is not the supported "$currentVersion".',
+      );
+    }
     return MigrationJournal(
-      version: data['version'] as String,
+      version: version,
       dialect: data['dialect'] as String,
       entries: [
         for (final entry in (data['entries'] as List<dynamic>))
@@ -113,6 +125,11 @@ class JournalEntry {
 
   /// Creates an entry from a map.
   factory JournalEntry.fromMap(Map<String, dynamic> data) {
+    checkKeys(
+      data,
+      context: 'a journal entry',
+      requiredKeys: const {'idx', 'version', 'when', 'tag', 'snapshotId'},
+    );
     return JournalEntry(
       idx: data['idx'] as int,
       version: data['version'] as String,
