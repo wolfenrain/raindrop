@@ -121,6 +121,31 @@ void main() {
     });
   });
 
+  group('string functions', () {
+    test('substr cuts from a 1-based start', () {
+      expect(renderExpression(substr(rows.name, 2)), 'SUBSTR("name", 2)');
+      expect(renderExpression(substr(rows.name, 2, 3)), 'SUBSTR("name", 2, 3)');
+    });
+
+    test('replace renders in SQL argument order', () {
+      expect(
+        renderExpression(replace(rows.name, from: 'a', to: 'b')),
+        '''REPLACE("name", 'a', 'b')''',
+      );
+    });
+
+    test('concat joins its parts with the concat operator', () {
+      expect(
+        renderExpression(concat([rows.name, '!', upper(rows.name)])),
+        '''("name" || '!' || UPPER("name"))''',
+      );
+    });
+
+    test('concat rejects an empty part list', () {
+      expect(() => concat([]), throwsArgumentError);
+    });
+  });
+
   group('between', () {
     test('renders BETWEEN with both bounds inclusive', () {
       expect(render(rows.age.between(18, and: 65)), '"age" BETWEEN 18 AND 65');

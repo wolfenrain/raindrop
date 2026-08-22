@@ -249,6 +249,26 @@ void testDriverConformance(
         expect(await db.select(avg(users.age)).from(users), [30.25]);
       });
 
+      conformanceTest('evaluates string functions', () async {
+        await db.insert(into: users).values([
+          User(name: 'Morgan', favoriteGame: 'zelda', age: 30),
+        ]);
+
+        expect(await db.select(substr(users.name, 1, 3)).from(users), ['Mor']);
+        expect(
+          await db
+              .select(replace(users.favoriteGame, from: 'zel', to: 'ZEL'))
+              .from(users),
+          ['ZELda'],
+        );
+        expect(
+          await db
+              .select(concat([users.name, ' likes ', users.favoriteGame]))
+              .from(users),
+          ['Morgan likes zelda'],
+        );
+      });
+
       conformanceTest('filters with between', () async {
         await seed();
 
