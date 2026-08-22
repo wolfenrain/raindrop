@@ -20,14 +20,14 @@ migration_naming: timestamp
 
       final config = await RaindropConfig.load(path);
       expect(config.driver, 'raindrop_sqlite');
-      expect(config.schemaPath, p.join(dir.path, 'lib/src'));
-      expect(config.outPath, p.join(dir.path, 'db/migrations'));
-      expect(config.dartPath, p.join(dir.path, 'lib/migrations.dart'));
+      expect(config.schemaPath, p.join(dir.path, 'lib', 'src'));
+      expect(config.outPath, p.join(dir.path, 'db', 'migrations'));
+      expect(config.dartPath, p.join(dir.path, 'lib', 'migrations.dart'));
       expect(config.migrationNaming, MigrationNaming.timestamp);
-      expect(config.metaPath, p.join(dir.path, 'db/migrations/meta'));
+      expect(config.metaPath, p.join(dir.path, 'db', 'migrations', 'meta'));
       expect(
         config.snapshotPath(3),
-        p.join(dir.path, 'db/migrations/meta/0003_snapshot.json'),
+        p.join(dir.path, 'db', 'migrations', 'meta', '0003_snapshot.json'),
       );
     });
 

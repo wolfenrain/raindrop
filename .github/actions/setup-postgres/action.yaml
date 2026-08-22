@@ -1,0 +1,33 @@
+name: 🐘 Setup PostgreSQL
+description: Ensures there is a PostgreSQL server running.
+
+inputs:
+  version:
+    description: The PostgreSQL version to install.
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - name: ⛔️ Require a version
+      if: inputs.version == ''
+      shell: bash
+      run: |
+        echo "A PostgreSQL version is required, use \"postgres:<version>\"." >&2
+        exit 1
+
+    - name: 🔍 Resolve release
+      id: resolve
+      shell: bash
+      env:
+        VERSION: ${{ inputs.version }}
+      run: |
+        if [ "$VERSION" == "latest" ]; then
+          VERSION=$(curl -fsSL https://endoflife.date/api/postgresql.json | jq -r '.[0].cycle')
+        fi
+        echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+
+    - name: 🐘 Install PostgreSQL
+      uses: ikalnytskyi/action-setup-postgres@v8
+      with:
+        postgres-version: ${{ steps.resolve.outputs.version }}

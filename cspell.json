@@ -19,6 +19,7 @@
   ],
   "useGitignore": true,
   "ignorePaths": [
+    ".github/actions/**",
     ".github/workflows/**",
     "packages/raindrop_postgres/test/fixtures/**",
     "packages/raindrop_sqlite/test/fixtures/**",

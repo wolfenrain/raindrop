@@ -1,0 +1,112 @@
+name: 🗃️ Setup SQLite
+description: Ensures the SQLite runtime library is available.
+
+inputs:
+  version:
+    description: The SQLite version to install.
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - name: ⛔️ Require a version
+      if: inputs.version == ''
+      shell: bash
+      run: |
+        echo "A SQLite version is required, use \"sqlite:<version>\" or \"sqlite:bundled\"." >&2
+        exit 1
+
+    - name: 🪝 Opt out of the bundled library
+      if: inputs.version != 'bundled'
+      shell: bash
+      run: |
+        cat >> pubspec.yaml <<'EOF'
+
+        hooks:
+          user_defines:
+            sqlite3:
+              source: system
+        EOF
+
+    - name: 🔍 Resolve release
+      if: inputs.version != 'bundled'
+      id: resolve
+      shell: bash
+      env:
+        VERSION: ${{ inputs.version }}
+      run: |
+        # The download page lists releases as machine-readable "PRODUCT,<version>,<year>/<file>,..." lines.
+        if [ "$VERSION" == "latest" ]; then
+          product=$(curl -fsSL https://www.sqlite.org/download.html | grep -o -m1 'PRODUCT,[0-9.]*,[0-9]*/sqlite-autoconf-[0-9]*\.tar\.gz')
+          echo "encoded=$(grep -o 'autoconf-[0-9]*' <<< "$product" | cut -d- -f2)" >> "$GITHUB_OUTPUT"
+          echo "year=$(cut -d, -f3 <<< "$product" | cut -d/ -f1)" >> "$GITHUB_OUTPUT"
+          exit 0
+        fi
+
+        # sqlite.org URLs contain the release year, which cannot be derived
+        # from the version (3.50.4 -> 2025/sqlite-autoconf-3500400.tar.gz).
+        encoded=$(awk -F. '{ printf "%d%02d%02d00", $1, $2, $3 }' <<< "$VERSION")
+        for year in $(seq "$(date +%Y)" -1 2013); do
+          url="https://www.sqlite.org/$year/sqlite-autoconf-$encoded.tar.gz"
+          if curl -fsSL --head "$url" > /dev/null 2>&1; then
+            echo "encoded=$encoded" >> "$GITHUB_OUTPUT"
+            echo "year=$year" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+        done
+
+        echo "SQLite $VERSION was not found on sqlite.org" >&2
+        exit 1
+
+    - name: 💾 Cache SQLite build
+      if: inputs.version != 'bundled' && runner.os != 'Windows'
+      id: cache
+      uses: actions/cache@v6
+      with:
+        path: ${{ runner.temp }}/sqlite-build
+        key: sqlite-${{ runner.os }}-${{ steps.resolve.outputs.encoded }}
+
+    - name: 🗃️ Build SQLite
+      if: inputs.version != 'bundled' && runner.os != 'Windows' && steps.cache.outputs.cache-hit != 'true'
+      shell: bash
+      env:
+        URL: https://www.sqlite.org/${{ steps.resolve.outputs.year }}/sqlite-autoconf-${{ steps.resolve.outputs.encoded }}.tar.gz
+      run: |
+        curl -fsSL "$URL" | tar -xz -C "$RUNNER_TEMP"
+        cd "$RUNNER_TEMP/sqlite-autoconf-${{ steps.resolve.outputs.encoded }}"
+        mkdir -p "$RUNNER_TEMP/sqlite-build"
+
+        flags=(-O2 -DSQLITE_ENABLE_COLUMN_METADATA -DSQLITE_ENABLE_FTS5
+          -DSQLITE_ENABLE_RTREE -DSQLITE_ENABLE_MATH_FUNCTIONS
+          -DSQLITE_ENABLE_DBSTAT_VTAB)
+
+        if [ "$RUNNER_OS" == "macOS" ]; then
+          cc -dynamiclib "${flags[@]}" -o "$RUNNER_TEMP/sqlite-build/libsqlite3.dylib" sqlite3.c
+        else
+          cc -shared -fPIC "${flags[@]}" -o "$RUNNER_TEMP/sqlite-build/libsqlite3.so" sqlite3.c
+        fi
+
+    - name: 🗃️ Register build
+      if: inputs.version != 'bundled' && runner.os != 'Windows'
+      shell: bash
+      run: |
+        if [ "$RUNNER_OS" == "macOS" ]; then
+          echo "DYLD_LIBRARY_PATH=$RUNNER_TEMP/sqlite-build:$DYLD_LIBRARY_PATH" >> "$GITHUB_ENV"
+        else
+          echo "LD_LIBRARY_PATH=$RUNNER_TEMP/sqlite-build:$LD_LIBRARY_PATH" >> "$GITHUB_ENV"
+        fi
+
+    - name: 🗃️ Download SQLite
+      if: inputs.version != 'bundled' && runner.os == 'Windows'
+      shell: pwsh
+      run: |
+        $base = "https://www.sqlite.org/${{ steps.resolve.outputs.year }}"
+        $encoded = "${{ steps.resolve.outputs.encoded }}"
+        $zip = "$env:RUNNER_TEMP\sqlite.zip"
+        try {
+          Invoke-WebRequest "$base/sqlite-dll-win-x64-$encoded.zip" -OutFile $zip
+        } catch {
+          Invoke-WebRequest "$base/sqlite-dll-win64-x64-$encoded.zip" -OutFile $zip
+        }
+        Expand-Archive $zip -DestinationPath "$env:RUNNER_TEMP\sqlite"
+        Add-Content $env:GITHUB_PATH "$env:RUNNER_TEMP\sqlite"
