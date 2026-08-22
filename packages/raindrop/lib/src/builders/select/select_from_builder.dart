@@ -32,14 +32,6 @@ class SelectFromBuilder<S extends Schema<R>, R, V> extends QueryBuilder<S, V>
     );
   }
 
-  /// Set the [groupBy] clause of the builder.
-  SelectFromBuilder<S, R, V> groupBy(Selectable<dynamic> groupBy) {
-    return SelectFromBuilder(
-      executor,
-      config: config.copyWith({#groupBy: groupBy}),
-    );
-  }
-
   /// Set the `HAVING` clause, which filters groups rather than rows:
   ///
   /// ```dart
@@ -91,8 +83,9 @@ class SelectFromBuilder<S extends Schema<R>, R, V> extends QueryBuilder<S, V>
         if (joins.isNotEmpty) SelectSlot.joins: JoinsClause(joins),
         if (config.where case final where?)
           SelectSlot.where: WhereClause(where, singleTable: singleTable),
-        if (config.groupBy case final groupBy?)
-          SelectSlot.groupBy: GroupByClause(groupBy, singleTable: singleTable),
+        if (config.groupBy.isNotEmpty)
+          SelectSlot.groupBy:
+              GroupByClause(config.groupBy, singleTable: singleTable),
         if (config.having case final having?)
           SelectSlot.having: HavingClause(having, singleTable: singleTable),
         if (orderBy.isNotEmpty)
@@ -138,13 +131,6 @@ class WholeRowFromBuilder<S extends Schema<R>, R>
   WholeRowFromBuilder<S, R> offset(int offset) => WholeRowFromBuilder(
         executor,
         config: config.copyWith({#offset: offset}),
-      );
-
-  @override
-  WholeRowFromBuilder<S, R> groupBy(Selectable<dynamic> groupBy) =>
-      WholeRowFromBuilder(
-        executor,
-        config: config.copyWith({#groupBy: groupBy}),
       );
 
   @override
@@ -196,13 +182,6 @@ class ProjectionFromBuilder<S extends Schema<R>, R, V>
   ProjectionFromBuilder<S, R, V> offset(int offset) => ProjectionFromBuilder(
         executor,
         config: config.copyWith({#offset: offset}),
-      );
-
-  @override
-  ProjectionFromBuilder<S, R, V> groupBy(Selectable<dynamic> groupBy) =>
-      ProjectionFromBuilder(
-        executor,
-        config: config.copyWith({#groupBy: groupBy}),
       );
 
   @override
@@ -258,13 +237,6 @@ class SingleProjectionFromBuilder<S extends Schema<R>, R, V>
       SingleProjectionFromBuilder(
         executor,
         config: config.copyWith({#offset: offset}),
-      );
-
-  @override
-  SingleProjectionFromBuilder<S, R, V> groupBy(Selectable<dynamic> groupBy) =>
-      SingleProjectionFromBuilder(
-        executor,
-        config: config.copyWith({#groupBy: groupBy}),
       );
 
   @override

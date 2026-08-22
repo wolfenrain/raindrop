@@ -48,8 +48,9 @@ extension type const QueryConfig._(Map<Symbol, Object?> _map) {
   /// The group filter.
   Filter? get having => _map[#having] as Filter?;
 
-  /// What rows are grouped by.
-  Selectable<dynamic>? get groupBy => _map[#groupBy] as Selectable<dynamic>?;
+  /// What rows are grouped by, in order.
+  List<Selectable<dynamic>> get groupBy =>
+      _map[#groupBy] as List<Selectable<dynamic>>? ?? const [];
 
   /// The sort terms, in order.
   List<OrderBy> get orderBy => _map[#orderBy] as List<OrderBy>? ?? const [];

@@ -343,27 +343,30 @@ class WhereClause extends Clause {
       'WHERE ${FilterClause(filter, singleTable: singleTable).render(context)}';
 }
 
-/// `GROUP BY <selection>`.
+/// `GROUP BY <term>, ...`.
 class GroupByClause extends Clause {
   /// Creates a group-by clause.
-  const GroupByClause(this.groupBy, {this.singleTable = true});
+  const GroupByClause(this.terms, {this.singleTable = true});
 
-  /// What to group by.
-  final Selectable<dynamic> groupBy;
+  /// What to group by, in order.
+  final List<Selectable<dynamic>> terms;
 
   /// When false, columns are table-qualified.
   final bool singleTable;
 
   @override
   String render(RenderContext context) {
-    final sql = switch (groupBy) {
-      final Expression<dynamic> expr => expr.build(),
-      final Column<dynamic, Object?> column => SQL([column]),
-      _ => throw UnsupportedError(
-          'Unsupported GROUP BY term: ${groupBy.runtimeType}',
-        ),
-    };
-    return '''GROUP BY ${ExpressionClause(sql, singleTable: singleTable).render(context)}''';
+    final rendered = terms.map((term) {
+      final sql = switch (term) {
+        final Expression<dynamic> expr => expr.build(),
+        final Column<dynamic, Object?> column => SQL([column]),
+        _ => throw UnsupportedError(
+            'Unsupported GROUP BY term: ${term.runtimeType}',
+          ),
+      };
+      return ExpressionClause(sql, singleTable: singleTable).render(context);
+    });
+    return 'GROUP BY ${rendered.join(', ')}';
   }
 }
 

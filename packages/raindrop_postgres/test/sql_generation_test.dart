@@ -58,6 +58,13 @@ void main() {
             .orderBy({users.favoriteGame: Order.asc}),
       )
       ..test(
+        'with multiple group by terms',
+        (db) => db
+            .select(users.favoriteGame)
+            .from(users)
+            .groupBy(users.favoriteGame, users.age),
+      )
+      ..test(
         'with limit and offset',
         (db) => db.select().from(users).limit(10).offset(20),
       );

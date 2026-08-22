@@ -17,7 +17,7 @@ void main() {
         #selecting: users.name,
         #where: filter,
         #having: filter,
-        #groupBy: users.id,
+        #groupBy: [users.id],
         #orderBy: [order],
         #joins: [join],
         #set: assignment,
@@ -33,7 +33,7 @@ void main() {
       expect(config.selecting, same(users.name));
       expect(config.where, same(filter));
       expect(config.having, same(filter));
-      expect(config.groupBy, same(users.id));
+      expect(config.groupBy, [users.id]);
       expect(config.orderBy, [order]);
       expect(config.joins, [join]);
       expect(config.set, same(assignment));

@@ -249,6 +249,22 @@ void testDriverConformance(
         expect(await db.select(avg(users.age)).from(users), [30.25]);
       });
 
+      conformanceTest('groups by multiple terms', () async {
+        await seed();
+        await db.insert(into: users).values([
+          User(name: 'Robin', favoriteGame: 'zelda', age: 30),
+        ]);
+
+        expect(
+          await db
+              .select(users.favoriteGame, users.age, count(users.id))
+              .from(users)
+              .groupBy(users.favoriteGame, users.age)
+              .orderBy({users.favoriteGame: Order.asc}),
+          [('doom', 41, 1), ('tetris', 28, 1), ('zelda', 30, 2)],
+        );
+      });
+
       conformanceTest('evaluates scalar expressions', () async {
         await db.insert(into: users).values([
           User(name: 'Morgan', favoriteGame: 'zelda', age: 30, nickname: ' M '),

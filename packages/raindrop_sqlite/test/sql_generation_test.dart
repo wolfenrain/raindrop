@@ -101,6 +101,13 @@ void main() {
         (db) => db.select(users.name).from(users).groupBy(users.favoriteGame),
       )
       ..test(
+        'with multiple group by terms',
+        (db) => db
+            .select(users.name)
+            .from(users)
+            .groupBy(users.favoriteGame, users.age),
+      )
+      ..test(
         'with limit',
         (db) => db.select().from(users).limit(10),
       )
