@@ -107,7 +107,7 @@ void main() {
       ]);
     });
 
-    test('refuses record rows wider than eight', () async {
+    test('decodes record rows wider than eight', () async {
       enqueueRow([1, 'Morgan', 30, 6, 'MORGAN', 'morgan', 'Morgan', 30, 1]);
       final nine = db
           .select(
@@ -124,7 +124,42 @@ void main() {
           .from(users)
           .limit(1);
 
-      await expectLater(nine, throwsUnsupportedError);
+      expect(await nine, [
+        (1, 'Morgan', 30, 6, 'MORGAN', 'morgan', 'Morgan', 30, 1),
+      ]);
+    });
+
+    test('decodes record rows at the generated arity ceiling', () async {
+      enqueueRow([for (var i = 0; i < 20; i++) i]);
+      final twenty = db
+          .select(
+            users.id,
+            users.age,
+            users.id,
+            users.age,
+            users.id,
+            users.age,
+            users.id,
+            users.age,
+            users.id,
+            users.age,
+            users.id,
+            users.age,
+            users.id,
+            users.age,
+            users.id,
+            users.age,
+            users.id,
+            users.age,
+            users.id,
+            users.age,
+          )
+          .from(users)
+          .limit(1);
+
+      expect(await twenty, [
+        (0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19),
+      ]);
     });
 
     test('decodes a schema shape through its table', () async {
