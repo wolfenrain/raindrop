@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:path/path.dart' as p;
@@ -129,6 +130,85 @@ void main() {
       final a = IndexSnapshot(name: 'i', tableName: 't', columns: ['x', 'y']);
       final b = IndexSnapshot(name: 'i', tableName: 't', columns: ['y', 'x']);
       expect(a, isNot(b));
+    });
+
+    group('strict parsing', () {
+      Map<String, dynamic> document() =>
+          jsonDecode(snapshot.toJson()) as Map<String, dynamic>;
+
+      Matcher failsWith(String fragment) => throwsA(
+            isA<FormatException>().having(
+              (e) => e.message,
+              'message',
+              contains(fragment),
+            ),
+          );
+
+      void expectRejected(Map<String, dynamic> data, String fragment) {
+        expect(
+          () => SchemaSnapshot.fromJson(jsonEncode(data)),
+          failsWith(fragment),
+        );
+      }
+
+      Map<String, dynamic> table(Map<String, dynamic> data) =>
+          (data['tables'] as Map<String, dynamic>)['users']
+              as Map<String, dynamic>;
+
+      Map<String, dynamic> column(Map<String, dynamic> data, String name) =>
+          (table(data)['columns'] as Map<String, dynamic>)[name]
+              as Map<String, dynamic>;
+
+      test('rejects an unknown top-level key', () {
+        expectRejected(
+          document()..['foreignKeys'] = <String, dynamic>{},
+          '"foreignKeys"',
+        );
+      });
+
+      test('rejects a missing top-level key', () {
+        expectRejected(document()..remove('prevId'), '"prevId"');
+      });
+
+      test('rejects an unsupported version', () {
+        expectRejected(document()..['version'] = '2', 'version "2"');
+      });
+
+      test('rejects an unknown table key', () {
+        final data = document();
+        table(data)['renamed'] = true;
+        expectRejected(data, 'table "users"');
+      });
+
+      test('rejects a column key written under another name', () {
+        // The casing an older format used: ignoring it would silently read
+        // the column as autoIncrement: false, a phantom schema change.
+        final data = document();
+        column(data, 'id')
+          ..remove('autoIncrement')
+          ..['autoincrement'] = true;
+        expectRejected(data, '"autoincrement"');
+      });
+
+      test('rejects a missing column key', () {
+        final data = document();
+        column(data, 'id').remove('isNullable');
+        expectRejected(data, '"isNullable"');
+      });
+
+      test('rejects an unknown foreign key key', () {
+        final data = document();
+        (column(data, 'ref')['foreignKey'] as Map<String, dynamic>)['onDrop'] =
+            'CASCADE';
+        expectRejected(data, 'a foreign key reference');
+      });
+
+      test('rejects an unknown index key', () {
+        final data = document();
+        ((data['indexes'] as Map<String, dynamic>)['users_ref']
+            as Map<String, dynamic>)['method'] = 'btree';
+        expectRejected(data, 'index "users_ref"');
+      });
     });
   });
 }

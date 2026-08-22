@@ -67,6 +67,5 @@
       ],
       "isUnique": false
     }
-  },
-  "foreignKeys": {}
+  }
 }

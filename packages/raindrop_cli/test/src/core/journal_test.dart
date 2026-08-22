@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:path/path.dart' as p;
@@ -47,6 +48,48 @@ void main() {
       await journal.save(path);
       final loaded = await MigrationJournal.load(path);
       expect(loaded.toJson(), journal.toJson());
+    });
+
+    group('strict parsing', () {
+      final journal = MigrationJournal.empty().addEntry(
+        JournalEntry(
+          idx: 0,
+          version: '1',
+          when: 1700000000000,
+          tag: '0000_init',
+          snapshotId: 'snap-0',
+        ),
+      );
+
+      Map<String, dynamic> document() =>
+          jsonDecode(journal.toJson()) as Map<String, dynamic>;
+
+      void expectRejected(Map<String, dynamic> data, String fragment) {
+        expect(
+          () => MigrationJournal.fromJson(jsonEncode(data)),
+          throwsA(
+            isA<FormatException>().having(
+              (e) => e.message,
+              'message',
+              contains(fragment),
+            ),
+          ),
+        );
+      }
+
+      test('rejects an unknown journal key', () {
+        expectRejected(document()..['comment'] = 'hi', '"comment"');
+      });
+
+      test('rejects an unsupported version', () {
+        expectRejected(document()..['version'] = '9', 'version "9"');
+      });
+
+      test('rejects a missing entry key', () {
+        final data = document();
+        ((data['entries'] as List)[0] as Map<String, dynamic>).remove('tag');
+        expectRejected(data, '"tag"');
+      });
     });
   });
 }
