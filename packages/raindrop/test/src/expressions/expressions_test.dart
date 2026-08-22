@@ -121,6 +121,55 @@ void main() {
     });
   });
 
+  group('CaseWhen', () {
+    test('a single branch stays open, without an ELSE', () {
+      expect(
+        renderExpression(caseWhen(rows.age.greaterThan(65), then: 'senior')),
+        '''CASE WHEN "age" > 65 THEN 'senior' END''',
+      );
+    });
+
+    test('chains branches in order and orElse closes the expression', () {
+      expect(
+        renderExpression(
+          caseWhen(rows.age.greaterThan(65), then: 'senior')
+              .when(rows.age.greaterThan(17), then: 'adult')
+              .orElse('minor'),
+        ),
+        '''CASE WHEN "age" > 65 THEN 'senior' WHEN "age" > 17 THEN 'adult' ELSE 'minor' END''',
+      );
+    });
+
+    test('accepts compound conditions and operand results', () {
+      expect(
+        renderExpression(
+          caseWhen(
+            rows.age.greaterThan(10) & rows.name.notEquals('x'),
+            then: rows.name,
+          ).orElse(upper(rows.name)),
+        ),
+        '''CASE WHEN "age" > 10 AND "name" != 'x' THEN "name" ELSE UPPER("name") END''',
+      );
+    });
+
+    test('takes its transformer from the first branch', () {
+      final open = caseWhen(rows.age.greaterThan(1), then: rows.mood);
+      expect(open.transformer, isNotNull);
+      expect(open.orElse(rows.mood).transformer, isNotNull);
+      expect(caseWhen(rows.age.greaterThan(1), then: 1).transformer, isNull);
+    });
+
+    test('encodes a literal branch value through that transformer', () {
+      expect(
+        renderExpression(
+          caseWhen(rows.age.greaterThan(1), then: rows.mood)
+              .orElse(_Mood.happy),
+        ),
+        '''CASE WHEN "age" > 1 THEN "mood" ELSE 'happy' END''',
+      );
+    });
+  });
+
   group('count', () {
     test('renders COUNT(*) without an operand', () {
       expect(renderExpression(count()), 'COUNT(*)');

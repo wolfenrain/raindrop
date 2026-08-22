@@ -65,6 +65,16 @@ void main() {
             .groupBy(users.favoriteGame, users.age),
       )
       ..test(
+        'with a case expression',
+        (db) => db
+            .select(
+              caseWhen(users.age.greaterThan(65), then: 'senior')
+                  .when(users.age.greaterThan(17), then: 'adult')
+                  .orElse('minor'),
+            )
+            .from(users),
+      )
+      ..test(
         'with limit and offset',
         (db) => db.select().from(users).limit(10).offset(20),
       );

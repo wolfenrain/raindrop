@@ -103,14 +103,27 @@ db.select(users.name).from(users).where(
 db.select.distinct(users.country, users.city).from(users);
 ```
 
+`CASE` expressions read in SQL order, and stay nullable until an `orElse`
+closes them:
+
+```dart
+// Expression<String>, every branch yields the same type.
+caseWhen(users.age.greaterThan(65), then: 'senior')
+    .when(users.age.greaterThan(17), then: 'adult')
+    .orElse('minor');
+
+// Expression<String?>: without an ELSE, an unmatched row is NULL.
+caseWhen(users.nickname.isNotNull(), then: users.nickname);
+```
+
 When the DSL has no spelling for something, `raw()` is the escape hatch and
 `raw.parts` keeps column handles and bound values intact rather than
 interpolating them into text:
 
 ```dart
-// No DSL spelling for CASE WHEN:
+// No DSL spelling for window functions:
 db
-    .select(raw<String>("CASE WHEN age >= 18 THEN 'adult' ELSE 'minor' END"))
+    .select(raw<int>('ROW_NUMBER() OVER (ORDER BY "age")'))
     .from(users);
 
 // raw.parts keeps handles and bound values intact inside the fragment:
