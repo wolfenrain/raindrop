@@ -19,9 +19,13 @@ def combos:
       then error("\($package)/ci.yaml must list at least one os")
       else . end | map(parse))[] as $os
   | ((.databases // []) | map(parse) | combos)[] as $dbs
+  | ($dbs | map(.value as $db | ($db | split(":")) as $parts
+      | if ($package | contains($parts[0])) and ($parts | length) > 1
+        then $parts[1:] | join(":") else $db end)) as $db_labels
+  | ([$os.value | rtrimstr("-latest")] + $db_labels) as $labels
   | { package: $package,
       os: $os.value,
       databases: ($dbs | map(.value)),
       experimental: ($os.unstable or any($dbs[]; .unstable)),
-      name: "\($package) (\(([$os.value] + ($dbs | map(.value))) | join(", ")))" }
+      name: "\($package) (\($labels | join(", ")))" }
 ]

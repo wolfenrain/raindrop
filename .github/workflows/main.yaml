@@ -43,7 +43,7 @@ jobs:
           sdk: stable
 
       - name: 💾 Cache pub dependencies
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: ~/.pub-cache
           key: pub-${{ runner.os }}-${{ hashFiles('pubspec.lock') }}
@@ -80,7 +80,7 @@ jobs:
           sdk: stable
 
       - name: 💾 Cache pub dependencies
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: ~/.pub-cache
           key: pub-${{ runner.os }}-${{ hashFiles('pubspec.lock') }}

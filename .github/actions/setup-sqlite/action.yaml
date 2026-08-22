@@ -61,7 +61,7 @@ runs:
     - name: 💾 Cache SQLite build
       if: inputs.version != 'bundled' && runner.os != 'Windows'
       id: cache
-      uses: actions/cache@v4
+      uses: actions/cache@v6
       with:
         path: ${{ runner.temp }}/sqlite-build
         key: sqlite-${{ runner.os }}-${{ steps.resolve.outputs.encoded }}
