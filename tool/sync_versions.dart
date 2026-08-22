@@ -27,6 +27,8 @@ void main() {
 
     File(p.join(package.path, 'lib', 'src', 'version.dart')).writeAsStringSync(
       '''
+// coverage:ignore-file
+
 /// The current version of the `$name` package.
 const packageVersion = '$version';
 ''',
