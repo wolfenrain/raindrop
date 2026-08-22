@@ -5,7 +5,7 @@ import 'package:raindrop_cli/src/cli/cli_runner.dart';
 Future<void> main(List<String> arguments) async {
   final runner = CliRunner();
   try {
-    await runner.run(arguments);
+    exitCode = await runner.run(arguments);
   } on UsageException catch (e) {
     stderr
       ..writeln(e.message)

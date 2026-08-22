@@ -16,6 +16,7 @@ workspace:
 dev_dependencies:
   coverage: ^1.15.1
   melos: ^8.2.2
+  path: ^1.9.1
   very_good_analysis: ^10.3.0
 
 melos:
@@ -26,6 +27,10 @@ melos:
       branch: main
       linkToCommits: true
       workspaceChangelog: true
+      hooks:
+        preCommit: >-
+          dart tool/sync_versions.dart &&
+          git add packages/*/lib/src/version.dart
 
   scripts:
     analyze:
