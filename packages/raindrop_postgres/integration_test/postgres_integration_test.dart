@@ -14,10 +14,9 @@ void main() {
       connection = await Connection.open(
         Endpoint(
           host: 'localhost',
-          port: 15432,
           database: 'postgres',
           username: 'postgres',
-          password: 'test',
+          password: 'postgres',
         ),
         settings: const ConnectionSettings(
           sslMode: SslMode.disable,

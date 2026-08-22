@@ -1,0 +1,2 @@
+os: [ubuntu-latest, windows-latest, macos-latest]
+databases: [sqlite:bundled, sqlite:3.44.0, sqlite:latest~]

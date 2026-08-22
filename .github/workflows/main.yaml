@@ -31,7 +31,7 @@ jobs:
     runs-on: ubuntu-latest
 
     outputs:
-      packages: ${{ steps.find.outputs.packages }}
+      matrix: ${{ steps.find.outputs.matrix }}
 
     steps:
       - name: 📚 Git Checkout
@@ -54,39 +54,21 @@ jobs:
 
       - name: 🔍 Discover packages
         id: find
-        run: |
-          packages=$(dart run melos list --no-private --json | jq -c '[.[].name]')
-          echo "packages=$packages" >> "$GITHUB_OUTPUT"
+        run: .github/scripts/discover_packages.sh >> "$GITHUB_OUTPUT"
 
   build:
     needs: packages
-    name: ${{ matrix.package }} (${{ matrix.os }})
+    name: ${{ matrix.name }}
     runs-on: ${{ matrix.os }}
+    continue-on-error: ${{ matrix.experimental }}
 
     strategy:
       fail-fast: false
       matrix:
-        package: ${{ fromJSON(needs.packages.outputs.packages) }}
-        os: [ubuntu-latest]
-        include:
-          - { package: raindrop_cli, os: windows-latest }
-          - { package: raindrop_cli, os: macos-latest }
+        include: ${{ fromJSON(needs.packages.outputs.matrix) }}
 
     env:
       MELOS_PACKAGES: ${{ matrix.package }}
-
-    services:
-      postgres:
-        image: ${{ matrix.package == 'raindrop_postgres' && 'postgres:16-alpine' || '' }}
-        env:
-          POSTGRES_PASSWORD: test
-        ports:
-          - 15432:5432
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
 
     steps:
       - name: 📚 Git Checkout
@@ -112,6 +94,11 @@ jobs:
 
       - name: 🕵️ Analyze
         run: dart run melos run analyze
+
+      - name: 🚰 Setup Databases
+        uses: ./.github/actions/setup-databases
+        with:
+          databases: ${{ toJSON(matrix.databases) }}
 
       - name: 🧪 Unit Tests
         run: dart run melos run test:unit --no-select

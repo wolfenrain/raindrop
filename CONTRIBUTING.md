@@ -101,13 +101,35 @@ dart run melos run test:unit         # unit tests only
 dart run melos run test:integration  # integration tests only
 ```
 
-The `raindrop_postgres` integration tests expect a Postgres instance on port
-`15432`, which you can start with Docker:
+The `raindrop_postgres` integration tests expect a Postgres instance on the
+default port `5432` with the default `postgres`/`postgres` credentials, which
+you can start with Docker:
 
 ```shell
 docker run -d --rm --name raindrop-pg-test \
-  -e POSTGRES_PASSWORD=test -p 15432:5432 postgres:16-alpine
+  -e POSTGRES_PASSWORD=postgres -p 5432:5432 postgres:16-alpine
 ```
+
+### Configuring CI for a package
+
+Every package has a `ci.yaml` in its root that declares where and against what
+its tests run, for example:
+
+```yaml
+os: [ubuntu-latest, windows-latest]
+databases: [postgres:16, postgres:latest~]
+```
+
+- `os` lists the [runner labels] the package is tested on, and is required.
+- `databases` lists the databases the tests need, one job per version of the
+  same database. Versions are required (`postgres:16`), with two special values:
+  `latest` resolves to the newest release, and `sqlite:bundled` is the library
+  that `package:sqlite3` ships.
+- A trailing `~` marks an entry as unstable: jobs using it are allowed to fail
+  without failing CI. Moving targets like `latest` should always carry it.
+
+The databases themselves are set up by the actions in `.github/actions`, one per
+database, which is also where support for a new database gets added.
 
 ### Performing changes
 
@@ -176,3 +198,4 @@ Examples of PR titles:
 [pub workspace]: https://dart.dev/tools/pub/workspaces
 [melos]: https://melos.invertase.dev
 [conventional commit]: https://www.conventionalcommits.org
+[runner labels]: https://docs.github.com/en/actions/using-github-hosted-runners/using-github-hosted-runners/about-github-hosted-runners#supported-runners-and-hardware-resources
