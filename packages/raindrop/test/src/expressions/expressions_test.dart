@@ -121,6 +121,41 @@ void main() {
     });
   });
 
+  group('between', () {
+    test('renders BETWEEN with both bounds inclusive', () {
+      expect(render(rows.age.between(18, and: 65)), '"age" BETWEEN 18 AND 65');
+    });
+
+    test('bounds accept columns and expressions', () {
+      expect(
+        render(rows.score.between(0, and: rows.age)),
+        '"score" BETWEEN 0 AND "age"',
+      );
+      expect(
+        render(rows.score.between(0, and: rows.age + 10)),
+        '"score" BETWEEN 0 AND ("age" + 10)',
+      );
+    });
+
+    test('orders strings lexicographically', () {
+      expect(
+        render(rows.name.between('A', and: 'M')),
+        '''"name" BETWEEN 'A' AND 'M\'''',
+      );
+    });
+
+    test('applies to expressions over numbers and strings', () {
+      expect(
+        render(length(rows.name).between(1, and: 5)),
+        'LENGTH("name") BETWEEN 1 AND 5',
+      );
+      expect(
+        render(upper(rows.name).between('A', and: 'M')),
+        '''UPPER("name") BETWEEN 'A' AND 'M\'''',
+      );
+    });
+  });
+
   group('CaseWhen', () {
     test('a single branch stays open, without an ELSE', () {
       expect(

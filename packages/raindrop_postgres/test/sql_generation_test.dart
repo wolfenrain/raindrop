@@ -30,6 +30,10 @@ void main() {
         (db) => db.select().from(users).where(users.age.greaterThan(18)),
       )
       ..test(
+        'with between filter',
+        (db) => db.select().from(users).where(users.age.between(18, and: 65)),
+      )
+      ..test(
         'with date time filter',
         (db) => db.select().from(users).where(
               users.deletedAt.equals(DateTime.utc(2026)),

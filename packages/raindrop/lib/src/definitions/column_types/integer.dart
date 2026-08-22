@@ -28,4 +28,13 @@ extension IntOperators<V extends int?> on ColumnOf<V> {
 
   /// Row value of column is less than or equal [value].
   SQL operator <=(ColumnOr<V> value) => lessThanOrEqual(value);
+
+  /// Row value of column is within the inclusive [low] to [and] range.
+  SQL between(ColumnOr<V> low, {required ColumnOr<V> and}) => SQL([
+        this,
+        const RawSQL('BETWEEN'),
+        operand(low),
+        const RawSQL('AND'),
+        operand(and),
+      ]);
 }

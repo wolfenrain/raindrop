@@ -249,6 +249,23 @@ void testDriverConformance(
         expect(await db.select(avg(users.age)).from(users), [30.25]);
       });
 
+      conformanceTest('filters with between', () async {
+        await seed();
+
+        expect(
+          await db.select(users.name).from(users).where(
+                users.age.between(28, and: 30),
+              ),
+          unorderedEquals(['Morgan', 'Alex']),
+        );
+        expect(
+          await db.select(users.name).from(users).where(
+                not(users.age.between(28, and: 30)),
+              ),
+          ['Sam'],
+        );
+      });
+
       conformanceTest('evaluates case expressions', () async {
         await seed();
 
