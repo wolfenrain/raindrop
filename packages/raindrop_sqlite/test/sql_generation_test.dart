@@ -112,6 +112,16 @@ void main() {
             .groupBy(users.favoriteGame, users.age),
       )
       ..test(
+        'with string functions',
+        (db) => db
+            .select(
+              substr(users.name, 1, 3),
+              replace(users.favoriteGame, from: 'zel', to: 'ZEL'),
+              concat([users.name, ' likes ', users.favoriteGame]),
+            )
+            .from(users),
+      )
+      ..test(
         'with a case expression',
         (db) => db
             .select(
