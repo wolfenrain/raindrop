@@ -11,4 +11,5 @@ export 'inner_joins.dart';
 export 'left_joins.dart';
 export 'right_joins.dart';
 export 'selectable_columns.dart';
+export 'selectable_reader.dart';
 export 'updateable_columns.dart';

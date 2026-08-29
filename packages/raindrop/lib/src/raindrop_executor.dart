@@ -95,66 +95,11 @@ R _read<R>(Selectable<R> selectable, List<Object?> rows) {
     final value = rows.removeAt(0);
     return operand.decode(value) as R;
   } else if (selectable case final SelectableResult<dynamic> result) {
-    return result.readRecord(rows) as R;
+    return readSelectableRecord(
+      result,
+      (selectable) => _read(selectable, rows),
+    ) as R;
   } else {
     throw UnimplementedError('${selectable.runtimeType}');
-  }
-}
-
-// TODO(wolfen): generate this??
-extension<R> on SelectableResult<R> {
-  R readRecord(List<Object?> rows) {
-    return switch (selected.length) {
-      2 => (
-          _read(selected[0], rows),
-          _read(selected[1], rows),
-        ) as R,
-      3 => (
-          _read(selected[0], rows),
-          _read(selected[1], rows),
-          _read(selected[2], rows),
-        ) as R,
-      4 => (
-          _read(selected[0], rows),
-          _read(selected[1], rows),
-          _read(selected[2], rows),
-          _read(selected[3], rows),
-        ) as R,
-      5 => (
-          _read(selected[0], rows),
-          _read(selected[1], rows),
-          _read(selected[2], rows),
-          _read(selected[3], rows),
-          _read(selected[4], rows),
-        ) as R,
-      6 => (
-          _read(selected[0], rows),
-          _read(selected[1], rows),
-          _read(selected[2], rows),
-          _read(selected[3], rows),
-          _read(selected[4], rows),
-          _read(selected[5], rows),
-        ) as R,
-      7 => (
-          _read(selected[0], rows),
-          _read(selected[1], rows),
-          _read(selected[2], rows),
-          _read(selected[3], rows),
-          _read(selected[4], rows),
-          _read(selected[5], rows),
-          _read(selected[6], rows),
-        ) as R,
-      8 => (
-          _read(selected[0], rows),
-          _read(selected[1], rows),
-          _read(selected[2], rows),
-          _read(selected[3], rows),
-          _read(selected[4], rows),
-          _read(selected[5], rows),
-          _read(selected[6], rows),
-          _read(selected[7], rows),
-        ) as R,
-      _ => throw UnsupportedError('${selected.length}'),
-    };
   }
 }

@@ -44,6 +44,11 @@ void main(List<String> arguments) {
     amount,
   );
 
+  selectableReader(
+    '${script.parent.path}/../lib/src/generated/selectable_reader.dart',
+    amount,
+  );
+
   Process.runSync('melos', ['format:fix']);
 }
 
@@ -269,6 +274,39 @@ extension $extension on $builder {
 }
 ''');
   }
+
+  return File(path).writeAsStringSync(buffer.toString());
+}
+
+void selectableReader(String path, int amount) {
+  final buffer = StringBuffer()..writeln('''
+// GENERATED CODE - DO NOT EDIT BY HAND.
+// Run `dart run tool/generate_the_magic.dart` to regenerate.
+// coverage:ignore-file
+import 'package:raindrop/raindrop.dart';
+
+/// Decodes a projected row into the record shape of [result], reading one
+/// value per selected term through [read], in order.
+R readSelectableRecord<R>(
+  SelectableResult<R> result,
+  Object? Function(Selectable<dynamic> selectable) read,
+) {
+  final selected = result.selected;
+  return switch (selected.length) {''');
+
+  for (var n = 2; n <= amount; n++) {
+    buffer
+      ..writeln('    $n => (')
+      ..writeln(
+        List.generate(n, (i) => '      read(selected[$i]),').join('\n'),
+      )
+      ..writeln('    ) as R,');
+  }
+
+  buffer.writeln(r'''
+    _ => throw UnsupportedError('${selected.length}'),
+  };
+}''');
 
   return File(path).writeAsStringSync(buffer.toString());
 }
