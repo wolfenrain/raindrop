@@ -1,10 +1,26 @@
 import 'dart:async';
 
 import 'package:raindrop/dialect.dart';
+import 'package:raindrop_test/raindrop_test.dart';
 import 'package:test/test.dart';
 
 void main() {
   group('migrate', () {
+    test('refuses a driver without migration storage', () async {
+      final db = Raindrop(_StoragelessDelegate());
+
+      await expectLater(
+        migrate(db, []),
+        throwsA(
+          isA<UnsupportedError>().having(
+            (e) => e.message,
+            'message',
+            contains('does not support migrations'),
+          ),
+        ),
+      );
+    });
+
     test(
       'creates tracking table and does nothing with no migrations',
       () async {
@@ -287,6 +303,9 @@ class _FakeRaindropDelegate extends RaindropDelegate {
       : txDelegate = _FakeTransactionDelegate(_FakeDialect()),
         super(dialect: _FakeDialect());
 
+  @override
+  final migrationStorage = DdlMigrationStorage(const TestDdlGenerator());
+
   final List<(String, String)> appliedMigrations;
   final _FakeTransactionDelegate txDelegate;
   final executedQueries = <(String, List<Object?>)>[];
@@ -300,9 +319,10 @@ class _FakeRaindropDelegate extends RaindropDelegate {
     executedQueries.add((query, values));
     if (query.contains('SELECT')) {
       return DatabaseResult(
-        columns: ['tag', 'checksum'],
+        columns: ['id', 'tag', 'checksum', 'applied_at'],
         rows: [
-          for (final (tag, checksum) in appliedMigrations) [tag, checksum],
+          for (final (index, migration) in appliedMigrations.indexed)
+            [index + 1, migration.$1, migration.$2, 0],
         ],
         rowsAffected: 0,
         lastInsertedRowId: null,
@@ -326,4 +346,19 @@ class _FakeRaindropDelegate extends RaindropDelegate {
       zoneValues: {#delegate: txDelegate},
     );
   }
+}
+
+/// A delegate that keeps the base class's null [migrationStorage].
+class _StoragelessDelegate extends RaindropDelegate {
+  _StoragelessDelegate() : super(dialect: _FakeDialect());
+
+  @override
+  Future<DatabaseResult> execute(String query, List<Object?> values) =>
+      throw UnsupportedError('unreachable');
+
+  @override
+  Future<T> transaction<T>(
+    Future<T> Function(TransactionDelegate delegate) transaction,
+  ) =>
+      throw UnsupportedError('unreachable');
 }

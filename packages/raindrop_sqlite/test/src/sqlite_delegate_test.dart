@@ -24,6 +24,28 @@ CREATE TABLE payloads (id INTEGER PRIMARY KEY AUTOINCREMENT, big BLOB NOT NULL, 
 
     tearDown(() => database.close());
 
+    group('foreign keys', () {
+      int pragmaOn(Database database) =>
+          database.select('PRAGMA foreign_keys').first.values.first! as int;
+
+      test('enforcement is on by default', () {
+        final fresh = sqlite3.openInMemory();
+        addTearDown(fresh.close);
+
+        expect(pragmaOn(fresh), 0, reason: 'SQLite ships with it off');
+        SQLiteDelegate(fresh);
+        expect(pragmaOn(fresh), 1);
+      });
+
+      test('enforceForeignKeys: false leaves the connection untouched', () {
+        final fresh = sqlite3.openInMemory();
+        addTearDown(fresh.close);
+
+        SQLiteDelegate(fresh, enforceForeignKeys: false);
+        expect(pragmaOn(fresh), 0);
+      });
+    });
+
     test('a transaction commits', () async {
       await db.transaction((tx) async {
         await tx.execute("INSERT INTO kv VALUES ('a', 1)", []);

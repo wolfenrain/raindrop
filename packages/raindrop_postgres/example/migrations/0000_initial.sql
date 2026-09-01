@@ -1,13 +1,11 @@
 CREATE TABLE "users" (
-  "id" INTEGER PRIMARY KEY AUTOINCREMENT,
+  "id" SERIAL PRIMARY KEY,
   "name" TEXT NOT NULL,
-  "deleted_at" INTEGER
+  "deleted_at" TIMESTAMP
 );
 
 CREATE TABLE "pets" (
-  "id" INTEGER PRIMARY KEY AUTOINCREMENT,
+  "id" SERIAL PRIMARY KEY,
   "owner_id" INTEGER NOT NULL REFERENCES "users"("id") ON DELETE CASCADE,
   "name" TEXT NOT NULL
 );
-
-CREATE INDEX "pets_owner" ON "pets" ("owner_id", "id");

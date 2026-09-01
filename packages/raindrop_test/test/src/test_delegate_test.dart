@@ -5,6 +5,10 @@ import 'package:test/test.dart';
 
 void main() {
   group('TestDelegate', () {
+    test('exposes migration storage over the test generator', () {
+      expect(TestDelegate().migrationStorage, isA<DdlMigrationStorage>());
+    });
+
     test('records every executed statement with its values', () async {
       final delegate = TestDelegate();
 

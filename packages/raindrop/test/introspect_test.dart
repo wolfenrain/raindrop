@@ -9,7 +9,7 @@ void main() {
 
   // No explicit dialectName: the tag filter derives from dialect.name.
   Map<String, Object?> snapshot() =>
-      buildSnapshot([owners, pets], dialect: dialect);
+      buildSnapshot([owners, pets], dialect: dialect).toMap();
 
   Map<String, Object?> tableOf(String name) =>
       (snapshot()['tables']! as Map)[name] as Map<String, Object?>;
@@ -20,13 +20,9 @@ void main() {
   Map<String, Object?> indexOf(String name) =>
       (snapshot()['indexes']! as Map)[name] as Map<String, Object?>;
 
-  group('the document', () {
-    test('carries the identity fields the CLI requires', () {
-      final document = snapshot();
-      expect(document['version'], snapshotFormatVersion);
-      expect(document['dialect'], 'test');
-      expect(document['id'], isA<String>());
-      expect(document['prevId'], isA<String>());
+  group('the snapshot', () {
+    test('records the dialect it was rendered for', () {
+      expect(snapshot()['dialect'], 'test');
     });
 
     test('every table appears, keyed by SQL name', () {
@@ -35,7 +31,8 @@ void main() {
 
     test('tables for another dialect are skipped', () {
       final document =
-          buildSnapshot([owners, pets], dialect: dialect, dialectName: 'other');
+          buildSnapshot([owners, pets], dialect: dialect, dialectName: 'other')
+              .toMap();
       expect(document['tables'], isEmpty);
       expect(document['indexes'], isEmpty);
     });

@@ -1,17 +1,7 @@
 import 'package:raindrop/dialect.dart';
+import 'package:raindrop/src/snapshot.dart';
 
-/// Snapshot format version. Must match `SchemaSnapshot.currentVersion` in
-/// `raindrop_cli`, the two packages cannot see each other, and the CLI reads
-/// this value back out of the JSON.
-const String snapshotFormatVersion = '1';
-
-/// Stand-in for the identity fields. `generate` overwrites both with a fresh
-/// id and the journal's previous id, but they must be present and non-null for
-/// the CLI to parse the document at all.
-const String _placeholderId = '00000000-0000-0000-0000-000000000000';
-
-/// Describes every table reachable from [schemas], as the JSON the CLI's
-/// `SchemaSnapshot.fromJson` accepts.
+/// Describes every table and index reachable from [schemas].
 ///
 /// [schemas] must be listed explicitly: a table registers itself when its
 /// top-level `final` is first read, and Dart initialises those lazily, so
@@ -20,14 +10,14 @@ const String _placeholderId = '00000000-0000-0000-0000-000000000000';
 /// [dialectName] selects which tables count and defaults to the [dialect]'s
 /// own [SqlDialect.name], pass it explicitly only when the tables carry a
 /// different tag than the rendering dialect.
-Map<String, Object?> buildSnapshot(
+SchemaSnapshot buildSnapshot(
   List<Schema<dynamic>> schemas, {
   required SqlDialect dialect,
   String? dialectName,
 }) {
   dialectName ??= dialect.name;
-  final tables = <String, Object?>{};
-  final indexes = <String, Object?>{};
+  final tables = <String, TableSnapshot>{};
+  final indexes = <String, IndexSnapshot>{};
 
   for (final schema in schemas) {
     final table = schema.$;
@@ -48,37 +38,33 @@ Map<String, Object?> buildSnapshot(
     }
   }
 
-  return {
-    'version': snapshotFormatVersion,
-    'dialect': dialectName,
-    'id': _placeholderId,
-    'prevId': _placeholderId,
-    'tables': tables,
-    'indexes': indexes,
-  };
+  return SchemaSnapshot(
+    dialect: dialectName,
+    tables: tables,
+    indexes: indexes,
+  );
 }
 
-Map<String, Object?> _table(Table<dynamic, dynamic> table, SqlDialect dialect) {
-  final columns = <String, Object?>{};
+TableSnapshot _table(Table<dynamic, dynamic> table, SqlDialect dialect) {
+  final columns = <String, ColumnSnapshot>{};
   for (final column in table.columns) {
     columns[column.name] = _column(table, column, dialect);
   }
 
-  return {
-    'name': table.name,
-    'columns': columns,
-    if (table.checks.isNotEmpty)
-      'checks': {
-        for (final check in table.checks) check.name: _checkSql(check, dialect),
-      },
-  };
+  return TableSnapshot(
+    name: table.name,
+    columns: columns,
+    checks: {
+      for (final check in table.checks) check.name: _checkSql(check, dialect),
+    },
+  );
 }
 
 /// A constraint's SQL, rendered from its predicate.
 String _checkSql(Check check, SqlDialect dialect) =>
     renderPredicate(check.predicate, dialect);
 
-Map<String, Object?> _column(
+ColumnSnapshot _column(
   Table<dynamic, dynamic> table,
   Column<dynamic, dynamic> column,
   SqlDialect dialect,
@@ -92,28 +78,33 @@ column "${table.name}.${column.name}" has no sqlType, so no migration can declar
   }
 
   final reference = column.foreignKeyReference;
-  return {
-    'name': column.name,
-    'type': sqlType,
-    'primaryKey': column.isPrimaryKey,
-    'isNullable': column.isNullable,
-    if (column.autoIncrement) 'autoIncrement': true,
-    if (column.defaultValue case final defaultValue?)
-      'default': switch (defaultValue) {
-        final Expression<dynamic> expression =>
-          renderPredicate(expression.build(), dialect),
-        _ => dialect.escapeLiteral(column.encode(defaultValue)),
-      },
-    if (reference != null)
-      'foreignKey': {
-        'referencedTable': reference.referencedTable,
-        'referencedColumn': reference.referencedColumnName,
-        if (reference.onDelete case final onDelete?)
-          'onDelete': _referentialActionSql(onDelete),
-        if (reference.onUpdate case final onUpdate?)
-          'onUpdate': _referentialActionSql(onUpdate),
-      },
-  };
+  return ColumnSnapshot(
+    name: column.name,
+    type: sqlType,
+    primaryKey: column.isPrimaryKey,
+    isNullable: column.isNullable,
+    autoIncrement: column.autoIncrement,
+    defaultValue: switch (column.defaultValue) {
+      null => null,
+      final Expression<dynamic> expression =>
+        renderPredicate(expression.build(), dialect),
+      final defaultValue => dialect.escapeLiteral(column.encode(defaultValue)),
+    },
+    foreignKey: reference == null
+        ? null
+        : ForeignKeySnapshotRef(
+            referencedTable: reference.referencedTable,
+            referencedColumn: reference.referencedColumnName,
+            onDelete: switch (reference.onDelete) {
+              final onDelete? => _referentialActionSql(onDelete),
+              _ => null,
+            },
+            onUpdate: switch (reference.onUpdate) {
+              final onUpdate? => _referentialActionSql(onUpdate),
+              _ => null,
+            },
+          ),
+  );
 }
 
 /// The ANSI keyword for a referential action.
@@ -125,19 +116,19 @@ String _referentialActionSql(ReferentialAction action) => switch (action) {
       ReferentialAction.noAction => 'NO ACTION',
     };
 
-Map<String, Object?> _index(Index index, SqlDialect dialect) {
+IndexSnapshot _index(Index index, SqlDialect dialect) {
   if (index.columns.isEmpty) {
     throw StateError('index "${index.name}" covers no columns');
   }
 
   final where = index.where;
-  return {
-    'name': index.name,
-    'tableName': index.columns.first.table.name,
-    'columns': [for (final column in index.columns) column.name],
-    'isUnique': index.isUnique,
-    if (where != null) 'where': renderPredicate(where, dialect),
-  };
+  return IndexSnapshot(
+    name: index.name,
+    tableName: index.columns.first.table.name,
+    columns: [for (final column in index.columns) column.name],
+    isUnique: index.isUnique,
+    where: where == null ? null : renderPredicate(where, dialect),
+  );
 }
 
 /// Renders [filter] as SQL that can sit in a schema: no bind parameters, and

@@ -160,13 +160,13 @@ class BlankDdlGenerator extends DdlGenerator {
   String generate(List<DiffOperation> operations) => '   ';
 
   @override
-  String createTable(TableInfo table) => '';
+  String createTable(TableInfo table, {bool ifNotExists = false}) => '';
   @override
   String dropTable(String tableName) => '';
   @override
   String alterTable(AlterTable operation) => '';
   @override
-  String createIndex(IndexInfo index) => '';
+  String createIndex(IndexInfo index, {bool ifNotExists = false}) => '';
   @override
   String dropIndex(String indexName) => '';
   @override

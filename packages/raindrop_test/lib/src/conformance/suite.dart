@@ -491,6 +491,18 @@ void testDriverConformance(
         );
       });
 
+      conformanceTest('deleting a parent cascades to its children', () async {
+        await seed();
+
+        await db.delete(from: users).where(users.name.equals('Morgan'));
+
+        expect(await db.select().from(pets), isEmpty);
+        expect(
+          await db.select(users.name).from(users),
+          unorderedEquals(['Alex', 'Sam']),
+        );
+      });
+
       conformanceTest('without a filter clears the table', () async {
         await seed();
 
@@ -608,6 +620,34 @@ void testDriverConformance(
         });
 
         expect(await db.select(users.name).from(users), ['Kept']);
+      });
+    });
+
+    group('migrations', () {
+      conformanceTest('a migration applies once, and reruns skip it', () async {
+        final dialect = db.delegate.dialect;
+        for (final name in ['_raindrop_migrations', 'conformance_migrated']) {
+          await db.execute('DROP TABLE IF EXISTS ${dialect.escapeName(name)}');
+        }
+
+        final migration = Migration(
+          '0000_conformance',
+          'CREATE TABLE ${dialect.escapeName('conformance_migrated')} '
+              '(${dialect.escapeName('n')} INTEGER)',
+        );
+        await migrate(db, [migration]);
+        await migrate(db, [migration]);
+
+        await db.execute(
+          'INSERT INTO ${dialect.escapeName('conformance_migrated')} '
+          '(${dialect.escapeName('n')}) VALUES (${dialect.escapeParam(0)})',
+          [1],
+        );
+        final recorded = await db.execute(
+          'SELECT COUNT(*) FROM '
+          '${dialect.escapeName('_raindrop_migrations')}',
+        );
+        expect(recorded.rows.first.first, 1);
       });
     });
 

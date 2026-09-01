@@ -1,9 +1,9 @@
 {
   "version": "1",
-  "id": "09f4f9d6-bc7e-4d7d-b7c0-8980b42dd58b",
+  "id": "dfa0ca39-05b4-4efc-ba66-87327e1ea350",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "schema": {
-    "dialect": "sqlite",
+    "dialect": "postgres",
     "tables": {
       "pets": {
         "name": "pets",
@@ -52,23 +52,13 @@
           },
           "deleted_at": {
             "name": "deleted_at",
-            "type": "INTEGER",
+            "type": "TIMESTAMP",
             "primaryKey": false,
             "isNullable": true
           }
         }
       }
     },
-    "indexes": {
-      "pets_owner": {
-        "name": "pets_owner",
-        "tableName": "pets",
-        "columns": [
-          "owner_id",
-          "id"
-        ],
-        "isUnique": false
-      }
-    }
+    "indexes": {}
   }
 }

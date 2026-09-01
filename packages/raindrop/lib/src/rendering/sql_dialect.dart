@@ -1,11 +1,5 @@
 import 'package:raindrop/dialect.dart';
 
-/// The executing migration.
-typedef MigrationExecute = Future<DatabaseResult> Function(
-  String sql, [
-  List<Object?> values,
-]);
-
 /// {@template sql_dialect}
 /// Base class for any SQL dialect.
 ///
@@ -169,50 +163,4 @@ abstract class SqlDialect {
 
   /// Render [value] as a SQL literal, for the places that cannot bind.
   String escapeLiteral(Object? value);
-
-  /// Ensures that the migration tracking storage exists.
-  Future<void> ensureMigrationStorage(MigrationExecute execute) async {
-    final table = escapeName('_raindrop_migrations');
-    final id = escapeName('id');
-    final tag = escapeName('tag');
-    final checksum = escapeName('checksum');
-    final appliedAt = escapeName('applied_at');
-    await execute(
-      '''
-CREATE TABLE IF NOT EXISTS $table ($id INTEGER PRIMARY KEY, $tag TEXT NOT NULL UNIQUE, $checksum TEXT NOT NULL, $appliedAt INTEGER NOT NULL)''',
-    );
-  }
-
-  /// Loads all previously applied migrations, ordered by application order.
-  Future<List<({String tag, String checksum})>> loadAppliedMigrations(
-    MigrationExecute execute,
-  ) async {
-    final table = escapeName('_raindrop_migrations');
-    final tag = escapeName('tag');
-    final checksum = escapeName('checksum');
-    final id = escapeName('id');
-    final result =
-        await execute('SELECT $tag, $checksum FROM $table ORDER BY $id');
-    return result.rows.map((row) {
-      return (tag: row[0]! as String, checksum: row[1]! as String);
-    }).toList();
-  }
-
-  /// Records a migration as applied.
-  Future<void> recordMigration(
-    Future<DatabaseResult> Function(String sql, [List<Object?> values])
-        execute, {
-    required String tag,
-    required String checksum,
-  }) async {
-    final table = escapeName('_raindrop_migrations');
-    final tagCol = escapeName('tag');
-    final checksumCol = escapeName('checksum');
-    final appliedAt = escapeName('applied_at');
-    await execute(
-      '''
-INSERT INTO $table ($tagCol, $checksumCol, $appliedAt) VALUES (${escapeParam(0)}, ${escapeParam(1)}, ${escapeParam(2)})''',
-      [tag, checksum, DateTime.now().millisecondsSinceEpoch],
-    );
-  }
 }

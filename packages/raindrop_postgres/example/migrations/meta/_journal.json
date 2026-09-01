@@ -1,13 +1,13 @@
 {
   "version": "1",
-  "dialect": "sqlite",
+  "dialect": "postgres",
   "entries": [
     {
       "idx": 0,
       "version": "1",
-      "when": 1787430779935,
+      "when": 1787423701301,
       "tag": "0000_initial",
-      "snapshotId": "09f4f9d6-bc7e-4d7d-b7c0-8980b42dd58b"
+      "snapshotId": "dfa0ca39-05b4-4efc-ba66-87327e1ea350"
     }
   ]
 }

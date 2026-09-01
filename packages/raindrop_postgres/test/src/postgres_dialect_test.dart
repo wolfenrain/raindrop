@@ -1,6 +1,9 @@
 import 'dart:typed_data';
 
+import 'package:raindrop/raindrop.dart';
+import 'package:raindrop_postgres/ddl.dart';
 import 'package:raindrop_postgres/raindrop_postgres.dart';
+import 'package:raindrop_test/raindrop_test.dart';
 import 'package:test/test.dart';
 
 void main() {
@@ -56,6 +59,22 @@ SELECT 1;''');
     test('non-finite doubles and unknown types have no literal form', () {
       expect(() => dialect.escapeLiteral(double.nan), throwsArgumentError);
       expect(() => dialect.escapeLiteral(#symbol), throwsArgumentError);
+    });
+
+    test('migration storage self-assigns ids and holds 64-bit timestamps',
+        () async {
+      final delegate = TestDelegate(dialect: PostgresDialect());
+      final storage = DdlMigrationStorage(const PostgresDdlGenerator());
+      await storage.ensure(Raindrop(delegate));
+
+      final statements = [for (final s in delegate.statements) s.sql];
+      expect(statements.first, contains('CREATE TABLE IF NOT EXISTS'));
+      expect(statements.first, contains('"id" SERIAL PRIMARY KEY'));
+      expect(statements.first, contains('"applied_at" BIGINT NOT NULL'));
+      expect(
+        statements.last,
+        contains('CREATE UNIQUE INDEX IF NOT EXISTS'),
+      );
     });
   });
 }

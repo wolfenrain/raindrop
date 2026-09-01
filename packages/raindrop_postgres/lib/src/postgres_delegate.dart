@@ -1,6 +1,7 @@
 import 'package:postgres/postgres.dart';
 import 'package:raindrop/raindrop.dart';
 import 'package:raindrop_postgres/raindrop_postgres.dart';
+import 'package:raindrop_postgres/src/postgres_ddl.dart';
 
 /// {@template postgres_delegate}
 /// Delegate for the Postgres database.
@@ -13,6 +14,9 @@ class PostgresDelegate extends RaindropDelegate with _SessionDelegate {
   PostgresDelegate(this._executor) : super(dialect: const PostgresDialect());
 
   final SessionExecutor _executor;
+
+  @override
+  final migrationStorage = DdlMigrationStorage(const PostgresDdlGenerator());
 
   @override
   Session get _session => _executor as Session;

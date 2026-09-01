@@ -50,8 +50,15 @@ class _Migrator {
   final SqlDialect _dialect;
 
   Future<void> run(List<Migration> allMigrations) async {
-    await _dialect.ensureMigrationStorage(_db.execute);
-    final applied = await _dialect.loadAppliedMigrations(_db.execute);
+    final storage = _db.delegate.migrationStorage;
+    if (storage == null) {
+      throw UnsupportedError(
+        'The ${_db.delegate.runtimeType} driver does not support migrations.',
+      );
+    }
+
+    await storage.ensure(_db);
+    final applied = await storage.loadApplied(_db);
 
     for (final record in applied) {
       final matching = allMigrations.where((m) => m.tag == record.tag);
@@ -76,11 +83,7 @@ class _Migrator {
           await tx.execute(statement);
         }
 
-        await _dialect.recordMigration(
-          tx.execute,
-          tag: migration.tag,
-          checksum: checksum,
-        );
+        await storage.record(tx, tag: migration.tag, checksum: checksum);
       });
     }
   }

@@ -309,7 +309,7 @@ INSERT INTO "__new_users" ("id", "full_name", "age") SELECT "id", "name", "age" 
     late Raindrop db;
 
     setUp(() {
-      database = sqlite3.openInMemory()..execute('PRAGMA foreign_keys = ON;');
+      database = sqlite3.openInMemory();
       db = Raindrop(SQLiteDelegate(database));
     });
 

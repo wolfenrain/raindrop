@@ -32,3 +32,26 @@ void main() async {
   ]).returning();
 }
 ```
+
+SQLite ships with foreign key enforcement off, so the delegate turns it on for
+its connection. Pass `enforceForeignKeys: false` to keep your own setting.
+
+## Beyond the core DSL
+
+Everything in the core [`raindrop`](https://pub.dev/packages/raindrop) DSL works
+unchanged. On top of it this driver adds upserts:
+
+```dart
+await db.insert(into: users).values([user])
+    .onConflict([users.email])
+    .doUpdate([users.age.to(excluded(users.age))]);
+// INSERT ... ON CONFLICT ("email") DO UPDATE SET "age" = "excluded"."age"
+```
+
+- `insertOrIgnore` renders `INSERT OR IGNORE`, skipping conflicting rows.
+- `returning()` on inserts, updates and deletes yields the affected rows.
+- `.limit(n)` caps updates and deletes. The driver probes the library for
+  `SQLITE_ENABLE_UPDATE_DELETE_LIMIT` and falls back to a key-based rewrite.
+- `unixepoch()` and `currentTimestamp()` evaluate in the database.
+- Column types beyond the core set: `boolean`, `dateTime` (milliseconds since
+  the epoch), `bigInt` and `blob`.

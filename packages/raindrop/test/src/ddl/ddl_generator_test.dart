@@ -63,7 +63,7 @@ class _SilentGenerator extends DdlGenerator {
   _SilentGenerator() : super(dialect: _Dialect());
 
   @override
-  String createTable(TableInfo table) => '';
+  String createTable(TableInfo table, {bool ifNotExists = false}) => '';
 
   @override
   String dropTable(String tableName) => 'DROP TABLE "$tableName";';
@@ -72,7 +72,7 @@ class _SilentGenerator extends DdlGenerator {
   String alterTable(AlterTable operation) => '   ';
 
   @override
-  String createIndex(IndexInfo index) => '';
+  String createIndex(IndexInfo index, {bool ifNotExists = false}) => '';
 
   @override
   String dropIndex(String indexName) => '';

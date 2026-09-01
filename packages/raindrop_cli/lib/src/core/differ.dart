@@ -1,6 +1,5 @@
 import 'package:raindrop/ddl.dart';
-
-import 'package:raindrop_cli/src/core/snapshot.dart';
+import 'package:raindrop/snapshot.dart';
 
 /// Calculates the diff between two schema snapshots.
 class SchemaDiffer {
@@ -16,11 +15,25 @@ class SchemaDiffer {
     final newIndexes = to.indexes;
 
     // Dropped tables. Their indexes die with them, so the index pass below
-    // must not emit a DropIndex that would run after the table is gone.
-    for (final tableName in oldTables.keys) {
-      if (!newTables.containsKey(tableName)) {
-        operations.add(DropTable(tableName));
-      }
+    // must not emit a DropIndex that would run after the table is gone. A
+    // referencing table drops before the table it references, so no foreign
+    // key ever points at a table that is already gone.
+    final dropped = [
+      for (final entry in oldTables.entries)
+        if (!newTables.containsKey(entry.key)) entry.value,
+    ];
+    for (final table in _referencedFirst(dropped).reversed) {
+      operations.add(DropTable(table.name));
+    }
+
+    // Created tables, referenced tables first, so no foreign key ever points
+    // at a table that does not exist yet.
+    final created = [
+      for (final entry in newTables.entries)
+        if (!oldTables.containsKey(entry.key)) entry.value,
+    ];
+    for (final table in _referencedFirst(created)) {
+      operations.add(CreateTable(table.toTableInfo()));
     }
 
     // Tables whose intra-table state is reconciled by an AlterTable, their
@@ -32,10 +45,7 @@ class SchemaDiffer {
       final tableName = entry.key;
       final newTable = entry.value;
 
-      if (!oldTables.containsKey(tableName)) {
-        operations.add(CreateTable(_toTableInfo(newTable)));
-        continue;
-      }
+      if (!oldTables.containsKey(tableName)) continue;
 
       final oldTable = oldTables[tableName]!;
       final tableOldIndexes = _tableIndexes(oldIndexes, tableName);
@@ -49,8 +59,8 @@ class SchemaDiffer {
       altered.add(tableName);
       operations.add(
         AlterTable(
-          oldTable: _toTableInfo(oldTable),
-          newTable: _toTableInfo(newTable),
+          oldTable: oldTable.toTableInfo(),
+          newTable: newTable.toTableInfo(),
           renamedColumns: _detectRenames(oldTable, newTable),
           oldIndexes: tableOldIndexes,
           newIndexes: tableNewIndexes,
@@ -92,7 +102,7 @@ class SchemaDiffer {
   ) =>
       [
         for (final index in indexes.values)
-          if (index.tableName == tableName) _toIndexInfo(index),
+          if (index.tableName == tableName) index.toIndexInfo(),
       ];
 
   /// The transitive closure of tables whose foreign keys reference
@@ -114,7 +124,7 @@ class SchemaDiffer {
           next.add(entry.key);
           result.add(
             ReferencedBy(
-              table: _toTableInfo(entry.value),
+              table: entry.value.toTableInfo(),
               indexes: _tableIndexes(to.indexes, entry.key),
             ),
           );
@@ -148,12 +158,12 @@ class SchemaDiffer {
 
       final oldIndex = oldIndexes[name];
       if (oldIndex == null) {
-        operations.add(CreateIndex(index: _toIndexInfo(newIndex)));
+        operations.add(CreateIndex(index: newIndex.toIndexInfo()));
       } else if (oldIndex != newIndex) {
         // Changed index - drop and recreate
         operations
           ..add(DropIndex(name, tableName: newIndex.tableName))
-          ..add(CreateIndex(index: _toIndexInfo(newIndex)));
+          ..add(CreateIndex(index: newIndex.toIndexInfo()));
       }
     }
 
@@ -199,44 +209,29 @@ class SchemaDiffer {
         old.defaultValue == new_.defaultValue &&
         old.foreignKey == new_.foreignKey;
   }
+}
 
-  TableInfo _toTableInfo(TableSnapshot snapshot) {
-    return TableInfo(
-      name: snapshot.name,
-      columns: snapshot.columns.values.map(_toColumnInfo).toList(),
-      checks: snapshot.checks,
-    );
+/// Orders [tables] so every table follows the tables its foreign keys
+/// reference, when those are also in [tables].
+///
+/// A reference cycle cannot be ordered, those tables keep their given order
+/// and the driver decides what to do with them.
+List<TableSnapshot> _referencedFirst(List<TableSnapshot> tables) {
+  final byName = {for (final table in tables) table.name: table};
+  final ordered = <TableSnapshot>[];
+  final visited = <String>{};
+
+  void visit(TableSnapshot table) {
+    if (!visited.add(table.name)) return;
+    for (final column in table.columns.values) {
+      final referenced = byName[column.foreignKey?.referencedTable];
+      if (referenced != null && referenced.name != table.name) {
+        visit(referenced);
+      }
+    }
+    ordered.add(table);
   }
 
-  /// Converts an [IndexSnapshot] to an [IndexInfo].
-  IndexInfo _toIndexInfo(IndexSnapshot snapshot) {
-    return IndexInfo(
-      name: snapshot.name,
-      tableName: snapshot.tableName,
-      columns: snapshot.columns,
-      isUnique: snapshot.isUnique,
-      where: snapshot.where,
-    );
-  }
-
-  /// Converts a [ColumnSnapshot] to a [ColumnInfo].
-  ColumnInfo _toColumnInfo(ColumnSnapshot snapshot) {
-    return ColumnInfo(
-      name: snapshot.name,
-      type: snapshot.type,
-      isNullable: snapshot.isNullable,
-      primaryKey: snapshot.primaryKey,
-      autoIncrement: snapshot.autoIncrement,
-      defaultValue: snapshot.defaultValue,
-      foreignKey: switch (snapshot.foreignKey) {
-        final ForeignKeySnapshotRef foreignKey => ForeignKeyInfo(
-            referencedTable: foreignKey.referencedTable,
-            referencedColumn: foreignKey.referencedColumn,
-            onDelete: foreignKey.onDelete,
-            onUpdate: foreignKey.onUpdate,
-          ),
-        _ => null,
-      },
-    );
-  }
+  tables.forEach(visit);
+  return ordered;
 }

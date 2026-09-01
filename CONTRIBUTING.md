@@ -40,6 +40,9 @@ might be closed, so please read these instructions carefully.
   `lib/ddl.dart` for migrations. The package's main library
   (`package:<name>/<name>.dart`) must export a `dialect` constant holding its
   `SqlDialect`.
+- A driver that supports `migrate()`
+  overrides`RaindropDelegate.migrationStorage`, usually with
+  `DdlMigrationStorage(<its generator>)`.
 - To verify a driver behaves the way raindrop expects, run the suites from
   [`raindrop_test`](https://pub.dev/packages/raindrop_test): implement
   `DriverTestHarness` and hand it to `testDriverConformance`.
@@ -110,8 +113,8 @@ docker run -d --rm --name raindrop-pg-test \
   -e POSTGRES_PASSWORD=postgres -p 5432:5432 postgres:16-alpine
 ```
 
-When your Postgres runs elsewhere, override any part of the endpoint through
-the `RAINDROP_PG_HOST`, `RAINDROP_PG_PORT`, `RAINDROP_PG_DATABASE`,
+When your Postgres runs elsewhere, override any part of the endpoint through the
+`RAINDROP_PG_HOST`, `RAINDROP_PG_PORT`, `RAINDROP_PG_DATABASE`,
 `RAINDROP_PG_USER` and `RAINDROP_PG_PASSWORD` environment variables.
 
 ### Configuring CI for a package

@@ -8,7 +8,7 @@ void main() {
   final dialect = TestDialect();
 
   Map<String, Object?> snapshot(List<Schema<dynamic>> schemas) =>
-      buildSnapshot(schemas, dialect: dialect, dialectName: 'test');
+      buildSnapshot(schemas, dialect: dialect, dialectName: 'test').toMap();
 
   test('two tables with the same name are rejected', () {
     final first = testTable('twice', _SoloSchema.new);

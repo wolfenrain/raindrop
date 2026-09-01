@@ -1,5 +1,5 @@
 import 'package:raindrop/raindrop.dart';
-import 'package:raindrop_sqlite/raindrop_sqlite.dart';
+import 'package:raindrop_sqlite/src/sqlite_dialect.dart';
 
 /// Creates a SQLite table with the given [name] and [builder].
 ///

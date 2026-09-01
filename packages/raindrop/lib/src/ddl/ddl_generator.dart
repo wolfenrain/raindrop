@@ -84,10 +84,12 @@ abstract class DdlGenerator {
 
   /// Renders a single operation through the dialect's methods.
   String render(DiffOperation operation) => switch (operation) {
-        CreateTable(:final table) => createTable(table),
+        CreateTable(:final table, :final ifNotExists) =>
+          createTable(table, ifNotExists: ifNotExists),
         DropTable(:final tableName) => dropTable(tableName),
         final AlterTable alter => alterTable(alter),
-        CreateIndex(:final index) => createIndex(index),
+        CreateIndex(:final index, :final ifNotExists) =>
+          createIndex(index, ifNotExists: ifNotExists),
         DropIndex(:final indexName) => dropIndex(indexName),
       };
 
@@ -99,7 +101,9 @@ abstract class DdlGenerator {
   }
 
   /// Generates a CREATE TABLE statement.
-  String createTable(TableInfo table);
+  ///
+  /// With [ifNotExists], an existing table with this name is left alone.
+  String createTable(TableInfo table, {bool ifNotExists = false});
 
   /// Generates a DROP TABLE statement.
   String dropTable(String tableName);
@@ -109,7 +113,9 @@ abstract class DdlGenerator {
   String alterTable(AlterTable operation);
 
   /// Generates a CREATE INDEX statement.
-  String createIndex(IndexInfo index);
+  ///
+  /// With [ifNotExists], an existing index with this name is left alone.
+  String createIndex(IndexInfo index, {bool ifNotExists = false});
 
   /// Generates a DROP INDEX statement.
   String dropIndex(String indexName);
