@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:raindrop/raindrop.dart';
+import 'package:raindrop_test/src/test_ddl_generator.dart';
 import 'package:raindrop_test/src/test_dialect.dart';
 
 /// A statement observed by a [TestDelegate], in execution order.
@@ -40,6 +41,12 @@ class TestDelegate extends RaindropDelegate {
 
   /// Called for every executed statement to produce its result.
   final OnExecute? onExecute;
+
+  /// Migration bookkeeping through [TestDdlGenerator], so `migrate` runs
+  /// against this delegate like against a real driver.
+  @override
+  late final MigrationStorage? migrationStorage =
+      DdlMigrationStorage(const TestDdlGenerator());
 
   /// Every statement executed against this delegate, oldest first.
   final List<ExecutedStatement> statements = [];

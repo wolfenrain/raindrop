@@ -18,7 +18,7 @@ class UserSchema extends Schema<User> {
   UserSchema(super.$)
       : id = $.integer('id', (s) => s.id).primaryKey(autoIncrement: true),
         name = $.text('name', (s) => s.name),
-        deletedAt = $.dateTime('deletedAt', (s) => s.deletedAt);
+        deletedAt = $.dateTime('deleted_at', (s) => s.deletedAt);
 
   @override
   User fromRow(RowReader read) => User(

@@ -32,15 +32,22 @@ sealed class DiffOperation {
 /// {@endtemplate}
 class CreateTable extends DiffOperation {
   /// {@macro create_table}
-  const CreateTable(this.table);
+  const CreateTable(this.table, {this.ifNotExists = false});
 
   /// Creates a [CreateTable] from a map representation.
   factory CreateTable.fromMap(Map<String, dynamic> map) {
-    return CreateTable(TableInfo.fromMap(map['table'] as Map<String, dynamic>));
+    return CreateTable(
+      TableInfo.fromMap(map['table'] as Map<String, dynamic>),
+      ifNotExists: map['ifNotExists'] as bool? ?? false,
+    );
   }
 
   /// The table to create, in full.
   final TableInfo table;
+
+  /// When true, an already existing table with this name is left alone
+  /// instead of failing the create.
+  final bool ifNotExists;
 
   @override
   String describe() => 'Create table "${table.name}"';
@@ -50,6 +57,7 @@ class CreateTable extends DiffOperation {
     return {
       'type': 'createTable',
       'table': table.toMap(),
+      if (ifNotExists) 'ifNotExists': true,
     };
   }
 }
@@ -180,17 +188,22 @@ class AlterTable extends DiffOperation {
 /// {@endtemplate}
 class CreateIndex extends DiffOperation {
   /// {@macro create_index}
-  const CreateIndex({required this.index});
+  const CreateIndex({required this.index, this.ifNotExists = false});
 
   /// Creates a [CreateIndex] from a map representation.
   factory CreateIndex.fromMap(Map<String, dynamic> map) {
     return CreateIndex(
       index: IndexInfo.fromMap(map['index'] as Map<String, dynamic>),
+      ifNotExists: map['ifNotExists'] as bool? ?? false,
     );
   }
 
   /// The index to create.
   final IndexInfo index;
+
+  /// When true, an already existing index with this name is left alone
+  /// instead of failing the create.
+  final bool ifNotExists;
 
   @override
   String describe() => '''
@@ -201,6 +214,7 @@ Create ${index.isUnique ? 'unique ' : ''}index "${index.name}" on table "${index
     return {
       'type': 'createIndex',
       'index': index.toMap(),
+      if (ifNotExists) 'ifNotExists': true,
     };
   }
 }

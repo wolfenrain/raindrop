@@ -69,7 +69,9 @@ class UserSchema extends Schema<User> {
 }
 
 /// The conformance `users` table.
-final UserSchema users = testTable('users', UserSchema.new);
+final UserSchema users = testTable('users', UserSchema.new, (table) {
+  check('users_age_positive', table.age.greaterThan(0)).on(table);
+});
 
 /// A row of the conformance `pets` table.
 class Pet {

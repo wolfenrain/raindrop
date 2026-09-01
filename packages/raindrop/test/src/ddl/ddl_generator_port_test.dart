@@ -128,7 +128,7 @@ class _Generator extends DdlGenerator {
   _Generator() : super(dialect: _Dialect());
 
   @override
-  String createTable(TableInfo table) =>
+  String createTable(TableInfo table, {bool ifNotExists = false}) =>
       'CREATE TABLE ${escapeName(table.name)};';
 
   @override
@@ -139,7 +139,7 @@ class _Generator extends DdlGenerator {
       'ALTER TABLE ${escapeName(operation.tableName)};';
 
   @override
-  String createIndex(IndexInfo index) =>
+  String createIndex(IndexInfo index, {bool ifNotExists = false}) =>
       'CREATE INDEX ${escapeName(index.name)};';
 
   @override

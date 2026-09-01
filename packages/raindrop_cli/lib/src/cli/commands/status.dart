@@ -43,28 +43,31 @@ class StatusCommand extends Command<int> {
     );
 
     stdout.writeln('Current schema:');
-    if (currentSnapshot.tables.isEmpty) {
+    if (currentSnapshot.schema.tables.isEmpty) {
       stdout.writeln('  No tables found.');
     } else {
       stdout
         ..writeln('  Dialect: ${currentSnapshot.dialect}')
-        ..writeln('  Tables: ${currentSnapshot.tables.length}');
-      for (final table in currentSnapshot.tables.values) {
+        ..writeln('  Tables: ${currentSnapshot.schema.tables.length}');
+      for (final table in currentSnapshot.schema.tables.values) {
         stdout.writeln('    - ${table.name} (${table.columns.length} columns)');
       }
     }
     stdout.writeln();
 
     // Load previous snapshot if it exists
-    SchemaSnapshot? previousSnapshot;
+    MigrationSnapshot? previousSnapshot;
     if (journal.entries.isNotEmpty) {
       final lastEntry = journal.entries.last;
       final snapshotPath = config.snapshotPath(lastEntry.idx);
-      previousSnapshot = await SchemaSnapshot.load(snapshotPath);
+      previousSnapshot = await MigrationSnapshot.load(snapshotPath);
 
       // Calculate diff
       final differ = SchemaDiffer();
-      final operations = differ.diff(previousSnapshot, currentSnapshot);
+      final operations = differ.diff(
+        previousSnapshot?.schema,
+        currentSnapshot.schema,
+      );
 
       if (operations.isEmpty) {
         stdout.writeln('Schema is up to date with latest snapshot.');

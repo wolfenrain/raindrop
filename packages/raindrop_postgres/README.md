@@ -36,3 +36,23 @@ void main() async {
   ]).returning();
 }
 ```
+
+The connection is yours: the driver does not pool, retry, or reconnect.
+
+## Beyond the core DSL
+
+Everything in the core [`raindrop`](https://pub.dev/packages/raindrop) DSL works
+unchanged. On top of it this driver adds upserts:
+
+```dart
+await db.insert(into: users).values([user])
+    .onConflict([users.email])
+    .doUpdate([users.age.to(excluded(users.age))]);
+// INSERT ... ON CONFLICT ("email") DO UPDATE SET "age" = "excluded"."age"
+```
+
+- `returning()` on inserts, updates and deletes yields the affected rows.
+- `now()` and `genRandomUuid()` evaluate in the database.
+- Column types beyond the core set: `boolean`, `dateTime` (`TIMESTAMP`),
+  `bigInt` (`NUMERIC`), `textArray` (`TEXT[]`) and `blob` (`BYTEA`).
+- `%` works on `bigInt` columns, computed over `NUMERIC`.

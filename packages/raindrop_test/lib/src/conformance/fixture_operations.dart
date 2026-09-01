@@ -13,32 +13,5 @@ List<CreateTable> fixtureCreateTableOperations(SqlDialect dialect) {
     dialect: dialect,
     dialectName: const TestDialect().name,
   );
-  final tables = snapshot['tables']! as Map<String, Object?>;
-  return [
-    for (final table in tables.values)
-      CreateTable(_tableInfo(table! as Map<String, Object?>)),
-  ];
-}
-
-TableInfo _tableInfo(Map<String, Object?> table) {
-  final columns = table['columns']! as Map<String, Object?>;
-  return TableInfo(
-    name: table['name']! as String,
-    columns: [
-      for (final column in columns.values.cast<Map<String, Object?>>())
-        ColumnInfo(
-          name: column['name']! as String,
-          type: column['type']! as String,
-          isNullable: column['isNullable']! as bool,
-          primaryKey: column['primaryKey'] as bool? ?? false,
-          autoIncrement: column['autoIncrement'] as bool? ?? false,
-          defaultValue: column['default'] as String?,
-          foreignKey: switch (column['foreignKey']) {
-            final Map<String, Object?> reference =>
-              ForeignKeyInfo.fromMap(reference),
-            _ => null,
-          },
-        ),
-    ],
-  );
+  return [for (final table in snapshot.tableInfos) CreateTable(table)];
 }

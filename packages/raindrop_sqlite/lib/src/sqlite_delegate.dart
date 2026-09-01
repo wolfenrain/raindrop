@@ -1,5 +1,6 @@
 import 'package:raindrop/raindrop.dart';
 import 'package:raindrop_sqlite/raindrop_sqlite.dart';
+import 'package:raindrop_sqlite/src/sqlite_ddl.dart';
 import 'package:sqlite3/common.dart';
 
 /// {@template sqlite_delegate}
@@ -8,13 +9,56 @@ import 'package:sqlite3/common.dart';
 class SQLiteDelegate extends RaindropDelegate with _DatabaseDelegate {
   /// {@macro sqlite_delegate}
 
-  SQLiteDelegate(CommonDatabase database)
-      : _database = database,
+  SQLiteDelegate(CommonDatabase database, {bool enforceForeignKeys = true})
+      : _database = checkSupportedVersion(database),
         super(
           dialect: SQLiteDialect(
             supportsUpdateDeleteLimit: probeForLimitSupport(database),
           ),
-        );
+        ) {
+    if (enforceForeignKeys) {
+      _database.execute('PRAGMA foreign_keys = ON');
+    }
+  }
+
+  @override
+  final migrationStorage = DdlMigrationStorage(const SQLiteDdlGenerator());
+
+  /// The oldest SQLite version this driver supports.
+  ///
+  /// 3.44.0 is where `RETURNING` started to apply column affinity, which row
+  /// decoding relies on.
+  static const minimumVersion = '3.44.0';
+
+  /// Returns [database] when its library is [minimumVersion] or newer, and
+  /// throws an [UnsupportedError] naming both versions otherwise.
+  static CommonDatabase checkSupportedVersion(CommonDatabase database) {
+    final version = database
+        .select('SELECT sqlite_version() AS version')
+        .first['version']! as String;
+    if (!isSupportedVersion(version)) {
+      throw UnsupportedError(
+        'raindrop_sqlite needs SQLite $minimumVersion or newer, but the '
+        'loaded library is $version.',
+      );
+    }
+    return database;
+  }
+
+  /// Whether [version] (`"3.44.0"`) is [minimumVersion] or newer, compared
+  /// numerically per segment.
+  static bool isSupportedVersion(String version) {
+    final parts = [
+      for (final part in version.split('.')) int.tryParse(part) ?? 0,
+      0,
+      0,
+    ];
+    const minimum = [3, 44, 0];
+    for (var i = 0; i < minimum.length; i++) {
+      if (parts[i] != minimum[i]) return parts[i] > minimum[i];
+    }
+    return true;
+  }
 
   /// Whether [database] was compiled with `SQLITE_ENABLE_UPDATE_DELETE_LIMIT`,
   /// which decides how a capped write renders, see `LimitedWriteClause`.

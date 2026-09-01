@@ -5,6 +5,7 @@ import 'dart:isolate';
 import 'package:meta/meta.dart';
 import 'package:path/path.dart' as p;
 
+import 'package:raindrop/snapshot.dart';
 import 'package:raindrop_cli/src/core/snapshot.dart';
 import 'package:raindrop_cli/src/introspect/schema_locator.dart';
 
@@ -19,7 +20,7 @@ class SnapshotRunner {
   /// [driver] is the driver package whose dialect selects which tables
   /// count, matching how one schema directory can hold tables for more than
   /// one database.
-  static Future<SchemaSnapshot> build({
+  static Future<MigrationSnapshot> build({
     required String schemaPath,
     required String driver,
     required String configDir,
@@ -46,10 +47,11 @@ class SnapshotRunner {
       packageConfig: packageConfig.uri,
     );
 
-    final document = (response['snapshot']! as Map).cast<String, Object?>();
-    return SchemaSnapshot.fromJson(jsonEncode(document)).copyWith(
-      id: SchemaSnapshot.generateId(),
-      prevId: prevId ?? SchemaSnapshot.nullUuid,
+    final document = (response['snapshot']! as Map).cast<String, dynamic>();
+    return MigrationSnapshot.of(
+      SchemaSnapshot.fromMap(document),
+      id: MigrationSnapshot.generateId(),
+      prevId: prevId ?? MigrationSnapshot.nullUuid,
     );
   }
 
@@ -99,7 +101,7 @@ Driver package "$driver" not found. Make sure the "driver" field in raindrop.yam
       ..writeln("        'snapshot': buildSnapshot(")
       ..writeln('          [${references.join(', ')}],')
       ..writeln('          dialect: dialect,')
-      ..writeln('        ),')
+      ..writeln('        ).toMap(),')
       ..writeln('      });')
       ..writeln('    } catch (error, stack) {')
       ..writeln('      reply.send({')

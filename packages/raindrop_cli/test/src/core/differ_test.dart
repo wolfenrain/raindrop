@@ -1,6 +1,6 @@
 import 'package:raindrop/ddl.dart';
+import 'package:raindrop/snapshot.dart';
 import 'package:raindrop_cli/src/core/differ.dart';
-import 'package:raindrop_cli/src/core/snapshot.dart';
 import 'package:test/test.dart';
 
 void main() {
@@ -19,6 +19,63 @@ void main() {
       final create = operations.single as CreateTable;
       expect(create.table.name, 'users');
       expect(create.table.columns.single.name, 'id');
+    });
+
+    test('creates a referencing table after the table it references', () {
+      final operations = differ.diff(
+        null,
+        _snapshot({
+          // Deliberately listed before the table it references.
+          'pets': _table('pets', [
+            _column('id', primaryKey: true),
+            _column(
+              'owner_id',
+              type: 'INTEGER',
+              foreignKey: const ForeignKeySnapshotRef(
+                referencedTable: 'users',
+                referencedColumn: 'id',
+              ),
+            ),
+          ]),
+          'users': _table('users', [_column('id', primaryKey: true)]),
+        }),
+      );
+
+      expect(
+        [
+          for (final operation in operations.cast<CreateTable>())
+            operation.table.name
+        ],
+        ['users', 'pets'],
+      );
+    });
+
+    test('drops a referencing table before the table it references', () {
+      final operations = differ.diff(
+        _snapshot({
+          'users': _table('users', [_column('id', primaryKey: true)]),
+          'pets': _table('pets', [
+            _column('id', primaryKey: true),
+            _column(
+              'owner_id',
+              type: 'INTEGER',
+              foreignKey: const ForeignKeySnapshotRef(
+                referencedTable: 'users',
+                referencedColumn: 'id',
+              ),
+            ),
+          ]),
+        }),
+        _snapshot({}),
+      );
+
+      expect(
+        [
+          for (final operation in operations.cast<DropTable>())
+            operation.tableName
+        ],
+        ['pets', 'users'],
+      );
     });
 
     test('an unchanged table emits nothing', () {
@@ -454,10 +511,7 @@ SchemaSnapshot _snapshot(
   Map<String, IndexSnapshot> indexes = const {},
 }) {
   return SchemaSnapshot(
-    version: SchemaSnapshot.currentVersion,
     dialect: 'sqlite',
-    id: SchemaSnapshot.nullUuid,
-    prevId: SchemaSnapshot.nullUuid,
     tables: tables,
     indexes: indexes,
   );

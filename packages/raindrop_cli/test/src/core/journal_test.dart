@@ -12,7 +12,7 @@ void main() {
       expect(journal.entries, isEmpty);
       expect(journal.dialect, isEmpty);
       expect(journal.nextIndex, 0);
-      expect(journal.previousId, SchemaSnapshot.nullUuid);
+      expect(journal.previousId, MigrationSnapshot.nullUuid);
     });
 
     test('addEntry advances index and previousId', () {

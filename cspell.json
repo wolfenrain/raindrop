@@ -54,6 +54,8 @@
     "unixepoch",
     "unrenderable",
     "updateable",
+    "upsert",
+    "upserts",
     "wolfen",
     "wolfenrain",
     "writeln"

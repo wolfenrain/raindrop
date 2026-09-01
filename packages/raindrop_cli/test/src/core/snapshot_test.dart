@@ -2,16 +2,14 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:path/path.dart' as p;
+import 'package:raindrop/snapshot.dart';
 import 'package:raindrop_cli/raindrop_cli.dart';
 import 'package:test/test.dart';
 
 void main() {
-  group('SchemaSnapshot', () {
-    final snapshot = SchemaSnapshot(
-      version: SchemaSnapshot.currentVersion,
+  group('MigrationSnapshot', () {
+    final schema = SchemaSnapshot(
       dialect: 'sqlite',
-      id: SchemaSnapshot.generateId(),
-      prevId: SchemaSnapshot.nullUuid,
       tables: {
         'users': TableSnapshot(
           name: 'users',
@@ -23,70 +21,66 @@ void main() {
               primaryKey: true,
               autoIncrement: true,
             ),
-            'ref': ColumnSnapshot(
-              name: 'ref',
-              type: 'INTEGER',
-              isNullable: true,
-              defaultValue: '0',
-              foreignKey: ForeignKeySnapshotRef(
-                referencedTable: 'other',
-                referencedColumn: 'id',
-                onDelete: 'CASCADE',
-                onUpdate: 'RESTRICT',
-              ),
-            ),
           },
-          checks: {'c': '1 = 1'},
-        ),
-      },
-      indexes: {
-        'users_ref': IndexSnapshot(
-          name: 'users_ref',
-          tableName: 'users',
-          columns: ['ref'],
-          isUnique: true,
-          where: '"ref" IS NOT NULL',
         ),
       },
     );
+    final snapshot = MigrationSnapshot(
+      version: MigrationSnapshot.currentVersion,
+      id: MigrationSnapshot.generateId(),
+      prevId: MigrationSnapshot.nullUuid,
+      schema: schema,
+    );
 
     test('round-trips through JSON', () {
-      final restored = SchemaSnapshot.fromJson(snapshot.toJson());
+      final restored = MigrationSnapshot.fromJson(snapshot.toJson());
       expect(restored.toJson(), snapshot.toJson());
-      expect(restored.tables['users']!.columns['ref']!.foreignKey!.onDelete,
-          'CASCADE');
-      expect(restored.indexes['users_ref']!.where, '"ref" IS NOT NULL');
+      expect(restored.id, snapshot.id);
+      expect(restored.schema.tables['users']!.columns['id']!.primaryKey, true);
+    });
+
+    test('nests the schema under its own key', () {
+      final document = jsonDecode(snapshot.toJson()) as Map<String, dynamic>;
+      expect(document.keys, containsAll(['version', 'id', 'prevId', 'schema']));
+      expect(
+        (document['schema'] as Map<String, dynamic>).keys,
+        containsAll(['dialect', 'tables', 'indexes']),
+      );
+    });
+
+    test('exposes the schema dialect', () {
+      expect(snapshot.dialect, 'sqlite');
+    });
+
+    test('of() stamps the current version', () {
+      final wrapped = MigrationSnapshot.of(
+        schema,
+        id: 'a',
+        prevId: MigrationSnapshot.nullUuid,
+      );
+      expect(wrapped.version, MigrationSnapshot.currentVersion);
+      expect(wrapped.schema, same(schema));
     });
 
     test('generateId is a v4 uuid, and unique', () {
-      final id = SchemaSnapshot.generateId();
+      final id = MigrationSnapshot.generateId();
       expect(
         id,
         matches(
-          '^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-'
-          r'[89ab][0-9a-f]{3}-[0-9a-f]{12}$',
+          RegExp(
+            '^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-'
+            r'[89ab][0-9a-f]{3}-[0-9a-f]{12}$',
+          ),
         ),
       );
-      expect(SchemaSnapshot.generateId(), isNot(id));
+      expect(MigrationSnapshot.generateId(), isNot(id));
     });
 
     test('copyWith replaces only the identity', () {
-      final copy = snapshot.copyWith(id: 'x', prevId: 'y');
-      expect(copy.id, 'x');
-      expect(copy.prevId, 'y');
-      expect(copy.tables, same(snapshot.tables));
-    });
-
-    test('save and load round-trip through disk, load returns null when absent',
-        () async {
-      final dir = Directory.systemTemp.createTempSync('snapshot_test_');
-      addTearDown(() => dir.deleteSync(recursive: true));
-      final path = p.join(dir.path, 'nested', 's.json');
-
-      expect(await SchemaSnapshot.load(path), isNull);
-      await snapshot.save(path);
-      final loaded = await SchemaSnapshot.load(path);
-      expect(loaded!.toJson(), snapshot.toJson());
+      final copy = snapshot.copyWith(id: 'a', prevId: 'b');
+      expect(copy.id, 'a');
+      expect(copy.prevId, 'b');
+      expect(copy.schema, same(snapshot.schema));
     });
 
     test('copyWith without arguments keeps the identity', () {
@@ -94,42 +88,16 @@ void main() {
       expect(snapshot.copyWith().prevId, snapshot.prevId);
     });
 
-    test('equal foreign keys collapse in a set', () {
-      ForeignKeySnapshotRef fk() => ForeignKeySnapshotRef(
-            referencedTable: 'users',
-            referencedColumn: 'id',
-            onDelete: 'CASCADE',
-          );
+    test('save and load round-trip through disk, load returns null when absent',
+        () async {
+      final dir = Directory.systemTemp.createTempSync('raindrop_snapshot');
+      addTearDown(() => dir.deleteSync(recursive: true));
+      final path = p.join(dir.path, 'meta', '0000_snapshot.json');
 
-      expect({fk(), fk()}, hasLength(1));
-      expect(fk().hashCode, fk().hashCode);
-    });
-
-    test('equal indexes collapse in a set', () {
-      IndexSnapshot index() => IndexSnapshot(
-            name: 'users_email',
-            tableName: 'users',
-            columns: ['email'],
-            isUnique: true,
-          );
-
-      expect({index(), index()}, hasLength(1));
-      expect(index().hashCode, index().hashCode);
-    });
-
-    test('column equality is structural', () {
-      final a = ColumnSnapshot(name: 'a', type: 'TEXT', isNullable: false);
-      final b = ColumnSnapshot(name: 'a', type: 'TEXT', isNullable: false);
-      final c = ColumnSnapshot(name: 'a', type: 'TEXT', isNullable: true);
-      expect(a, b);
-      expect(a.hashCode, b.hashCode);
-      expect(a, isNot(c));
-    });
-
-    test('index equality is order-sensitive on columns', () {
-      final a = IndexSnapshot(name: 'i', tableName: 't', columns: ['x', 'y']);
-      final b = IndexSnapshot(name: 'i', tableName: 't', columns: ['y', 'x']);
-      expect(a, isNot(b));
+      expect(await MigrationSnapshot.load(path), isNull);
+      await snapshot.save(path);
+      final loaded = await MigrationSnapshot.load(path);
+      expect(loaded!.toJson(), snapshot.toJson());
     });
 
     group('strict parsing', () {
@@ -146,24 +114,13 @@ void main() {
 
       void expectRejected(Map<String, dynamic> data, String fragment) {
         expect(
-          () => SchemaSnapshot.fromJson(jsonEncode(data)),
+          () => MigrationSnapshot.fromJson(jsonEncode(data)),
           failsWith(fragment),
         );
       }
 
-      Map<String, dynamic> table(Map<String, dynamic> data) =>
-          (data['tables'] as Map<String, dynamic>)['users']
-              as Map<String, dynamic>;
-
-      Map<String, dynamic> column(Map<String, dynamic> data, String name) =>
-          (table(data)['columns'] as Map<String, dynamic>)[name]
-              as Map<String, dynamic>;
-
       test('rejects an unknown top-level key', () {
-        expectRejected(
-          document()..['foreignKeys'] = <String, dynamic>{},
-          '"foreignKeys"',
-        );
+        expectRejected(document()..['dialect'] = 'sqlite', '"dialect"');
       });
 
       test('rejects a missing top-level key', () {
@@ -174,40 +131,10 @@ void main() {
         expectRejected(document()..['version'] = '2', 'version "2"');
       });
 
-      test('rejects an unknown table key', () {
+      test('rejects a schema the library refuses', () {
         final data = document();
-        table(data)['renamed'] = true;
-        expectRejected(data, 'table "users"');
-      });
-
-      test('rejects a column key written under another name', () {
-        // The casing an older format used: ignoring it would silently read
-        // the column as autoIncrement: false, a phantom schema change.
-        final data = document();
-        column(data, 'id')
-          ..remove('autoIncrement')
-          ..['autoincrement'] = true;
-        expectRejected(data, '"autoincrement"');
-      });
-
-      test('rejects a missing column key', () {
-        final data = document();
-        column(data, 'id').remove('isNullable');
-        expectRejected(data, '"isNullable"');
-      });
-
-      test('rejects an unknown foreign key key', () {
-        final data = document();
-        (column(data, 'ref')['foreignKey'] as Map<String, dynamic>)['onDrop'] =
-            'CASCADE';
-        expectRejected(data, 'a foreign key reference');
-      });
-
-      test('rejects an unknown index key', () {
-        final data = document();
-        ((data['indexes'] as Map<String, dynamic>)['users_ref']
-            as Map<String, dynamic>)['method'] = 'btree';
-        expectRejected(data, 'index "users_ref"');
+        (data['schema'] as Map<String, dynamic>)['renamed'] = true;
+        expectRejected(data, '"renamed"');
       });
     });
   });

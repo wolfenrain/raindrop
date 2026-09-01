@@ -76,17 +76,17 @@ Use a pre-built schema snapshot (JSON) as the current state instead of running t
       return 1;
     }
 
-    SchemaSnapshot? previousSnapshot;
+    MigrationSnapshot? previousSnapshot;
     if (journal.entries.isNotEmpty) {
-      previousSnapshot = await SchemaSnapshot.load(
+      previousSnapshot = await MigrationSnapshot.load(
         config.snapshotPath(journal.entries.last.idx),
       );
     }
 
     // Built even for --empty, so that pending schema changes can be DETECTED.
-    final SchemaSnapshot currentSnapshot;
+    final MigrationSnapshot currentSnapshot;
     if (argResults!['current-snapshot'] case final String snapshotArg) {
-      final loaded = await SchemaSnapshot.load(
+      final loaded = await MigrationSnapshot.load(
         p.normalize(p.join(config.configDir, snapshotArg)),
       );
       if (loaded == null) {
@@ -94,7 +94,7 @@ Use a pre-built schema snapshot (JSON) as the current state instead of running t
         return 1;
       }
       currentSnapshot = loaded.copyWith(
-        id: SchemaSnapshot.generateId(),
+        id: MigrationSnapshot.generateId(),
         prevId: journal.previousId,
       );
     } else {
@@ -106,13 +106,14 @@ Use a pre-built schema snapshot (JSON) as the current state instead of running t
       );
     }
 
-    if (!empty && currentSnapshot.tables.isEmpty) {
+    if (!empty && currentSnapshot.schema.tables.isEmpty) {
       stderr.writeln('''
 No tables found for "${config.driver}" in schema directory: ${config.schemaPath}''');
       return 1;
     }
 
-    final operations = SchemaDiffer().diff(previousSnapshot, currentSnapshot);
+    final operations =
+        SchemaDiffer().diff(previousSnapshot?.schema, currentSnapshot.schema);
 
     if (empty) {
       if (operations.isNotEmpty) {
@@ -169,7 +170,7 @@ No tables found for "${config.driver}" in schema directory: ${config.schemaPath}
 
     final entry = JournalEntry(
       idx: migrationIndex,
-      version: SchemaSnapshot.currentVersion,
+      version: MigrationSnapshot.currentVersion,
       when: now.millisecondsSinceEpoch,
       tag: tag,
       snapshotId: currentSnapshot.id,

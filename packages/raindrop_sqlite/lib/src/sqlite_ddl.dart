@@ -30,13 +30,14 @@ Rebuilding "${alter.tableName}" must recreate "${dependent.table.name}", which i
   }
 
   @override
-  String createTable(TableInfo table) {
+  String createTable(TableInfo table, {bool ifNotExists = false}) {
     final defs = [
       ...table.columns.map(_columnDefinition),
       for (final entry in table.checks.entries)
         'CONSTRAINT ${escapeName(entry.key)} CHECK (${entry.value})',
     ].join(',\n  ');
-    return 'CREATE TABLE ${escapeName(table.name)} (\n  $defs\n);';
+    final exists = ifNotExists ? 'IF NOT EXISTS ' : '';
+    return 'CREATE TABLE $exists${escapeName(table.name)} (\n  $defs\n);';
   }
 
   @override
@@ -53,12 +54,13 @@ Rebuilding "${alter.tableName}" must recreate "${dependent.table.name}", which i
   }
 
   @override
-  String createIndex(IndexInfo index) {
+  String createIndex(IndexInfo index, {bool ifNotExists = false}) {
     final unique = index.isUnique ? 'UNIQUE ' : '';
+    final exists = ifNotExists ? 'IF NOT EXISTS ' : '';
     final cols = index.columns.map(escapeName).join(', ');
     final where = index.where != null ? ' WHERE ${index.where}' : '';
     return '''
-CREATE ${unique}INDEX ${escapeName(index.name)} ON ${escapeName(index.tableName)} ($cols)$where;''';
+CREATE ${unique}INDEX $exists${escapeName(index.name)} ON ${escapeName(index.tableName)} ($cols)$where;''';
   }
 
   @override
