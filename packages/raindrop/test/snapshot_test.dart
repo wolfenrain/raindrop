@@ -61,7 +61,9 @@ void main() {
 
       test('columns become an ordered list', () {
         final table = snapshot.tables['users']!.toTableInfo();
-        expect([for (final column in table.columns) column.name], [
+        expect([
+          for (final column in table.columns) column.name
+        ], [
           'id',
           'ref',
         ]);

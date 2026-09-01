@@ -88,8 +88,7 @@ column "${table.name}.${column.name}" has no sqlType, so no migration can declar
       null => null,
       final Expression<dynamic> expression =>
         renderPredicate(expression.build(), dialect),
-      final defaultValue =>
-        dialect.escapeLiteral(column.encode(defaultValue)),
+      final defaultValue => dialect.escapeLiteral(column.encode(defaultValue)),
     },
     foreignKey: reference == null
         ? null
