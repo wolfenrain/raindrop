@@ -1,6 +1,6 @@
 name: raindrop_sqlite
 description: The SQLite driver for raindrop, built on top of the sqlite3 package.
-version: 0.0.1
+version: 0.1.0
 repository: https://github.com/wolfenrain/raindrop/tree/main/packages/raindrop_sqlite
 issue_tracker: https://github.com/wolfenrain/raindrop/issues
 topics:
@@ -14,11 +14,11 @@ environment:
   sdk: ^3.6.0
 
 dependencies:
-  raindrop: ^0.0.1
+  raindrop: ^0.1.0
   sqlite3: ">=2.4.0 <4.0.0"
 
 dev_dependencies:
   meta: ^1.15.0
   mocktail: ^1.0.3
-  raindrop_test: ^0.0.1
+  raindrop_test: ^0.1.0
   test: ^1.25.2

@@ -1,0 +1,183 @@
+# Change Log
+
+All notable changes to this project will be documented in this file.
+See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
+
+## 2026-09-04
+
+### Changes
+
+---
+
+Packages with breaking changes:
+
+ - [`raindrop` - `v0.1.0`](#raindrop---v010)
+ - [`raindrop_cli` - `v0.1.0`](#raindrop_cli---v010)
+ - [`raindrop_postgres` - `v0.1.0`](#raindrop_postgres---v010)
+ - [`raindrop_sqlite` - `v0.1.0`](#raindrop_sqlite---v010)
+ - [`raindrop_test` - `v0.1.0`](#raindrop_test---v010)
+
+Packages with other changes:
+
+ - There are no other changes in this release.
+
+---
+
+#### `raindrop` - `v0.1.0`
+
+ - **REFACTOR**: simply dialect logic across packages. ([7f9a7d4c](https://github.com/wolfenrain/raindrop/commit/7f9a7d4ca16436b93dd0bb0d5206af5ecbf87c12))
+ - **REFACTOR**: nullable-aware columns, projection joins, and a lot more. ([37f1872a](https://github.com/wolfenrain/raindrop/commit/37f1872a96275021c1789e25b9ffa2c8e01db4c1))
+ - **REFACTOR**: nullable-aware columns, projection joins, and a lot more. ([33e5e34d](https://github.com/wolfenrain/raindrop/commit/33e5e34d4493a1bfd2f12e9bd6e6a5bbb50888e1))
+ - **REFACTOR**: nullable-aware columns, projection joins, and a lot more. ([c2970d1d](https://github.com/wolfenrain/raindrop/commit/c2970d1d1d39ed2749b5443cd2cf798a6b6f4a1c))
+ - **REFACTOR**: remove `.$` column by introducing a `ColumnOr` solution. ([91fc4305](https://github.com/wolfenrain/raindrop/commit/91fc43051be9d53e994b1ca2db0432082dba8b2c))
+ - **REFACTOR**: make fakes obsolute and clean up the schema API. ([b78ceca1](https://github.com/wolfenrain/raindrop/commit/b78ceca18205697156e198312be97022eca71abc))
+ - **REFACTOR**: remove unneeded flag. ([1c3d1b1b](https://github.com/wolfenrain/raindrop/commit/1c3d1b1bb4d4f9b7b2c3dfb5c39262874f3244f9))
+ - **FIX**: joins had wrong internal type. ([67be4a09](https://github.com/wolfenrain/raindrop/commit/67be4a09abf235f38878b5f3d19c474e3884acfe))
+ - **FIX**: properly transform column values when used in queries. ([4cbf2f59](https://github.com/wolfenrain/raindrop/commit/4cbf2f59d9331cff7a57716e2fe8e6760db499f2))
+ - **FIX**: decode projections up to the generated arity ([#50](https://github.com/wolfenrain/raindrop/issues/50)). ([4c73a7af](https://github.com/wolfenrain/raindrop/commit/4c73a7afe1faf8a688d7abbb18809ffb6f2b1dbc))
+ - **FIX**: errors. ([523c18e4](https://github.com/wolfenrain/raindrop/commit/523c18e4449a5ff5902b78a229415e9a4dce0060))
+ - **FIX**: improve join syntax. ([1ec095c9](https://github.com/wolfenrain/raindrop/commit/1ec095c9e210096209404a9848a52ec1c3312293))
+ - **FIX**: try to imporve updatable. ([f7a7dbbe](https://github.com/wolfenrain/raindrop/commit/f7a7dbbeca9e82ecaaa8b50a813690241935824b))
+ - **FIX**: make update actually work. ([4debcc23](https://github.com/wolfenrain/raindrop/commit/4debcc23cc280a35a5c8bb67946876420c12a78a))
+ - **FIX**: no need to transform on read. ([37507b4b](https://github.com/wolfenrain/raindrop/commit/37507b4b2c026fb7a185359d1cb22d2c9b30d7a0))
+ - **FIX**: properly detect if a column is nullable. ([f35b9c46](https://github.com/wolfenrain/raindrop/commit/f35b9c46224c4367c5bb8113b069800c9332985d))
+ - **FIX**: try to imporve updatable. ([53ee4b3e](https://github.com/wolfenrain/raindrop/commit/53ee4b3e170d5ae66a5904be6637ec6f0ea39598))
+ - **FIX**: only skip primary key if there is no value. ([9c76c4c6](https://github.com/wolfenrain/raindrop/commit/9c76c4c6bc13c69e85909e88b2f530c4d84b3320))
+ - **FIX**: render capped SQLite writes as a key subquery ([#31](https://github.com/wolfenrain/raindrop/issues/31)). ([799b2490](https://github.com/wolfenrain/raindrop/commit/799b2490d2351a5c2b393059ea53faef046a4bb5))
+ - **FIX**: add prefixes with complexer queries. ([61a229de](https://github.com/wolfenrain/raindrop/commit/61a229dec29b2f548bffa2f421828447e4d28c33))
+ - **FIX**: cosmetic sql clean-up. ([b8279100](https://github.com/wolfenrain/raindrop/commit/b82791004d97a4812b87e2d7644f80bcff699e4f))
+ - **FIX**: `IN` clause throws `ConcurrentModificationError` because of shadowed value. ([f09c9a7f](https://github.com/wolfenrain/raindrop/commit/f09c9a7fd1cea77ee720b5b3b1fd4dedee3b965a))
+ - **FIX**: stop coearcing literals into column references. ([0c72985a](https://github.com/wolfenrain/raindrop/commit/0c72985af4be93df33f1e1ec23a50fa5ee861dd5))
+ - **FEAT**: support multiple `GROUP BY` terms ([#45](https://github.com/wolfenrain/raindrop/issues/45)). ([f28fa64c](https://github.com/wolfenrain/raindrop/commit/f28fa64c67727d5039ff9115427f389031a80bdb))
+ - **FEAT**: Add synthetic value for custom column types. ([da43b6bc](https://github.com/wolfenrain/raindrop/commit/da43b6bc39235ca8b1d446a6cb3f043ba6dc1a72))
+ - **FEAT**: support update values as SQL. ([95b21a22](https://github.com/wolfenrain/raindrop/commit/95b21a22bf7d74ee70ea911cbc0175d4edde491f))
+ - **FEAT**: support more custom types like lists. ([0d05a312](https://github.com/wolfenrain/raindrop/commit/0d05a312ca37f257ca9190bf8c4499b8ea3e1cb3))
+ - **FEAT**: Support list argument in set all. ([72339c2c](https://github.com/wolfenrain/raindrop/commit/72339c2cca21c142bbc1dadb19e87e32039f62f5))
+ - **FEAT**: get column from table using []. ([6163a70c](https://github.com/wolfenrain/raindrop/commit/6163a70c29cf0a135c79004181d37d14ca92819a))
+ - **FEAT**: Transform value on read. ([f1624bba](https://github.com/wolfenrain/raindrop/commit/f1624bba68e1f034230770bf39ed3ddac2eda168))
+ - **FEAT**: add extension for non-null primary keys. ([2364ea1e](https://github.com/wolfenrain/raindrop/commit/2364ea1e64622741571c5ab62d0a3e01a827f9b0))
+ - **FEAT**: added helper methods to `ToQuery`. ([b67f9758](https://github.com/wolfenrain/raindrop/commit/b67f97582a1c883544fffddd7e1377bfb89c1915))
+ - **FEAT**: Add operation for nullable filters. ([798f8213](https://github.com/wolfenrain/raindrop/commit/798f82131e1f51fe0bb32b2417e000c50cce460d))
+ - **FEAT**: add extension for non-null primary keys. ([204c2493](https://github.com/wolfenrain/raindrop/commit/204c24933249c0d70a19a08c7f8a37ae13f8963a))
+ - **FEAT**: remove option to autoincrement anything other than integers. ([0ee0afe9](https://github.com/wolfenrain/raindrop/commit/0ee0afe96ed6516ee84635efe51b342ee81e3bac))
+ - **FEAT**: support Dart based migrations. ([ba555b30](https://github.com/wolfenrain/raindrop/commit/ba555b30ee5e871efb87793c736a1ec3a30e59c0))
+ - **FEAT**: improve and support transactions. ([a31401d7](https://github.com/wolfenrain/raindrop/commit/a31401d792e794f51be6b9f1ab6641b5cce40c3e))
+ - **FEAT**: add setAll to generate the magic file. ([25e1a77a](https://github.com/wolfenrain/raindrop/commit/25e1a77a79174a6673a1fa2708db455691829fac))
+ - **FEAT**: add `CASE` expressions ([#46](https://github.com/wolfenrain/raindrop/issues/46)). ([fa694c37](https://github.com/wolfenrain/raindrop/commit/fa694c37c1b440abad872e9aafac64dc1fa36195))
+ - **FEAT**: add basic foreign key support. ([45cbd8e1](https://github.com/wolfenrain/raindrop/commit/45cbd8e1c1c5cd37ab2adcd6984b2efc0bda9d4f))
+ - **FEAT**: added sql DDL generation and a basic CLI to accomidate it + improvements to the runtime API. ([aeef771a](https://github.com/wolfenrain/raindrop/commit/aeef771a03850aa99eab66dc8d7adf8e0b6fac66))
+ - **FEAT**: add logging capabilities. ([05ab55b7](https://github.com/wolfenrain/raindrop/commit/05ab55b7dd358eec257996cf3e0ebbe7e34cd8a4))
+ - **FEAT**: Support list argument in set all. ([ff1ea540](https://github.com/wolfenrain/raindrop/commit/ff1ea540696396880174744fc3f57dea25d43402))
+ - **FEAT**: add fake validation to column types. ([6b82d503](https://github.com/wolfenrain/raindrop/commit/6b82d503ef245af7f6b781e2c4a2ce11f0a770ab))
+ - **FEAT**: support more custom types like lists. ([2b27182d](https://github.com/wolfenrain/raindrop/commit/2b27182dcfcd5845afac9bed1293db5781bad037))
+ - **FEAT**: add `BETWEEN` ([#47](https://github.com/wolfenrain/raindrop/issues/47)). ([b4000fad](https://github.com/wolfenrain/raindrop/commit/b4000fadc8fd422354d4758814229e3c6fd53d37))
+ - **FEAT**: add tests. ([62f56e43](https://github.com/wolfenrain/raindrop/commit/62f56e439ef59035b0f212d27ba90f24525c35db))
+ - **FEAT**: add portable string functions ([#49](https://github.com/wolfenrain/raindrop/issues/49)). ([fb19b1a1](https://github.com/wolfenrain/raindrop/commit/fb19b1a1247f0ea88a0295644449b444fbfcda81))
+ - **FEAT**: improve column types. ([b03bf152](https://github.com/wolfenrain/raindrop/commit/b03bf1529540a2d02ec0aa4659b92c0c8d741ddd))
+ - **FEAT**: add `greater/less` than or equals. ([a92311fa](https://github.com/wolfenrain/raindrop/commit/a92311fa11f966cce7f618012b0930fb601c667c))
+ - **FEAT**: add test. ([c750ec74](https://github.com/wolfenrain/raindrop/commit/c750ec74480ff7a1e503d2b61cfbfd87f6907961))
+ - **DOCS**: added READMEs. ([81b8c019](https://github.com/wolfenrain/raindrop/commit/81b8c019642efeb22e9c0590f6f102ea409ae29f))
+ - **BREAKING** **REFACTOR**: simplify delegate connection handling and lower dependency constraints. ([870b5c3a](https://github.com/wolfenrain/raindrop/commit/870b5c3ab11732846e4ef42ebc818ddb3bebd1e0))
+ - **BREAKING** **FEAT**: give drivers their own migration storage ([#51](https://github.com/wolfenrain/raindrop/issues/51)). ([7114aad3](https://github.com/wolfenrain/raindrop/commit/7114aad3fb7f1dffbe3d917b10da3f4c2c406bbb))
+ - **BREAKING** **FEAT**: drastically change how queries generate and how database results gets turned into actual instances of schemas and columns. ([07682884](https://github.com/wolfenrain/raindrop/commit/07682884fecfe11d66530c9e1d55825538fa1616))
+ - **BREAKING** **FEAT**: Support SQL Expressions. ([ab8ac44a](https://github.com/wolfenrain/raindrop/commit/ab8ac44a0d2f07afeb01a94fca00e84382ec53c2))
+
+#### `raindrop_cli` - `v0.1.0`
+
+ - **REFACTOR**: nullable-aware columns, projection joins, and a lot more. ([c2970d1d](https://github.com/wolfenrain/raindrop/commit/c2970d1d1d39ed2749b5443cd2cf798a6b6f4a1c))
+ - **REFACTOR**: remove function to add args. ([c6f8a39d](https://github.com/wolfenrain/raindrop/commit/c6f8a39d0deea519860a9c45006a11d623efcc91))
+ - **REFACTOR**: clean up comment and output. ([5b9ac078](https://github.com/wolfenrain/raindrop/commit/5b9ac0785365cc0d051e6f151dbbaa3a5b8c2d78))
+ - **FIX**: reject unknown or missing keys in snapshot and journal files ([#44](https://github.com/wolfenrain/raindrop/issues/44)). ([9911a31e](https://github.com/wolfenrain/raindrop/commit/9911a31ebfd00fea29311f3e6c4e960ba5483d3f))
+ - **FIX**: proper version handling in cli ([#42](https://github.com/wolfenrain/raindrop/issues/42)). ([e45b025c](https://github.com/wolfenrain/raindrop/commit/e45b025c356e25930e83356aee75190326152a86))
+ - **FIX**: build generated package: URIs with forward slashes ([#35](https://github.com/wolfenrain/raindrop/issues/35)). ([8a30a582](https://github.com/wolfenrain/raindrop/commit/8a30a582dc1f6e31d2cb6326e7d40da6b8a45271))
+ - **FIX**: reordering a table's indexes is not a schema change ([#37](https://github.com/wolfenrain/raindrop/issues/37)). ([69088e17](https://github.com/wolfenrain/raindrop/commit/69088e178f62d1aca5cf8fc38b78232140072376))
+ - **FIX**: properly transform column values when used in queries. ([4cbf2f59](https://github.com/wolfenrain/raindrop/commit/4cbf2f59d9331cff7a57716e2fe8e6760db499f2))
+ - **FIX**: update analyzer. ([71c906cc](https://github.com/wolfenrain/raindrop/commit/71c906ccb191c6ff72bec264c7ad7e35e55b1df9))
+ - **FIX**: properly detect if a column is nullable. ([f35b9c46](https://github.com/wolfenrain/raindrop/commit/f35b9c46224c4367c5bb8113b069800c9332985d))
+ - **FEAT**: add optional config flags to command. ([9527a4dd](https://github.com/wolfenrain/raindrop/commit/9527a4dd29a0b7a666202554e178c0af62f4ffab))
+ - **FEAT**: clean up code. ([9b8bed9b](https://github.com/wolfenrain/raindrop/commit/9b8bed9b09c0b3f13413d28e5534208703f68651))
+ - **FEAT**: add optional config flags to command. ([ac94b721](https://github.com/wolfenrain/raindrop/commit/ac94b72178532b4bf00a96ef4732a74944097aed))
+ - **FEAT**: return early when no migration changes are detected. ([034cf58f](https://github.com/wolfenrain/raindrop/commit/034cf58f161f163810b312bc7fa27a68dd181b83))
+ - **FEAT**: add option to tag migration with timestamp. ([eb4b50ab](https://github.com/wolfenrain/raindrop/commit/eb4b50abd5f48287c611945771fa99f552a2ee4e))
+ - **FEAT**: support Dart based migrations. ([ba555b30](https://github.com/wolfenrain/raindrop/commit/ba555b30ee5e871efb87793c736a1ec3a30e59c0))
+ - **FEAT**: add basic foreign key support. ([45cbd8e1](https://github.com/wolfenrain/raindrop/commit/45cbd8e1c1c5cd37ab2adcd6984b2efc0bda9d4f))
+ - **FEAT**: added sql DDL generation and a basic CLI to accomidate it + improvements to the runtime API. ([aeef771a](https://github.com/wolfenrain/raindrop/commit/aeef771a03850aa99eab66dc8d7adf8e0b6fac66))
+ - **DOCS**: added READMEs. ([81b8c019](https://github.com/wolfenrain/raindrop/commit/81b8c019642efeb22e9c0590f6f102ea409ae29f))
+ - **BREAKING** **FEAT**: give drivers their own migration storage ([#51](https://github.com/wolfenrain/raindrop/issues/51)). ([7114aad3](https://github.com/wolfenrain/raindrop/commit/7114aad3fb7f1dffbe3d917b10da3f4c2c406bbb))
+
+#### `raindrop_postgres` - `v0.1.0`
+
+ - **REFACTOR**: nullable-aware columns, projection joins, and a lot more. ([c2970d1d](https://github.com/wolfenrain/raindrop/commit/c2970d1d1d39ed2749b5443cd2cf798a6b6f4a1c))
+ - **REFACTOR**: remove `.$` column by introducing a `ColumnOr` solution. ([91fc4305](https://github.com/wolfenrain/raindrop/commit/91fc43051be9d53e994b1ca2db0432082dba8b2c))
+ - **REFACTOR**: make fakes obsolute and clean up the schema API. ([b78ceca1](https://github.com/wolfenrain/raindrop/commit/b78ceca18205697156e198312be97022eca71abc))
+ - **REFACTOR**: simply dialect logic across packages. ([7f9a7d4c](https://github.com/wolfenrain/raindrop/commit/7f9a7d4ca16436b93dd0bb0d5206af5ecbf87c12))
+ - **FIX**: render capped SQLite writes as a key subquery ([#31](https://github.com/wolfenrain/raindrop/issues/31)). ([799b2490](https://github.com/wolfenrain/raindrop/commit/799b2490d2351a5c2b393059ea53faef046a4bb5))
+ - **FIX**: properly detect if a column is nullable. ([f35b9c46](https://github.com/wolfenrain/raindrop/commit/f35b9c46224c4367c5bb8113b069800c9332985d))
+ - **FIX**: make column names valid in SQL. ([59e88583](https://github.com/wolfenrain/raindrop/commit/59e885833b0b692cd98053255aa03b103a23dd57))
+ - **FIX**: make update actually work. ([4debcc23](https://github.com/wolfenrain/raindrop/commit/4debcc23cc280a35a5c8bb67946876420c12a78a))
+ - **FIX**: try to imporve updatable. ([f7a7dbbe](https://github.com/wolfenrain/raindrop/commit/f7a7dbbeca9e82ecaaa8b50a813690241935824b))
+ - **FEAT**: add portable string functions ([#49](https://github.com/wolfenrain/raindrop/issues/49)). ([fb19b1a1](https://github.com/wolfenrain/raindrop/commit/fb19b1a1247f0ea88a0295644449b444fbfcda81))
+ - **FEAT**: rework insert conflict handling into a chained upsert API ([#48](https://github.com/wolfenrain/raindrop/issues/48)). ([12acfc57](https://github.com/wolfenrain/raindrop/commit/12acfc57172ddd507b44e4f583c6d438a8d497b3))
+ - **FEAT**: add `BETWEEN` ([#47](https://github.com/wolfenrain/raindrop/issues/47)). ([b4000fad](https://github.com/wolfenrain/raindrop/commit/b4000fadc8fd422354d4758814229e3c6fd53d37))
+ - **FEAT**: add `CASE` expressions ([#46](https://github.com/wolfenrain/raindrop/issues/46)). ([fa694c37](https://github.com/wolfenrain/raindrop/commit/fa694c37c1b440abad872e9aafac64dc1fa36195))
+ - **FEAT**: support multiple `GROUP BY` terms ([#45](https://github.com/wolfenrain/raindrop/issues/45)). ([f28fa64c](https://github.com/wolfenrain/raindrop/commit/f28fa64c67727d5039ff9115427f389031a80bdb))
+ - **FEAT**: deepen the driver conformance suite ([#43](https://github.com/wolfenrain/raindrop/issues/43)). ([37c44597](https://github.com/wolfenrain/raindrop/commit/37c44597a34eebb76c97ce25d809857778e09b2a))
+ - **FEAT**: let `dateTime`, `boolean` and `bigInt` columns declare a default value ([#32](https://github.com/wolfenrain/raindrop/issues/32)). ([cca8f5fe](https://github.com/wolfenrain/raindrop/commit/cca8f5feabe85c2af8312cd0fa2b56810bc9c152))
+ - **FEAT**: add basic foreign key support. ([45cbd8e1](https://github.com/wolfenrain/raindrop/commit/45cbd8e1c1c5cd37ab2adcd6984b2efc0bda9d4f))
+ - **FEAT**: added sql DDL generation and a basic CLI to accomidate it + improvements to the runtime API. ([aeef771a](https://github.com/wolfenrain/raindrop/commit/aeef771a03850aa99eab66dc8d7adf8e0b6fac66))
+ - **FEAT**: support more custom types like lists. ([2b27182d](https://github.com/wolfenrain/raindrop/commit/2b27182dcfcd5845afac9bed1293db5781bad037))
+ - **FEAT**: support more custom types like lists. ([0d05a312](https://github.com/wolfenrain/raindrop/commit/0d05a312ca37f257ca9190bf8c4499b8ea3e1cb3))
+ - **FEAT**: add `postgres` support. ([e9cf12a2](https://github.com/wolfenrain/raindrop/commit/e9cf12a2959832e295f28d5bcce24ee4afa00fe1))
+ - **DOCS**: added READMEs. ([81b8c019](https://github.com/wolfenrain/raindrop/commit/81b8c019642efeb22e9c0590f6f102ea409ae29f))
+ - **BREAKING** **REFACTOR**: simplify delegate connection handling and lower dependency constraints. ([870b5c3a](https://github.com/wolfenrain/raindrop/commit/870b5c3ab11732846e4ef42ebc818ddb3bebd1e0))
+ - **BREAKING** **FEAT**: give drivers their own migration storage ([#51](https://github.com/wolfenrain/raindrop/issues/51)). ([7114aad3](https://github.com/wolfenrain/raindrop/commit/7114aad3fb7f1dffbe3d917b10da3f4c2c406bbb))
+
+#### `raindrop_sqlite` - `v0.1.0`
+
+ - **REFACTOR**: nullable-aware columns, projection joins, and a lot more. ([c2970d1d](https://github.com/wolfenrain/raindrop/commit/c2970d1d1d39ed2749b5443cd2cf798a6b6f4a1c))
+ - **REFACTOR**: remove `.$` column by introducing a `ColumnOr` solution. ([91fc4305](https://github.com/wolfenrain/raindrop/commit/91fc43051be9d53e994b1ca2db0432082dba8b2c))
+ - **REFACTOR**: make fakes obsolute and clean up the schema API. ([b78ceca1](https://github.com/wolfenrain/raindrop/commit/b78ceca18205697156e198312be97022eca71abc))
+ - **REFACTOR**: remove unneeded flag. ([1c3d1b1b](https://github.com/wolfenrain/raindrop/commit/1c3d1b1bb4d4f9b7b2c3dfb5c39262874f3244f9))
+ - **REFACTOR**: simply dialect logic across packages. ([7f9a7d4c](https://github.com/wolfenrain/raindrop/commit/7f9a7d4ca16436b93dd0bb0d5206af5ecbf87c12))
+ - **FIX**: make update actually work. ([4debcc23](https://github.com/wolfenrain/raindrop/commit/4debcc23cc280a35a5c8bb67946876420c12a78a))
+ - **FIX**: try to imporve updatable. ([f7a7dbbe](https://github.com/wolfenrain/raindrop/commit/f7a7dbbeca9e82ecaaa8b50a813690241935824b))
+ - **FIX**: reject unknown or missing keys in snapshot and journal files ([#44](https://github.com/wolfenrain/raindrop/issues/44)). ([9911a31e](https://github.com/wolfenrain/raindrop/commit/9911a31ebfd00fea29311f3e6c4e960ba5483d3f))
+ - **FIX**: render capped SQLite writes as a key subquery ([#31](https://github.com/wolfenrain/raindrop/issues/31)). ([799b2490](https://github.com/wolfenrain/raindrop/commit/799b2490d2351a5c2b393059ea53faef046a4bb5))
+ - **FIX**: serialize calls on a shared `SQLiteDelegate` ([#52](https://github.com/wolfenrain/raindrop/issues/52)). ([41272d7a](https://github.com/wolfenrain/raindrop/commit/41272d7a88e8832fe26a5f30e4f84005889d1cd6))
+ - **FIX**: properly detect if a column is nullable. ([f35b9c46](https://github.com/wolfenrain/raindrop/commit/f35b9c46224c4367c5bb8113b069800c9332985d))
+ - **FIX**: uppercased SQLite DDL generator. ([0cf02ac4](https://github.com/wolfenrain/raindrop/commit/0cf02ac4f8fea6d297c3a32908c0eca20f24ec88))
+ - **FIX**: make column names valid in SQL. ([59e88583](https://github.com/wolfenrain/raindrop/commit/59e885833b0b692cd98053255aa03b103a23dd57))
+ - **FEAT**: implement delete. ([b21e8677](https://github.com/wolfenrain/raindrop/commit/b21e8677075ff6fe8db46c59c623fa337b286ea1))
+ - **FEAT**: add logging capabilities. ([05ab55b7](https://github.com/wolfenrain/raindrop/commit/05ab55b7dd358eec257996cf3e0ebbe7e34cd8a4))
+ - **FEAT**: added custom types and implemented setting table data. ([f1654eb2](https://github.com/wolfenrain/raindrop/commit/f1654eb27fad2bec08caae2cba6f24c7775637ab))
+ - **FEAT**: add portable string functions ([#49](https://github.com/wolfenrain/raindrop/issues/49)). ([fb19b1a1](https://github.com/wolfenrain/raindrop/commit/fb19b1a1247f0ea88a0295644449b444fbfcda81))
+ - **FEAT**: write tests. ([22d74b61](https://github.com/wolfenrain/raindrop/commit/22d74b61b51a2686402d3d802647c58d345a1948))
+ - **FEAT**: support multiple `GROUP BY` terms ([#45](https://github.com/wolfenrain/raindrop/issues/45)). ([f28fa64c](https://github.com/wolfenrain/raindrop/commit/f28fa64c67727d5039ff9115427f389031a80bdb))
+ - **FEAT**: add test for null equals. ([9560a669](https://github.com/wolfenrain/raindrop/commit/9560a669dbeb2e5fd4165af6e3288c586245e9c5))
+ - **FEAT**: deepen the driver conformance suite ([#43](https://github.com/wolfenrain/raindrop/issues/43)). ([37c44597](https://github.com/wolfenrain/raindrop/commit/37c44597a34eebb76c97ce25d809857778e09b2a))
+ - **FEAT**: add limit extension to delete. ([553f6193](https://github.com/wolfenrain/raindrop/commit/553f6193dc297f267dce0653110585e2bfe79138))
+ - **FEAT**: add option to tag migration with timestamp. ([eb4b50ab](https://github.com/wolfenrain/raindrop/commit/eb4b50abd5f48287c611945771fa99f552a2ee4e))
+ - **FEAT**: let `dateTime`, `boolean` and `bigInt` columns declare a default value ([#32](https://github.com/wolfenrain/raindrop/issues/32)). ([cca8f5fe](https://github.com/wolfenrain/raindrop/commit/cca8f5feabe85c2af8312cd0fa2b56810bc9c152))
+ - **FEAT**: improve and support transactions. ([a31401d7](https://github.com/wolfenrain/raindrop/commit/a31401d792e794f51be6b9f1ab6641b5cce40c3e))
+ - **FEAT**: rework insert conflict handling into a chained upsert API ([#48](https://github.com/wolfenrain/raindrop/issues/48)). ([12acfc57](https://github.com/wolfenrain/raindrop/commit/12acfc57172ddd507b44e4f583c6d438a8d497b3))
+ - **FEAT**: added sql DDL generation and a basic CLI to accomidate it + improvements to the runtime API. ([aeef771a](https://github.com/wolfenrain/raindrop/commit/aeef771a03850aa99eab66dc8d7adf8e0b6fac66))
+ - **FEAT**: improve column types. ([b03bf152](https://github.com/wolfenrain/raindrop/commit/b03bf1529540a2d02ec0aa4659b92c0c8d741ddd))
+ - **FEAT**: add `BETWEEN` ([#47](https://github.com/wolfenrain/raindrop/issues/47)). ([b4000fad](https://github.com/wolfenrain/raindrop/commit/b4000fadc8fd422354d4758814229e3c6fd53d37))
+ - **FEAT**: add `CASE` expressions ([#46](https://github.com/wolfenrain/raindrop/issues/46)). ([fa694c37](https://github.com/wolfenrain/raindrop/commit/fa694c37c1b440abad872e9aafac64dc1fa36195))
+ - **FEAT**: add basic foreign key support. ([45cbd8e1](https://github.com/wolfenrain/raindrop/commit/45cbd8e1c1c5cd37ab2adcd6984b2efc0bda9d4f))
+ - **FEAT**: added custom types. ([3099e5b7](https://github.com/wolfenrain/raindrop/commit/3099e5b7e3e2b9a6a50656e54727504a32749eca))
+ - **DOCS**: added READMEs. ([81b8c019](https://github.com/wolfenrain/raindrop/commit/81b8c019642efeb22e9c0590f6f102ea409ae29f))
+ - **BREAKING** **REFACTOR**: simplify delegate connection handling and lower dependency constraints. ([870b5c3a](https://github.com/wolfenrain/raindrop/commit/870b5c3ab11732846e4ef42ebc818ddb3bebd1e0))
+ - **BREAKING** **FEAT**: Support SQL Expressions. ([ab8ac44a](https://github.com/wolfenrain/raindrop/commit/ab8ac44a0d2f07afeb01a94fca00e84382ec53c2))
+ - **BREAKING** **FEAT**: give drivers their own migration storage ([#51](https://github.com/wolfenrain/raindrop/issues/51)). ([7114aad3](https://github.com/wolfenrain/raindrop/commit/7114aad3fb7f1dffbe3d917b10da3f4c2c406bbb))
+ - **BREAKING** **FEAT**: drastically change how queries generate and how database results gets turned into actual instances of schemas and columns. ([07682884](https://github.com/wolfenrain/raindrop/commit/07682884fecfe11d66530c9e1d55825538fa1616))
+
+#### `raindrop_test` - `v0.1.0`
+
+ - **FEAT**: add portable string functions ([#49](https://github.com/wolfenrain/raindrop/issues/49)). ([fb19b1a1](https://github.com/wolfenrain/raindrop/commit/fb19b1a1247f0ea88a0295644449b444fbfcda81))
+ - **FEAT**: add `BETWEEN` ([#47](https://github.com/wolfenrain/raindrop/issues/47)). ([b4000fad](https://github.com/wolfenrain/raindrop/commit/b4000fadc8fd422354d4758814229e3c6fd53d37))
+ - **FEAT**: add `CASE` expressions ([#46](https://github.com/wolfenrain/raindrop/issues/46)). ([fa694c37](https://github.com/wolfenrain/raindrop/commit/fa694c37c1b440abad872e9aafac64dc1fa36195))
+ - **FEAT**: support multiple `GROUP BY` terms ([#45](https://github.com/wolfenrain/raindrop/issues/45)). ([f28fa64c](https://github.com/wolfenrain/raindrop/commit/f28fa64c67727d5039ff9115427f389031a80bdb))
+ - **FEAT**: deepen the driver conformance suite ([#43](https://github.com/wolfenrain/raindrop/issues/43)). ([37c44597](https://github.com/wolfenrain/raindrop/commit/37c44597a34eebb76c97ce25d809857778e09b2a))
+ - **BREAKING** **FEAT**: give drivers their own migration storage ([#51](https://github.com/wolfenrain/raindrop/issues/51)). ([7114aad3](https://github.com/wolfenrain/raindrop/commit/7114aad3fb7f1dffbe3d917b10da3f4c2c406bbb))
+
