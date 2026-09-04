@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:raindrop/raindrop.dart';
 import 'package:raindrop_sqlite/raindrop_sqlite.dart';
 import 'package:raindrop_sqlite/src/sqlite_ddl.dart';
@@ -82,21 +84,51 @@ class SQLiteDelegate extends RaindropDelegate with _DatabaseDelegate {
   @override
   final CommonDatabase _database;
 
+  /// Calls queue here so at most one runs at a time. SQLite allows one open
+  /// transaction per connection, so two racing on `BEGIN` would fail.
+  Future<void> _chain = Future.value();
+
+  /// Runs [body] once every earlier call on this delegate completed.
+  ///
+  /// A call from inside a transaction body would wait for that very
+  /// transaction and deadlock, so it throws instead.
+  Future<T> _serialized<T>(Future<T> Function() body) {
+    if (identical(Zone.current[SQLiteDelegate], this)) {
+      throw StateError(
+        'Calls from inside a transaction body must use the '
+        'TransactionDelegate, not the SQLiteDelegate.',
+      );
+    }
+
+    final ticket = _chain.then(
+      (_) => runZoned(body, zoneValues: {SQLiteDelegate: this}),
+    );
+    _chain = ticket.then((_) {}, onError: (_) {});
+    return ticket;
+  }
+
+  @override
+  Future<DatabaseResult> execute(String query, List<Object?> values) {
+    return _serialized(() => super.execute(query, values));
+  }
+
   @override
   Future<T> transaction<T>(
     Future<T> Function(TransactionDelegate delegate) transaction,
-  ) async {
-    final tx = _TransactionDelegate(_database, this.dialect);
-    _database.execute('BEGIN', []);
+  ) {
+    return _serialized(() async {
+      final tx = _TransactionDelegate(_database, this.dialect);
+      _database.execute('BEGIN', []);
 
-    try {
-      final result = await transaction(tx);
-      _database.execute('COMMIT', []);
-      return result;
-    } catch (_) {
-      _database.execute('ROLLBACK', []);
-      rethrow;
-    }
+      try {
+        final result = await transaction(tx);
+        _database.execute('COMMIT', []);
+        return result;
+      } catch (_) {
+        _database.execute('ROLLBACK', []);
+        rethrow;
+      }
+    });
   }
 }
 
