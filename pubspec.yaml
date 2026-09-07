@@ -24,6 +24,9 @@ dev_dependencies:
 melos:
   repository: https://github.com/wolfenrain/raindrop
 
+  ide:
+    intellij: false
+
   command:
     version:
       branch: main
