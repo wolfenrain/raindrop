@@ -6,12 +6,14 @@ environment:
 
 workspace:
   - packages/raindrop
+  - packages/raindrop/example
   - packages/raindrop_postgres
   - packages/raindrop_postgres/example
   - packages/raindrop_sqlite
   - packages/raindrop_sqlite/example
   - packages/raindrop_cli
   - packages/raindrop_test
+  - packages/raindrop_test/example
 
 dev_dependencies:
   coverage: ^1.15.1
