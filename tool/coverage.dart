@@ -4,7 +4,7 @@ Future<void> main() async {
   final coverage = Directory('coverage');
   if (coverage.existsSync()) coverage.deleteSync(recursive: true);
 
-  await _run(['test', '--coverage=coverage']);
+  await _run(['test', '--coverage=${coverage.absolute.path}']);
   await _run([
     'run',
     'coverage:format_coverage',
