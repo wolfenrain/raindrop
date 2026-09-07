@@ -106,7 +106,7 @@ jobs:
       - name: 🔌 Integration Tests
         run: dart run melos run test:integration --no-select
 
-      - name: 💯 pub.dev score
+      - name: 💯 Pana score
         if: matrix.score
         run: |
           dart pub global activate pana
