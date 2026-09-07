@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:io';
 
 Future<void> main() async {
@@ -76,8 +77,43 @@ Future<void> main() async {
       '  ${entry.key} (${entry.value.length} lines): '
       '${entry.value.join(', ')}',
     );
+    _reportPerSuite(entry.key, entry.value);
   }
   exit(1);
+}
+
+/// Prints what every suite's raw VM report holds for [lines] of [libPath], so
+/// a failure shows which suite lost its hits and whether the file was loaded.
+void _reportPerSuite(String libPath, List<int> lines) {
+  final suffix = libPath.replaceFirst('lib/', '/');
+  final reports = Directory('coverage')
+      .listSync(recursive: true)
+      .whereType<File>()
+      .where((file) => file.path.endsWith('.vm.json'));
+  for (final report in reports) {
+    final suite = _normalize(report.path).replaceFirst('coverage/', '');
+    final document =
+        jsonDecode(report.readAsStringSync()) as Map<String, Object?>;
+    final entries = (document['coverage'] as List<Object?>? ?? const [])
+        .cast<Map<String, Object?>>()
+        .where((entry) => (entry['source']! as String).endsWith(suffix));
+    if (entries.isEmpty) {
+      stdout.writeln('    $suite: file not loaded');
+      continue;
+    }
+    for (final entry in entries) {
+      final hits = (entry['hits']! as List<Object?>).cast<int>();
+      final byLine = {
+        for (var i = 0; i < hits.length; i += 2) hits[i]: hits[i + 1],
+      };
+      final covered = byLine.values.where((count) => count > 0).length;
+      final wanted = [for (final line in lines) '$line=${byLine[line] ?? '-'}'];
+      stdout.writeln(
+        '    $suite: $covered of ${byLine.length} lines hit, '
+        '${wanted.join(' ')}',
+      );
+    }
+  }
 }
 
 String _normalize(String path) => path.trim().replaceAll(r'\', '/');
