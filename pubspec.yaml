@@ -43,6 +43,10 @@ melos:
     format:fix:
       exec: dart format .
 
+    score:
+      description: Scores every publishable package with pana against the workspace.
+      run: dart tool/pana.dart
+
     test:
       description: Runs each package's unit and integration tests.
       steps:
