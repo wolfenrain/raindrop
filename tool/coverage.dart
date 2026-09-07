@@ -43,7 +43,7 @@ Future<void> main() async {
 
   var total = 0;
   var hit = 0;
-  final uncovered = <String, int>{};
+  final uncovered = <String, List<int>>{};
   var current = '';
   for (final line in lcov) {
     if (line.startsWith('SF:')) {
@@ -56,7 +56,8 @@ Future<void> main() async {
       if (hits > 0) {
         hit++;
       } else {
-        uncovered[current] = (uncovered[current] ?? 0) + 1;
+        final number = int.parse(line.substring(3).split(',')[0]);
+        (uncovered[current] ??= []).add(number);
       }
     }
   }
@@ -71,7 +72,10 @@ Future<void> main() async {
     'Uncovered:',
   );
   for (final entry in uncovered.entries) {
-    stdout.writeln('  ${entry.key} (${entry.value} lines)');
+    stdout.writeln(
+      '  ${entry.key} (${entry.value.length} lines): '
+      '${entry.value.join(', ')}',
+    );
   }
   exit(1);
 }
