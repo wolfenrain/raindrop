@@ -7,3 +7,7 @@ build/
 pubspec.lock
 
 coverage/
+
+# IDE dirs
+.idea/
+.vscode/
