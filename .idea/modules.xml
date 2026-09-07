@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ProjectModuleManager">
+    <modules>
+<module fileurl="file://$PROJECT_DIR$/packages/raindrop/melos_raindrop.iml" filepath="$PROJECT_DIR$/packages/raindrop/melos_raindrop.iml"/>
+<module fileurl="file://$PROJECT_DIR$/packages/raindrop_cli/melos_raindrop_cli.iml" filepath="$PROJECT_DIR$/packages/raindrop_cli/melos_raindrop_cli.iml"/>
+<module fileurl="file://$PROJECT_DIR$/packages/raindrop/example/melos_raindrop_example.iml" filepath="$PROJECT_DIR$/packages/raindrop/example/melos_raindrop_example.iml"/>
+<module fileurl="file://$PROJECT_DIR$/packages/raindrop_postgres/melos_raindrop_postgres.iml" filepath="$PROJECT_DIR$/packages/raindrop_postgres/melos_raindrop_postgres.iml"/>
+<module fileurl="file://$PROJECT_DIR$/packages/raindrop_postgres/example/melos_raindrop_postgres_example.iml" filepath="$PROJECT_DIR$/packages/raindrop_postgres/example/melos_raindrop_postgres_example.iml"/>
+<module fileurl="file://$PROJECT_DIR$/packages/raindrop_sqlite/melos_raindrop_sqlite.iml" filepath="$PROJECT_DIR$/packages/raindrop_sqlite/melos_raindrop_sqlite.iml"/>
+<module fileurl="file://$PROJECT_DIR$/packages/raindrop_sqlite/example/melos_raindrop_sqlite_example.iml" filepath="$PROJECT_DIR$/packages/raindrop_sqlite/example/melos_raindrop_sqlite_example.iml"/>
+<module fileurl="file://$PROJECT_DIR$/packages/raindrop_test/melos_raindrop_test.iml" filepath="$PROJECT_DIR$/packages/raindrop_test/melos_raindrop_test.iml"/>
+<module fileurl="file://$PROJECT_DIR$/packages/raindrop_test/example/melos_raindrop_test_example.iml" filepath="$PROJECT_DIR$/packages/raindrop_test/example/melos_raindrop_test_example.iml"/>
+<module fileurl="file://$PROJECT_DIR$/melos_raindrop_workspace.iml" filepath="$PROJECT_DIR$/melos_raindrop_workspace.iml"/>
+    </modules>
+  </component>
+</project>
