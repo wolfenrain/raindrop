@@ -21,12 +21,6 @@ dev_dependencies:
   path: ^1.9.1
   very_good_analysis: ^10.3.0
 
-dependency_overrides:
-  # test 1.32.0 randomly loses coverage hits on ubuntu and windows, failing
-  # the raindrop_cli 100% gate while all tests pass. Cause unknown.
-  # Remove once a newer release passes that job a few times in a row.
-  test: 1.31.2
-
 melos:
   repository: https://github.com/wolfenrain/raindrop
 
