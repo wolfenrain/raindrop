@@ -1,6 +1,7 @@
 import 'dart:isolate';
 
 import 'package:raindrop/ddl.dart';
+import 'package:raindrop/ddl_server.dart';
 import 'package:raindrop/dialect.dart';
 import 'package:test/test.dart';
 

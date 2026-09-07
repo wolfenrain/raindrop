@@ -148,6 +148,7 @@ export 'package:raindrop_sqlite/raindrop_sqlite.dart';
 import 'dart:isolate';
 
 import 'package:raindrop/ddl.dart';
+import 'package:raindrop/ddl_server.dart';
 import 'package:raindrop_sqlite/raindrop_sqlite.dart';
 
 void main(List<String> args, SendPort sendPort) =>
