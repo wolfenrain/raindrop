@@ -61,11 +61,13 @@ void testDriverContract({
 
       final handshake = ReceivePort();
       final errors = ReceivePort();
+      final exit = ReceivePort();
       final isolate = await Isolate.spawnUri(
         entrypoint!,
         [],
         handshake.sendPort,
         onError: errors.sendPort,
+        onExit: exit.sendPort,
         packageConfig: await _packageConfig(),
       );
 
@@ -95,6 +97,8 @@ void testDriverContract({
         handshake.close();
         errors.close();
         isolate.kill(priority: Isolate.immediate);
+        await exit.first;
+        exit.close();
       }
     });
   });
