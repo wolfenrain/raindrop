@@ -23,6 +23,13 @@ abstract class DriverTestHarness {
   /// then every test is skipped instead of failing.
   FutureOr<bool> isAvailable() => true;
 
+  /// Whether a transaction opened inside another one rolls back on its
+  /// own, to a savepoint, without undoing the outer one.
+  ///
+  /// A driver over a host that cannot nest transactions declares `false`
+  /// and the suite skips the savepoint test instead of failing it.
+  bool get supportsNestedTransactions => true;
+
   /// Opens a fresh delegate to the database.
   FutureOr<RaindropDelegate> open();
 

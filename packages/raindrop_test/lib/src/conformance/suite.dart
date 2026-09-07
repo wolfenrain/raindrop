@@ -607,6 +607,9 @@ void testDriverConformance(
 
       conformanceTest('a nested transaction rolls back to its savepoint',
           () async {
+        if (!harness.supportsNestedTransactions) {
+          return markTestSkipped('the driver cannot nest transactions');
+        }
         await db.transaction((tx) async {
           await insertUser(tx, 'Kept');
           try {
