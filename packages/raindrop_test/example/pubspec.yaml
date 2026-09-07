@@ -1,0 +1,12 @@
+name: raindrop_test_example
+publish_to: none
+resolution: workspace
+
+environment:
+  sdk: ^3.6.0
+
+dependencies:
+  raindrop:
+    path: ../../raindrop
+  raindrop_test:
+    path: ../
