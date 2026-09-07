@@ -2,6 +2,9 @@
 #
 # Input: one { package, os, databases } object per package.
 # Output: a matrix entry per OS and per database version combination.
+#
+# The first stable ubuntu entry of each package also carries `score: true`, 
+# so the pub.dev score runs once per package.
 
 # "postgres:16~" -> { value: "postgres:16", unstable: true }
 def parse: { value: rtrimstr("~"), unstable: endswith("~") };
@@ -29,3 +32,12 @@ def combos:
       experimental: ($os.unstable or any($dbs[]; .unstable)),
       name: "\($package) (\($labels | join(", ")))" }
 ]
+| . as $entries
+| to_entries
+| map(.key as $i | .value
+    | (.os == "ubuntu-latest" and (.experimental | not)) as $stable_ubuntu
+    | . + { score: ($stable_ubuntu and
+        ([ $entries[:$i][]
+           | select(.package == $entries[$i].package
+                    and .os == "ubuntu-latest" and (.experimental | not)) ]
+         | length == 0)) })
