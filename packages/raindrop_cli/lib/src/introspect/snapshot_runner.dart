@@ -176,6 +176,7 @@ Schema file "$filePath" is not inside a package's lib/ directory, so it cannot b
   }) async {
     final receivePort = ReceivePort();
     final errorPort = ReceivePort();
+    final exitPort = ReceivePort();
     Isolate? isolate;
     try {
       isolate = await Isolate.spawnUri(
@@ -183,6 +184,7 @@ Schema file "$filePath" is not inside a package's lib/ directory, so it cannot b
         const [],
         receivePort.sendPort,
         onError: errorPort.sendPort,
+        onExit: exitPort.sendPort,
         packageConfig: packageConfig,
       );
 
@@ -210,7 +212,17 @@ Schema file "$filePath" is not inside a package's lib/ directory, so it cannot b
     } finally {
       receivePort.close();
       errorPort.close();
-      isolate?.kill(priority: Isolate.immediate);
+      await _shutdown(isolate, exitPort);
     }
+  }
+
+  /// Kills [isolate] and waits until it is gone, so the caller never returns
+  /// with a child still shutting down.
+  static Future<void> _shutdown(Isolate? isolate, ReceivePort exitPort) async {
+    if (isolate != null) {
+      isolate.kill(priority: Isolate.immediate);
+      await exitPort.first;
+    }
+    exitPort.close();
   }
 }

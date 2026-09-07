@@ -127,6 +127,7 @@ Driver package "$driver" not found. Make sure the "driver" field in raindrop.yam
   }) async {
     final receivePort = ReceivePort();
     final errorPort = ReceivePort();
+    final exitPort = ReceivePort();
 
     Isolate? isolate;
     try {
@@ -135,6 +136,7 @@ Driver package "$driver" not found. Make sure the "driver" field in raindrop.yam
         [],
         receivePort.sendPort,
         onError: errorPort.sendPort,
+        onExit: exitPort.sendPort,
         packageConfig: packageConfig,
       );
 
@@ -168,7 +170,17 @@ Driver package "$driver" not found. Make sure the "driver" field in raindrop.yam
     } finally {
       receivePort.close();
       errorPort.close();
-      isolate?.kill(priority: Isolate.immediate);
+      await _shutdown(isolate, exitPort);
     }
+  }
+
+  /// Kills [isolate] and waits until it is gone, so the caller never returns
+  /// with a child still shutting down.
+  static Future<void> _shutdown(Isolate? isolate, ReceivePort exitPort) async {
+    if (isolate != null) {
+      isolate.kill(priority: Isolate.immediate);
+      await exitPort.first;
+    }
+    exitPort.close();
   }
 }
