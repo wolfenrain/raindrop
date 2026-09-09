@@ -1,17 +1,20 @@
 import 'package:raindrop/raindrop.dart';
 
-/// SQL `LENGTH(value)`, the character count of [value].
-Length length(ColumnOr<String?> value) => Length(value);
+/// `LENGTH(value)`.
+///
+/// The length of a `NULL` is `NULL`, which a non-nullable `int` cannot
+/// carry. Give a nullable column a fallback with [coalesce] first.
+Length length(ColumnOr<String> value) => Length(value);
 
 /// {@template length}
-/// SQL `LENGTH(value)`.
+/// The `LENGTH` function: the number of characters in [value].
 /// {@endtemplate}
 class Length extends Expression<int> {
   /// {@macro length}
   Length(this.value);
 
-  /// What is being measured.
-  final ColumnOr<String?> value;
+  /// The text to measure.
+  final ColumnOr<String> value;
 
   @override
   SQL build() => SQL.function('LENGTH', [value]);

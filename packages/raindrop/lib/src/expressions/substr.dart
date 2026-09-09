@@ -1,24 +1,28 @@
 import 'package:raindrop/raindrop.dart';
 
-/// SQL `SUBSTR(value, start, [length])`, the part of [value] that starts at
-/// the 1-based [start], capped to [length] characters when given.
-Substr substr(ColumnOr<String?> value, int start, [int? length]) =>
-    Substr(value, start, length);
+/// `SUBSTR(value, start[, length])`. The result is nullable when [value] is.
+Substr<V> substr<V extends String?>(
+  ColumnOr<V> value,
+  int start, [
+  int? length,
+]) =>
+    Substr<V>(value, start, length);
 
 /// {@template substr}
-/// SQL `SUBSTR(value, start, [length])`.
+/// The `SUBSTR` function: [length] characters of [value] from [start], or
+/// the rest of [value] without a [length].
 /// {@endtemplate}
-class Substr extends Expression<String> {
+class Substr<V extends String?> extends Expression<V> {
   /// {@macro substr}
   Substr(this.value, this.start, [this.length]);
 
-  /// What is being cut.
-  final ColumnOr<String?> value;
+  /// The text to cut from.
+  final ColumnOr<V> value;
 
-  /// The 1-based position the part starts at.
+  /// The 1-based position to start at.
   final int start;
 
-  /// The most characters the part holds, unbounded when null.
+  /// The number of characters to take.
   final int? length;
 
   @override
