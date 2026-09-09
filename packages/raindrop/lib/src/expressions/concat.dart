@@ -1,12 +1,13 @@
 import 'package:raindrop/raindrop.dart';
 
-/// SQL `(a || b || ...)`, the [parts] joined into one string.
+/// `part || part || ...`.
 ///
-/// Rendered with the `||` operator, which every dialect parses.
-Concat concat(List<ColumnOr<String?>> parts) => Concat(parts);
+/// One `NULL` part makes the whole result `NULL`, which a non-nullable
+/// `String` cannot carry. Give a nullable part a fallback with [coalesce].
+Concat concat(List<ColumnOr<String>> parts) => Concat(parts);
 
 /// {@template concat}
-/// SQL `(a || b || ...)`.
+/// The `||` operator over [parts], in order.
 /// {@endtemplate}
 class Concat extends Expression<String> {
   /// {@macro concat}
@@ -16,8 +17,8 @@ class Concat extends Expression<String> {
     }
   }
 
-  /// What is being joined, in order.
-  final List<ColumnOr<String?>> parts;
+  /// The texts to join.
+  final List<ColumnOr<String>> parts;
 
   @override
   SQL build() => SQL([
