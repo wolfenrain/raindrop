@@ -26,7 +26,7 @@ CREATE TABLE users (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL, "f
   tearDown(() => database.close());
 
   test('column nullable, alias and toString', () async {
-    final column = users.$['name'];
+    final column = users.name;
     expect(column.nullable.isNullable, isTrue);
     expect(column.toString(), contains('name'));
 

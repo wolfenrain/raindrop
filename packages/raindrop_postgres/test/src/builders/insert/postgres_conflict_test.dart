@@ -86,7 +86,8 @@ void main() {
         sql,
         endsWith(
           'ON CONFLICT ("email") WHERE "id" IS NOT NULL '
-          r'DO UPDATE SET "name" = "excluded"."name" WHERE "name" != $3',
+          'DO UPDATE SET "name" = "excluded"."name" '
+          r'WHERE "users"."name" != $3',
         ),
       );
     });

@@ -103,7 +103,7 @@ class OnConflictBuilder<S extends Schema<R>, R> {
       SQL([
         const RawSQL('DO UPDATE SET'),
         UpdateSetClause(UpdateableResult<void>(assignments)),
-        if (where != null) ...[const RawSQL('WHERE'), where],
+        if (where != null) ...[const RawSQL('WHERE'), FilterClause(where)],
       ]),
     );
   }
