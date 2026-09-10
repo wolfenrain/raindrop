@@ -461,6 +461,23 @@ void main() {
         'delete with limit',
         (db) =>
             db.delete(from: users).where(users.age.greaterThan(0)).limit(10),
+      )
+      ..test(
+        'delete with limit and returning',
+        (db) => db
+            .delete(from: users)
+            .where(users.age.greaterThan(0))
+            .limit(10)
+            .returning(),
+      )
+      ..test(
+        'update with limit and returning',
+        (db) => db
+            .update(users)
+            .set(users.name.to('Renamed'))
+            .where(users.age.greaterThan(18))
+            .limit(5)
+            .returning(),
       );
   });
 }

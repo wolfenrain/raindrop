@@ -13,5 +13,11 @@ extension SQLiteUpdateLimit<S extends Schema<R>, R, V>
           limit: limit,
         ),
         UpdateLimitedBuilder.new,
+      ).withClause(
+        // Past `RETURNING` at `where + 5000`: SQLite parses the bare
+        // `LIMIT` only there.
+        UpdateSlot.where + 10000,
+        (config) => LimitedWriteTailClause(limit),
+        UpdateLimitedBuilder.new,
       );
 }
