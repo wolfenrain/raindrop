@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:raindrop/dialect.dart';
 
 /// Renders a [SQL] fragment (its chunk list: raw SQL, columns, value lists,
@@ -19,7 +21,7 @@ class ExpressionClause extends Clause {
       final chunk = sql.chunks[i];
       if (chunk case [final Subquery<dynamic> only]) {
         buffer.write(_chunk(context, only));
-      } else if (chunk case final List<dynamic> list) {
+      } else if (chunk case final List<dynamic> list when chunk is! TypedData) {
         buffer.write('(');
         for (var j = 0; j < list.length; j++) {
           if (j > 0) buffer.write(', ');
@@ -533,4 +535,57 @@ class DeleteFromClause extends Clause {
   @override
   String render(RenderContext context) =>
       'DELETE FROM ${TableClause(from).render(context)}';
+}
+
+/// `ON CONFLICT [(target)] [WHERE ...] DO NOTHING` or
+/// `ON CONFLICT (target) [WHERE ...] DO UPDATE SET ... [WHERE ...]`.
+class OnConflictClause extends Clause {
+  /// Creates a conflict clause. A null [assignments] renders `DO NOTHING`.
+  const OnConflictClause({
+    this.target = const [],
+    this.targetWhere,
+    this.assignments,
+    this.where,
+  });
+
+  /// The conflict-target columns (the unique index / constraint columns).
+  ///
+  /// May be empty for a bare `ON CONFLICT DO NOTHING`.
+  final List<Column<dynamic, dynamic>> target;
+
+  /// The partial-index predicate narrowing [target], if any.
+  final Filter? targetWhere;
+
+  /// The `DO UPDATE SET` assignments, or null for `DO NOTHING`.
+  final List<Updateable<dynamic>>? assignments;
+
+  /// The predicate of `DO UPDATE ... WHERE`, rendered table-qualified so it
+  /// can not be ambiguous with the excluded row.
+  final Filter? where;
+
+  @override
+  String render(RenderContext context) {
+    final assignments = this.assignments;
+    return ExpressionClause(
+      SQL([
+        const RawSQL('ON CONFLICT'),
+        if (target.isNotEmpty) target,
+        if (targetWhere case final targetWhere?) ...[
+          const RawSQL('WHERE'),
+          targetWhere,
+        ],
+        if (assignments == null)
+          const RawSQL('DO NOTHING')
+        else ...[
+          const RawSQL('DO UPDATE SET'),
+          UpdateSetClause(UpdateableResult<void>(assignments)),
+          if (where case final where?) ...[
+            const RawSQL('WHERE'),
+            FilterClause(where),
+          ],
+        ],
+      ]),
+      singleTable: true,
+    ).render(context);
+  }
 }

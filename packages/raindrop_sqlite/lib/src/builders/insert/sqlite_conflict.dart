@@ -82,8 +82,7 @@ class OnConflictBuilder<S extends Schema<R>, R> {
   }
 
   /// Close the clause with `DO NOTHING`, skipping the conflicting row.
-  InsertWithValuesBuilder<S, R, void> doNothing() =>
-      _close(const RawSQL('DO NOTHING'));
+  InsertWithValuesBuilder<S, R, void> doNothing() => _close(null, null);
 
   /// Close the clause with `DO UPDATE SET ...`, updating the existing row
   /// with [assignments], optionally only where [where] holds.
@@ -99,62 +98,23 @@ class OnConflictBuilder<S extends Schema<R>, R> {
         'columns the insert can conflict on.',
       );
     }
-    return _close(
-      SQL([
-        const RawSQL('DO UPDATE SET'),
-        UpdateSetClause(UpdateableResult<void>(assignments)),
-        if (where != null) ...[const RawSQL('WHERE'), where],
-      ]),
-    );
+    return _close(assignments, where);
   }
 
-  InsertWithValuesBuilder<S, R, void> _close(Object action) {
+  InsertWithValuesBuilder<S, R, void> _close(
+    List<Updateable<dynamic>>? assignments,
+    Filter? where,
+  ) {
     // Between the body (2000) and any trailing RETURNING (body + 5000).
     return _insert.withClause(
       InsertSlot.body + 1000,
       (_) => OnConflictClause(
         target: _target,
         targetWhere: _targetWhere,
-        action: action,
+        assignments: assignments,
+        where: where,
       ),
       InsertWithValuesBuilder.new,
     );
-  }
-}
-
-/// An `ON CONFLICT [(target)] [WHERE ...] DO ...` clause of a SQLite insert.
-class OnConflictClause extends Clause {
-  /// Creates a conflict clause for the given [target] and [action].
-  const OnConflictClause({
-    required this.action,
-    this.target = const [],
-    this.targetWhere,
-  });
-
-  /// The conflict-target columns (the unique index / constraint columns).
-  ///
-  /// May be empty for a bare `ON CONFLICT DO NOTHING`.
-  final List<Column<dynamic, dynamic>> target;
-
-  /// The partial-index predicate narrowing [target], if any.
-  final Filter? targetWhere;
-
-  /// The rendered-SQL action closing the clause.
-  final Object action;
-
-  @override
-  String render(RenderContext context) {
-    return ExpressionClause(
-      SQL([
-        const RawSQL('ON CONFLICT'),
-        if (target.isNotEmpty) target,
-        if (targetWhere case final targetWhere?) ...[
-          const RawSQL('WHERE'),
-          targetWhere,
-        ],
-        action,
-      ]),
-      singleTable: true,
-    ).render(context);
   }
 }

@@ -45,6 +45,46 @@ CREATE TABLE accounts (id SERIAL PRIMARY KEY, email TEXT NOT NULL UNIQUE, balanc
     );
   });
 
+  test('constraintKind reads real SQLSTATE codes', () async {
+    if (connection == null) return markTestSkipped('no Postgres');
+    await db.execute('DROP TABLE IF EXISTS ck_child, ck_parent');
+    await db.execute(
+      'CREATE TABLE ck_parent (id TEXT PRIMARY KEY, code TEXT UNIQUE)',
+    );
+    await db.execute(
+      'CREATE TABLE ck_child (id TEXT PRIMARY KEY, '
+      'parent TEXT REFERENCES ck_parent(id), n INTEGER NOT NULL CHECK (n > 0))',
+    );
+    await db.execute("INSERT INTO ck_parent VALUES ('p', 'c')");
+
+    Future<ConstraintKind?> kindOf(String sql) async {
+      try {
+        await db.execute(sql);
+      } on Object catch (error) {
+        return db.delegate.constraintKind(error);
+      }
+      fail('$sql did not throw');
+    }
+
+    expect(
+      await kindOf("INSERT INTO ck_child VALUES ('a', 'missing', 1)"),
+      ConstraintKind.foreignKey,
+    );
+    expect(
+      await kindOf("INSERT INTO ck_parent VALUES ('q', 'c')"),
+      ConstraintKind.unique,
+    );
+    expect(
+      await kindOf("INSERT INTO ck_child VALUES ('a', 'p', 0)"),
+      ConstraintKind.check,
+    );
+    expect(
+      await kindOf("INSERT INTO ck_child VALUES ('a', 'p', NULL)"),
+      ConstraintKind.notNull,
+    );
+    await db.execute('DROP TABLE ck_child, ck_parent');
+  });
+
   test('insert and select round-trip every custom type', () async {
     if (connection == null) return markTestSkipped('no Postgres');
     final createdAt = DateTime.utc(2026, 8, 7, 12, 30);

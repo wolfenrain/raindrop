@@ -161,6 +161,18 @@ class _TransactionDelegate extends TransactionDelegate with _DatabaseDelegate {
 }
 
 mixin _DatabaseDelegate on Delegate {
+  @override
+  ConstraintKind? constraintKind(Object error) {
+    if (error is! SqliteException) return null;
+    return switch (error.extendedResultCode) {
+      787 => ConstraintKind.foreignKey,
+      1555 || 2067 => ConstraintKind.unique,
+      275 => ConstraintKind.check,
+      1299 => ConstraintKind.notNull,
+      _ => null,
+    };
+  }
+
   CommonDatabase get _database;
 
   @override
