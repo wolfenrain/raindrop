@@ -4,7 +4,6 @@ import 'dart:developer';
 /// {@template logger}
 /// Provides logging capabilities inside Raindrop.
 /// {@endtemplate}
-// ignore: one_member_abstracts an interface for users to implement
 abstract interface class Logger {
   /// {@macro logger}
   const Logger(); // coverage:ignore-line

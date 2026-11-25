@@ -98,13 +98,13 @@ void main() {
       });
 
       test('a nested transaction wraps its body in a savepoint', () async {
-        await delegate.transaction((tx) async {
-          return tx.transaction((inner) async {
+        await delegate.transaction(
+          (tx) => tx.transaction((inner) async {
             expect(inner.depth, 1);
             await inner.execute('INSERT INTO t VALUES (2)', []);
             return 0;
-          });
-        });
+          }),
+        );
 
         verifyInOrder([
           () => txSession.execute('SAVEPOINT sp_0', parameters: []),
@@ -117,14 +117,14 @@ void main() {
       });
 
       test('deeper nesting numbers its savepoints by depth', () async {
-        await delegate.transaction((tx) async {
-          return tx.transaction((inner) async {
-            return inner.transaction((innermost) async {
+        await delegate.transaction(
+          (tx) => tx.transaction(
+            (inner) => inner.transaction((innermost) async {
               expect(innermost.depth, 2);
               return 0;
-            });
-          });
-        });
+            }),
+          ),
+        );
 
         verifyInOrder([
           () => txSession.execute('SAVEPOINT sp_0', parameters: []),
@@ -137,11 +137,11 @@ void main() {
       test('a failing nested transaction rolls back to its savepoint',
           () async {
         await expectLater(
-          delegate.transaction((tx) async {
-            return tx.transaction<int>((inner) async {
+          delegate.transaction(
+            (tx) => tx.transaction<int>((inner) async {
               throw StateError('abort');
-            });
-          }),
+            }),
+          ),
           throwsStateError,
         );
 

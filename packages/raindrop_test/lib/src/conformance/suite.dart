@@ -575,7 +575,7 @@ void testDriverConformance(
       conformanceTest('reads its own writes with builders', () async {
         final names = await db.transaction((tx) async {
           await insertUser(tx, 'Morgan');
-          return tx.select(users.name).from(users);
+          return await tx.select(users.name).from(users);
         });
 
         expect(names, ['Morgan']);

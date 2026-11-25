@@ -20,7 +20,7 @@ class Raindrop extends RaindropExecutor<RaindropDelegate> {
     String query, [
     List<Object?> values = const [],
   ]) async {
-    return tracer.trace('Raindrop.execute', (span) {
+    return await tracer.trace('Raindrop.execute', (span) {
       span?.attributes.addAll({'query': query, 'values': values});
       return super.execute(query, values);
     });
