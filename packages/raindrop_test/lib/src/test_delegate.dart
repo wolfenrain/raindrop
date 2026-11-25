@@ -59,7 +59,7 @@ class TestDelegate extends RaindropDelegate {
   @override
   Future<DatabaseResult> execute(String query, List<Object?> values) async {
     statements.add((sql: query, values: List<Object?>.of(values)));
-    if (onExecute case final onExecute?) return onExecute(query, values);
+    if (onExecute case final onExecute?) return await onExecute(query, values);
     if (_results.isNotEmpty) return _results.removeAt(0);
     return empty;
   }

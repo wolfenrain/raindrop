@@ -99,9 +99,8 @@ class _FakeTransactionDelegate extends TransactionDelegate {
   @override
   Future<T> transaction<T>(
     Future<T> Function(TransactionDelegate delegate) transaction,
-  ) async {
-    return transaction(this);
-  }
+  ) =>
+      transaction(this);
 
   @override
   Future<void> rollback() async {}
@@ -127,10 +126,9 @@ class _FakeDelegate extends RaindropDelegate {
   @override
   Future<T> transaction<T>(
     Future<T> Function(TransactionDelegate delegate) transaction,
-  ) async {
-    return runZoned(
-      () => transaction(_tx),
-      zoneValues: {#delegate: _tx},
-    );
-  }
+  ) =>
+      runZoned(
+        () => transaction(_tx),
+        zoneValues: {#delegate: _tx},
+      );
 }

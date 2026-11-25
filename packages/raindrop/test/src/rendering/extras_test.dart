@@ -23,7 +23,8 @@ void main() {
             .update(users)
             .set(users.age.to(23))
             .where(users.id.equals(1))
-            .withClause(UpdateSlot.where + 1000, probe, UpdateWhereBuilder.new),
+            .withClause<UpdateWhereBuilder<_UserSchema, _User, void>>(
+                UpdateSlot.where + 1000, probe, UpdateWhereBuilder.new),
       );
 
       expect(
@@ -37,7 +38,8 @@ void main() {
         db
             .update(users)
             .set(users.age.to(23))
-            .withClause(UpdateSlot.where + 1000, probe, UpdateWhereBuilder.new)
+            .withClause<UpdateWhereBuilder<_UserSchema, _User, void>>(
+                UpdateSlot.where + 1000, probe, UpdateWhereBuilder.new)
             .where(users.id.equals(1)),
       );
 
@@ -49,7 +51,8 @@ void main() {
         db
             .update(users)
             .set(users.age.to(23))
-            .withClause(UpdateSlot.where + 1000, probe, UpdateWhereBuilder.new),
+            .withClause<UpdateWhereBuilder<_UserSchema, _User, void>>(
+                UpdateSlot.where + 1000, probe, UpdateWhereBuilder.new),
       );
 
       expect(sql, contains('PROBE users unfiltered'));
@@ -60,7 +63,8 @@ void main() {
         db
             .delete(from: users)
             .where(users.id.equals(1))
-            .withClause(DeleteSlot.where, probe, DeleteWhereBuilder.new),
+            .withClause<DeleteWhereBuilder<_UserSchema, _User, void>>(
+                DeleteSlot.where, probe, DeleteWhereBuilder.new),
       );
 
       expect(sql, contains('PROBE users filtered'));
@@ -72,7 +76,8 @@ void main() {
           .update(users)
           .set(users.age.to(23))
           .where(users.id.equals(1))
-          .withClause(UpdateSlot.where, probe, UpdateLimitedBuilder.new);
+          .withClause<UpdateLimitedBuilder<_UserSchema, _User, void>>(
+              UpdateSlot.where, probe, UpdateLimitedBuilder.new);
 
       expect(sealed, isA<UpdateLimitedBuilder<dynamic, dynamic, dynamic>>());
       expect(sqlOf(sealed), contains('PROBE users filtered'));
@@ -80,7 +85,8 @@ void main() {
       final sealedDelete = db
           .delete(from: users)
           .where(users.id.equals(1))
-          .withClause(DeleteSlot.where, probe, DeleteLimitedBuilder.new);
+          .withClause<DeleteLimitedBuilder<_UserSchema, _User, void>>(
+              DeleteSlot.where, probe, DeleteLimitedBuilder.new);
 
       expect(
         sealedDelete,

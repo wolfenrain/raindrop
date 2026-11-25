@@ -188,7 +188,7 @@ void main() {
         final delegate = TestDelegate();
 
         await expectLater(
-          delegate.transaction((tx) async => tx.rollback()),
+          delegate.transaction((tx) => tx.rollback()),
           throwsA(isA<TransactionRollback>()),
         );
         expect(delegate.statements.map((s) => s.sql), ['BEGIN', 'ROLLBACK']);

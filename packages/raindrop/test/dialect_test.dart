@@ -13,7 +13,10 @@ void main() {
 
   group('withClause', () {
     test('slots a clause into a select statement', () {
-      final builder = db.select().from(rows).withClause(
+      final builder = db
+          .select()
+          .from(rows)
+          .withClause<SelectFromBuilder<_RowSchema, _Row, List<_Row>>>(
             SelectSlot.offset + 500,
             (_) => Keyword('-- trailing'),
             SelectFromBuilder.new,
@@ -36,8 +39,9 @@ void main() {
     });
 
     test('slots a clause into an insert statement with values', () {
-      final builder =
-          db.insert(into: rows).values([_Row(name: 'a')]).withClause(
+      final builder = db.insert(into: rows).values([
+        _Row(name: 'a')
+      ]).withClause<InsertWithValuesBuilder<_RowSchema, _Row, void>>(
         InsertSlot.verb + 500,
         (_) => Keyword('OR REPLACE'),
         InsertWithValuesBuilder.new,
@@ -47,7 +51,10 @@ void main() {
     });
 
     test('slots a clause into an update statement', () {
-      final builder = db.update(rows).set(rows.name.to('b')).withClause(
+      final builder = db
+          .update(rows)
+          .set(rows.name.to('b'))
+          .withClause<UpdateWhereBuilder<_RowSchema, _Row, void>>(
             UpdateSlot.where + 500,
             (_) => Keyword('-- trailing'),
             UpdateWhereBuilder.new,
@@ -57,12 +64,14 @@ void main() {
     });
 
     test('slots a clause into a delete statement', () {
-      final builder =
-          db.delete(from: rows).where(rows.name.equals('a')).withClause(
-                DeleteSlot.where + 500,
-                (_) => Keyword('-- trailing'),
-                DeleteWhereBuilder.new,
-              );
+      final builder = db
+          .delete(from: rows)
+          .where(rows.name.equals('a'))
+          .withClause<DeleteWhereBuilder<_RowSchema, _Row, void>>(
+            DeleteSlot.where + 500,
+            (_) => Keyword('-- trailing'),
+            DeleteWhereBuilder.new,
+          );
 
       expect(translate(builder), endsWith('-- trailing'));
     });
