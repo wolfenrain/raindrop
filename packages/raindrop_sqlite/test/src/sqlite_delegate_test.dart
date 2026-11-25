@@ -40,7 +40,7 @@ CREATE TABLE payloads (id INTEGER PRIMARY KEY AUTOINCREMENT, big BLOB NOT NULL, 
         );
         await db.execute(
           'CREATE TABLE child (id TEXT PRIMARY KEY, '
-          'parent TEXT REFERENCES parent(id), n INTEGER NOT NULL CHECK (n > 0))',
+          '''parent TEXT REFERENCES parent(id), n INTEGER NOT NULL CHECK (n > 0))''',
         );
         await db.execute("INSERT INTO parent VALUES ('p', 'c')");
       });
