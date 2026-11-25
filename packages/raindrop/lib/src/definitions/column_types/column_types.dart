@@ -139,14 +139,9 @@ extension ColumnOperators<V extends Object?> on ColumnOf<V> {
 /// Primary-key marking for a possibly-absent column.
 extension PrimaryColumn<T extends ColumnType<V>, V extends Object?> on T? {
   /// Marks this column as the primary key (no auto-increment).
-  T? primaryKey() {
-    if (this case final column?) {
-      column
-        ..isPrimaryKey = true
-        ..autoIncrement = false;
-    }
-    return this;
-  }
+  T? primaryKey() => this
+    ?..isPrimaryKey = true
+    ..autoIncrement = false;
 }
 
 /// Primary-key marking for a known-present column.
@@ -160,14 +155,9 @@ extension PrimaryColumnNonNull<T extends ColumnType<V>, V extends Object?>
 extension PrimaryColumnInteger<T extends ColumnType<int?>> on T {
   /// Marks this integer column as the primary key, optionally with
   /// auto-increment.
-  T primaryKey({required bool autoIncrement}) {
-    if (this case final column) {
-      column
-        ..isPrimaryKey = true
-        ..autoIncrement = autoIncrement;
-    }
-    return this;
-  }
+  T primaryKey({required bool autoIncrement}) => this
+    ..isPrimaryKey = true
+    ..autoIncrement = autoIncrement;
 }
 
 /// Extension to add foreign key references to columns.

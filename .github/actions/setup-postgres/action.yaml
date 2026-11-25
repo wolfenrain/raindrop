@@ -23,11 +23,11 @@ runs:
         VERSION: ${{ inputs.version }}
       run: |
         if [ "$VERSION" == "latest" ]; then
-          VERSION=$(curl -fsSL https://endoflife.date/api/postgresql.json | jq -r '.[0].cycle')
+          VERSION=18 # The newest the action installs.
         fi
         echo "version=$VERSION" >> "$GITHUB_OUTPUT"
 
     - name: 🐘 Install PostgreSQL
-      uses: ikalnytskyi/action-setup-postgres@v8
+      uses: ikalnytskyi/action-setup-postgres@v9
       with:
         postgres-version: ${{ steps.resolve.outputs.version }}

@@ -67,7 +67,7 @@ Use a pre-built schema snapshot (JSON) as the current state instead of running t
     final journal = await MigrationJournal.load(config.journalPath);
 
     if (dartOnly) {
-      return _emitOnly(config, journal, dartOutputPath);
+      return await _emitOnly(config, journal, dartOutputPath);
     }
 
     final migrationName = argResults!['name'] as String?;

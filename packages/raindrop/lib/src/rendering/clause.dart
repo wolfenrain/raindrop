@@ -27,7 +27,6 @@ import 'package:raindrop/dialect.dart';
 /// );
 /// ```
 /// {@endtemplate}
-// ignore: one_member_abstracts dialects subclass it to add their own clauses
 abstract class Clause {
   /// {@macro clause}
   const Clause();
