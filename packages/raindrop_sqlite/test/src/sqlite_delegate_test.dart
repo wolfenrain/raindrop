@@ -24,6 +24,53 @@ CREATE TABLE payloads (id INTEGER PRIMARY KEY AUTOINCREMENT, big BLOB NOT NULL, 
 
     tearDown(() => database.close());
 
+    group('constraintKind', () {
+      Future<ConstraintKind?> kindOf(String sql) async {
+        try {
+          await db.execute(sql);
+        } on Object catch (error) {
+          return db.delegate.constraintKind(error);
+        }
+        fail('$sql did not throw');
+      }
+
+      setUp(() async {
+        await db.execute(
+          'CREATE TABLE parent (id TEXT PRIMARY KEY, code TEXT UNIQUE)',
+        );
+        await db.execute(
+          'CREATE TABLE child (id TEXT PRIMARY KEY, '
+          '''parent TEXT REFERENCES parent(id), n INTEGER NOT NULL CHECK (n > 0))''',
+        );
+        await db.execute("INSERT INTO parent VALUES ('p', 'c')");
+      });
+
+      test('tells the constraint kinds apart', () async {
+        expect(
+          await kindOf("INSERT INTO child VALUES ('a', 'missing', 1)"),
+          ConstraintKind.foreignKey,
+        );
+        expect(
+          await kindOf("INSERT INTO parent VALUES ('q', 'c')"),
+          ConstraintKind.unique,
+        );
+        expect(
+          await kindOf("INSERT INTO parent VALUES ('p', 'd')"),
+          ConstraintKind.unique,
+        );
+        expect(
+          await kindOf("INSERT INTO child VALUES ('a', 'p', 0)"),
+          ConstraintKind.check,
+        );
+        expect(
+          await kindOf("INSERT INTO child VALUES ('a', 'p', NULL)"),
+          ConstraintKind.notNull,
+        );
+        expect(await kindOf('SELECT * FROM nope'), isNull);
+        expect(db.delegate.constraintKind(Exception('x')), isNull);
+      });
+    });
+
     group('foreign keys', () {
       int pragmaOn(Database database) =>
           database.select('PRAGMA foreign_keys').first.values.first! as int;

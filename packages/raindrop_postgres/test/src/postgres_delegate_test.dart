@@ -30,6 +30,21 @@ void main() {
   });
 
   group('PostgresDelegate', () {
+    test('constraintKind maps SQLSTATE codes', () {
+      ConstraintKind? kindOf(String? code) {
+        final error = _MockServerException();
+        when(() => error.code).thenReturn(code);
+        return delegate.constraintKind(error);
+      }
+
+      expect(kindOf('23503'), ConstraintKind.foreignKey);
+      expect(kindOf('23505'), ConstraintKind.unique);
+      expect(kindOf('23514'), ConstraintKind.check);
+      expect(kindOf('23502'), ConstraintKind.notNull);
+      expect(kindOf('42P01'), isNull);
+      expect(delegate.constraintKind(Exception('x')), isNull);
+    });
+
     test('speaks the postgres dialect', () {
       expect(delegate.dialect, isA<PostgresDialect>());
     });
@@ -194,3 +209,5 @@ pg.Result _result({
 }
 
 Future<int> _fallbackTxBody(pg.TxSession session) async => 0;
+
+class _MockServerException extends Mock implements pg.ServerException {}

@@ -20,6 +20,19 @@ abstract class Delegate {
     Future<T> Function(TransactionDelegate delegate) transaction,
   );
 
+  /// The kind of constraint that [error], thrown by [execute], violated, or
+  /// null if it is not a constraint violation or the driver cannot tell.
+  ConstraintKind? constraintKind(Object error) => null;
+
+  /// Render [query] and execute it through [executor].
+  ///
+  /// Override this to change a query before it renders, or to run more
+  /// statements around it.
+  Future<DatabaseResult> run(RaindropExecutor executor, Query<dynamic> query) {
+    final (sql, values) = dialect.translate(query);
+    return executor.execute(sql, values);
+  }
+
   /// Create an insert builder for an entity.
   InsertValuesBuilder<Schema<R>, R, void> insert<R>(
     RaindropExecutor executor,
@@ -63,4 +76,19 @@ abstract class Delegate {
       config: QueryConfig.from({#from: from}),
     );
   }
+}
+
+/// A kind of constraint that a statement can violate.
+enum ConstraintKind {
+  /// A foreign key: the referenced row is missing or still referenced.
+  foreignKey,
+
+  /// A unique index or primary key.
+  unique,
+
+  /// A `CHECK` constraint.
+  check,
+
+  /// A `NOT NULL` column.
+  notNull,
 }

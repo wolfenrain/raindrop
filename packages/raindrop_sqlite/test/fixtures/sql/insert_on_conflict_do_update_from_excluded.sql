@@ -1,4 +1,4 @@
-INSERT INTO "users" ("name", "favoriteGame", "age", "is_active", "rating", "deletedAt") VALUES ($1, $2, $3, $4, $5, $6) ON CONFLICT ("name") DO UPDATE SET "age" = "excluded"."age" WHERE "age" < "excluded"."age"
+INSERT INTO "users" ("name", "favoriteGame", "age", "is_active", "rating", "deletedAt") VALUES ($1, $2, $3, $4, $5, $6) ON CONFLICT ("name") DO UPDATE SET "age" = "excluded"."age" WHERE "users"."age" < "excluded"."age"
 
 -- $1 = "Morgan"
 -- $2 = "zelda"

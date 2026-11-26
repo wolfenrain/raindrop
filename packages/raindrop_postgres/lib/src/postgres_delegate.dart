@@ -63,6 +63,18 @@ class _TransactionDelegate extends TransactionDelegate
 }
 
 mixin _SessionDelegate<S extends Session> on Delegate {
+  @override
+  ConstraintKind? constraintKind(Object error) {
+    if (error is! ServerException) return null;
+    return switch (error.code) {
+      '23503' => ConstraintKind.foreignKey,
+      '23505' => ConstraintKind.unique,
+      '23514' => ConstraintKind.check,
+      '23502' => ConstraintKind.notNull,
+      _ => null,
+    };
+  }
+
   S get _session;
 
   @override

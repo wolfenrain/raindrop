@@ -209,6 +209,14 @@ void main() {
       expect('${Raindrop.tracer.dump()}', contains('RaindropExecutor.run'));
     });
 
+    test('routes the query through the delegate run hook', () async {
+      final hooked = _HookedDelegate();
+      final rows = await Raindrop(hooked).select(users.name).from(users);
+
+      expect(hooked.queries, hasLength(1));
+      expect(rows, ['Hooked']);
+    });
+
     test('throws for a selectable it cannot decode', () async {
       enqueueRow([1]);
       final query = Query<int>(
@@ -275,6 +283,27 @@ class _UserSchema extends Schema<_User> {
 }
 
 final _UserSchema users = testTable('users', _UserSchema.new);
+
+/// A delegate that answers every query from its run hook.
+class _HookedDelegate extends TestDelegate {
+  final List<Query<dynamic>> queries = [];
+
+  @override
+  Future<DatabaseResult> run(
+    RaindropExecutor executor,
+    Query<dynamic> query,
+  ) async {
+    queries.add(query);
+    return const DatabaseResult(
+      columns: ['name'],
+      rows: [
+        ['Hooked'],
+      ],
+      rowsAffected: 0,
+      lastInsertedRowId: null,
+    );
+  }
+}
 
 /// A selectable shape the executor has no decoding strategy for.
 class _OpaqueSelectable implements Selectable<int> {}

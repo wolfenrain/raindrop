@@ -65,9 +65,7 @@ This bypasses the current transaction context and could lead to inconsistent beh
   /// Render [query] to SQL, execute it, and decode the returned rows.
   Future<List<V>> run<V>(Query<V> query) {
     return Raindrop.tracer.trace('RaindropExecutor.run', (span) async {
-      final (sql, values) = delegate.dialect.translate(query);
-      span?.attributes.addAll({'sql': sql, 'values': values});
-      final result = await execute(sql, values);
+      final result = await delegate.run(this, query);
       return result.rows
           .map((e) => _read(query.shape, [...e]))
           .cast<V>()

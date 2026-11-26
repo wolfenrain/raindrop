@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:raindrop/dialect.dart';
 import 'package:raindrop_test/columns.dart';
 import 'package:raindrop_test/raindrop_test.dart';
@@ -21,7 +23,36 @@ void main() {
 
   String sql(Clause clause) => render(clause).$1;
 
+  group('OnConflictClause', () {
+    test('renders DO NOTHING without a target', () {
+      expect(sql(OnConflictClause()), 'ON CONFLICT DO NOTHING');
+    });
+
+    test('renders DO UPDATE with a qualified predicate', () {
+      final clause = OnConflictClause(
+        target: [users.id],
+        targetWhere: users.name.isNotNull(),
+        assignments: [users.name.to('x')],
+        where: users.name.isNull(),
+      );
+
+      expect(
+        sql(clause),
+        'ON CONFLICT ("id") WHERE "name" IS NOT NULL DO UPDATE SET '
+        r'"name" = $1 WHERE "users"."name" IS NULL',
+      );
+    });
+  });
+
   group('ExpressionClause', () {
+    test('binds bytes as one value, not as a value list', () {
+      final bytes = Uint8List.fromList([1, 2]);
+      final (text, values) = render(ExpressionClause(SQL([bytes])));
+
+      expect(text, r'$1');
+      expect(values, [bytes]);
+    });
+
     test('''
 a single-element list chunk holding a subquery loses the tuple parentheses''',
         () {

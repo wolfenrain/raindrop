@@ -13,6 +13,10 @@ void main() {
       dialect.translate((builder as ToQuery<dynamic, dynamic>).compile()).$1;
 
   group('Delegate', () {
+    test('constraintKind knows no errors by default', () {
+      expect(delegate.constraintKind(Exception('x')), isNull);
+    });
+
     test('insert creates a builder writing into the table', () {
       final builder = delegate.insert<_Row>(db, rows.$);
 
