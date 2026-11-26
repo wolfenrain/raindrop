@@ -21,7 +21,7 @@ abstract class Delegate {
   );
 
   /// The kind of constraint that [error], thrown by [execute], violated, or
-  /// null if it is not a constraint violation or the driver can not tell.
+  /// null if it is not a constraint violation or the driver cannot tell.
   ConstraintKind? constraintKind(Object error) => null;
 
   /// Render [query] and execute it through [executor].
